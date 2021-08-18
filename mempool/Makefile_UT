@@ -1,0 +1,39 @@
+SRCS = mempool.c mempoolWrap.c
+ODIR = ./mempoolobjs/
+OBJS = $(addprefix $(ODIR),$(SRCS:.c=.o))  
+DEPS = $(addprefix $(ODIR),$(SRCS:.c=.d)) 
+
+DEFINE +=  
+
+CXXFLAGS = -I../export/logExport -I ../export/utilExport  -I./mempoolExport -lpthread -g -Wall -Werror=declaration-after-statement  $(DEFINE)
+
+LDFLAGS := -Wl,--wrap,malloc -Wl,--wrap,free
+
+$(ODIR)libmem.a:$(OBJS)
+	ar crv $@  $^
+	cp -f $(ODIR)libmem.a  ./objs_ut
+#	g++ $(CXXFLAGS) $(OBJS) ../util/objs/Thread.o  -o test
+
+$(ODIR)%.o: %.c
+	test -d $(ODIR) || mkdir -p $(ODIR)
+	gcc -c $(CXXFLAGS) $< -o $@
+
+#using '-', indicate that if make don't find the depentfile, don't care the errors,
+#at begining, still don't produce the dependent file
+-include $(DEPS)
+
+$(ODIR)%.d:%.c
+	test -d $(ODIR) || mkdir -p $(ODIR)
+	@set -e; rm -f $@;
+	gcc -MM  $(CXXFLAGS)  $< > $@.123456;
+	sed 's,\($*\)\.o[ :]*, $(ODIR)\1.o $@ : ,g' < $@.123456 > $@;
+	rm -f $@.123456
+
+
+.PHONY: clean
+clean:  
+	rm -f $(OBJS)
+	rm -f $(DEPS)
+	rm -f ./mempoolobjs/libmem.a
+	rm -f ./mempoolobjs/*.o
+
