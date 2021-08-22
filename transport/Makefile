@@ -1,6 +1,6 @@
 ODIR := ./trans_objs/
 
-Cxx_SRCS :=  socket.cpp tcpTransport.cpp tlsTransport.cpp udpTransport.cpp
+Cxx_SRCS :=  socket.cpp udpConnection.cpp
 Cxx_ODIR := $(ODIR)cxxobjs/
 Cxx_OBJS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.o))  
 Cxx_DEPS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.d)) 

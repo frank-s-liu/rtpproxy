@@ -1,5 +1,5 @@
-#include "udpTransport.h"
-#include "transport.h" 
+#include "udpConnection.h"
+#include "connection.h" 
 #include "log.h"
 
 
@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <netinet/tcp.h>
+#include <stdio.h>
 
 UdpConnection::UdpConnection(const char* local_ip):Socket(UDP, IPV4)
 {
@@ -48,10 +49,8 @@ int UdpConnection::bind(const char* local_ip)
         struct sockaddr_in sockaddr;
         int len = sizeof(sockaddr);
         getsockname(m_socket, (struct sockaddr *) &sockaddr, (socklen_t *) &len); 
-        port = ntohs(sockaddr.sin_port); 
-        m_port = port;
+        m_port = ntohs(sockaddr.sin_port); 
         m_status = 1;
-        break;
     }
     else
     {
