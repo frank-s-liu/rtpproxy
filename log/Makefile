@@ -18,7 +18,9 @@ $(ODIR)%o: %cpp
 
 #using '-', indicate that if make don't find the depentfile, don't care the errors,
 #at begining, still don't produce the dependent file
+ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
+endif
 
 $(ODIR)%.d:%.cpp
 	test -d $(ODIR) || mkdir -p $(ODIR)

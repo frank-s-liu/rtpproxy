@@ -45,8 +45,11 @@ $(C_ODIR)%o: %c
 
 #using '-', indicate that if make don't find the depentfile, don't care the errors,
 #at begining, still don't produce the dependent file
+
+ifneq ($(MAKECMDGOALS),clean)
 include $(Cxx_DEPS)
 include $(C_DEPS)
+endif
 
 $(Cxx_ODIR)%d:%cpp
 	test -d $(Cxx_ODIR) || mkdir -p $(Cxx_ODIR)
