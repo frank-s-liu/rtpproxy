@@ -11,7 +11,7 @@ public:
     virtual void doStop();
 
 private:
-    
+    int m_ep_fd;
 
 };
 

@@ -19,7 +19,7 @@ public:
     virtual int modify_write_event2Epoll(int ep_fd, void* event_data);
     virtual int modify_read_event2Epoll(int ep_fd, void* event_data) ;
     virtual void setnoblock();
-    virtual int connect_to(const char* ip, int port)=0;
+    virtual int connect_to(const char* ip, int port){return 0;};
     virtual void setkeepalive(int interval);
     virtual int getlocalPort();
     virtual int delSocketFromEpollLoop(int ep_fd);
