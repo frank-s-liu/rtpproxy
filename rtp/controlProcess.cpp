@@ -1,20 +1,11 @@
 #include "ControlProcess.h"
+#include "epoll.h"
 
 #include <sys/epoll.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 
-static const int EPOLL_LISTEN_CNT = 4;
-static const int EPOLL_LISTEN_TIMEOUT = 500; //ms
-
-static const int RTP_RES_CMD_SOCKET_FD = 1;
-
-typedef struct epoll_data
-{
-    int epoll_fd_type;
-    
-}Epoll_data;
 
 ControlProcess::ControlProcess():Thread("media-ctl")
 {
@@ -57,7 +48,7 @@ ControlProcess::run()
                     int type = data->epoll_fd_type;
                     if(type == RTP_RES_CMD_SOCKET_FD)
                     {
-
+                        
                     }
                 }
                 else if( (events[i].events & EPOLLERR) ||
