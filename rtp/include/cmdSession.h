@@ -18,6 +18,10 @@ public:
     virtual ~CmdSession();
     void set_client_addr(char* ip, int port);
     int process_cmd(int cmd);
+
+public:
+    long  m_call_id;
+
 private:
     CmdSessionState* css;
     int   m_direction;

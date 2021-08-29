@@ -12,14 +12,15 @@ typedef enum socket_type
     RTP_RES_CMD_SOCKET_FD = 1,
     RTP_RECV_SOCKET_FD,
     RTP_SEND_SOCKET_FD,
-    RTP_RECV_SOCKET_FD,
+    RTCP_RECV_SOCKET_FD,
     RTCP_SEND_SOCKET_FD,
     RTP_STATISTICS_SOCKET_FD,
     RTP_PIPE_FD,
+    RTP_TIMER_FD,
     RTP_MAX_FD_TYPE
 };
 
-static const int EPOLL_LISTEN_CNT = 8;
+static const int EPOLL_LISTEN_CNT = 16;
 static const int EPOLL_LISTEN_TIMEOUT = 500; //ms
 
 
