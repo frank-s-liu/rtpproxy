@@ -12,7 +12,7 @@ CmdSession::~CmdSession()
     css = NULL;
 }
 
-CmdSession::process_cmd()
+CmdSession::process_cmd(int cmd)
 {
-    css->processCMD();
+    css->processCMD(cmd);
 }

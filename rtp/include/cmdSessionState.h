@@ -8,7 +8,7 @@ class CmdSessionState
 public:
     CmdSessionState(CmdSession* cs);
     virtual ~CmdSessionState();
-    virtual int processCMD() = 0;
+    virtual int processCMD(int cmd) = 0;
 
 protected:
     CmdSession* cs;
@@ -19,7 +19,7 @@ class CmdSessionInitState : public CmdSessionState
 public:
     CmdSessionInitState(CmdSession* cs);
     virtual ~CmdSessionInitState();
-    virtual int processCMD();
+    virtual int processCMD(int cmd);
 };
 
 #endif

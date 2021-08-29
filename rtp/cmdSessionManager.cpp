@@ -7,12 +7,14 @@
 
 typedef std::map<long, CmdSession*> cdm_session_map;
 
-static int CMD_PING = BKDRHash("ping", 4);
-static int CMD_OFFER = BKDRHash("offer",5);
-static int CMD_ANSWER = BKDRHash("answer",6);
-static int CMD_DELETE = BKDRHash("delete",6);
-static int CMD_QUERY = BKDRHash("query",5);
+static long CMD_PING = BKDRHash("ping", 4);
+static long CMD_OFFER = BKDRHash("offer",5);
+static long CMD_ANSWER = BKDRHash("answer",6);
+static long CMD_DELETE = BKDRHash("delete",6);
+static long CMD_QUERY = BKDRHash("query",5);
 
+static cdm_session_map s_sessions_callid;
+//static cdm_session_map s_sessions_fromtag;
 
 CmdSessionManager::CmdSessionManager(const char* localip, int localPort)
 {
@@ -37,8 +39,11 @@ int CmdSessionManager::processCmd()
     {
         char* cookie = cmd_str;
         char* cmd = strchr(cmd_str, ' ');
-        const char* result_str = "OK";
         bencode_item_t* dict;
+        bencode_item_t* call_id_item;
+        long cmd_case = 0;
+        long call_id = 0;
+        CmdSession* cs = NULL;
         if(!cmd)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "invalid cmd str [%s]", cmd_str);
@@ -66,12 +71,6 @@ int CmdSessionManager::processCmd()
         if(ret != 0)
         {
             tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "bencode_buffer_init error %d", ret);
-            goto retpoint;
-        }
-        bencode_item_t* resp = bencode_dictionary(&buffer);
-        if(!resp)
-        {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "bencode_dictionary error");
             ret = 1;
             goto retpoint;
         }
@@ -91,38 +90,91 @@ int CmdSessionManager::processCmd()
             ret = 1;
             goto retpoint;
         }
-        long cmd_case = BKDRHash(cmd_item->iov[1].iov_base, cmd_item->iov[1].iov_len);
+        cmd_case = BKDRHash(cmd_item->iov[1].iov_base, cmd_item->iov[1].iov_len);
         switch (cmd_case)
         {
             case CMD_PING:
             {
-                result_str = "pong";
+                char result_str[256];
+                snprintf(result_str, sizeof(result_str), "%s d6:result4:ponge", cookie);
+                m_connection->sendto(result_str, strlen(result_str), 0, (struct sockaddr*)&client_addr, &socket_len);
                 break;
             }
             case CMD_OFFER:
+            case CMD_ANSWER:
+            case CMD_DELETE:
             {
+                call_id_item = bencode_dictionary_get(dict, "call-id");
+                if (!call_id_item || call_id_item->type != BENCODE_STRING)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "don't have call_id parameters");
+                    ret = 1;
+                    goto retpoint;
+                }
+                call_id = BKDRHash(call_id_item->iov[1].iov_base, call_id_item->iov[1].iov_len);
+                cdm_session_map::iterator ite = s_sessions_callid.find(call_id);
+                if(ite != s_sessions_callid.end())
+                {
+                    cs = s_sessions_callid[call_id];
+                }
+                break;
+            }
+            case CMD_QUERY:
+            default:
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unsupport command:%s", cmd_item->iov[1].iov_base);
+                ret = 1;
+                goto retpoint;
+            }
+        }
+        
+        switch (cmd_case)
+        {
+            case CMD_OFFER:
+            {
+                if(!cs)
+                {
+                    cs = new CmdSession();
+                    s_sessions_callid[call_id] = cs;
+                }
+                ret = cs->process_cmd(OFFER_CMD);
                 break;
             }
             case CMD_ANSWER:
             {
+                if(!cs)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "don't find call id:[%s] when process ANSWER cmd session", call_id_item->iov[1].iov_base);
+                    ret = 1;
+                    goto retpoint;
+                }
+                ret = cs->process_cmd(ANSWER_CMD);
                 break;
             }
             case CMD_DELETE:
             {
+                if(!cs)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "don't find call id:[%s] when process delete cmd session", call_id_item->iov[1].iov_base);
+                    ret = 1;
+                    goto retpoint;
+                }
+                ret = cs->process_cmd(DELETE_CMD);
                 break;
             }
             case CMD_QUERY:
-            {
-                break;
-            }
             default:
             {
-              tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unsupport command:%s", cmd_item->iov[1].iov_base);
-              goto retpoint;
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknon issue, should not here");
+                ret = 1;
+                goto retpoint;
             }
         }
-        
-        bencode_dictionary_add_string(resp, "result", resultstr);
+
+        //bencode_dictionary_add_string(resp, "result", resultstr);
+        //cmd_resp = bencode_collapse(resp, &response_len);
+
+        //m_connection->sendto(cmd_str, sizeof(cmd_str), 0, (struct sockaddr*)&client_addr, &socket_len);
         ret = 0;
         goto retpoint;
     }
