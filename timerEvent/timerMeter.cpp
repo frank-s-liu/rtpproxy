@@ -152,14 +152,16 @@ runpoint:
                             if((*it)->pos == ms_meter_pos)
                             {
                                 TimeEvent* event = *it;
-                                int ret = pushTimeEvent(event);
-                                if(0 != ret)
-                                {
-                                    tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "can not process task, process queue is full");
-                                    event->duration = 64 + random()%1024;
-                                    bindEvent2Meter(event);
-                                }
+                                event->cb(event->args);
+                                //int ret = pushTimeEvent(event);
+                                //if(0 != ret)
+                                //{
+                                //    tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "can not process task, process queue is full");
+                                //    event->duration = 64 + random()%1024;
+                                //    bindEvent2Meter(event);
+                                //}
                                 m_ms_meter[position].erase(it);
+                                delete event;
                             }
                             else if((*it)->pos > ms_meter_pos)
                             {
