@@ -7,7 +7,7 @@
 #include <errno.h>
 
 
-ControlProcess::ControlProcess():Thread("media-ctl")
+ControlProcess::ControlProcess():Thread("signalCtl")
 {
     m_ep_fd = epoll_create(EPOLL_LISTEN_CNT);
 }

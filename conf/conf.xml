@@ -1,0 +1,29 @@
+<profile name="all">
+    <logsettings>
+        <param logpath="/home/frank/mysql/pbx_mysql_test/sipplog"/>
+        <param loglevel="INFO"/>
+    </logsettings>
+    <clisettings>
+        <param CLIip="10.100.125.147"/> <!-- local cli ip -->
+        <param CLIport="8989"/> <!-- local cli port -->
+    </clisettings>
+    <Aclsettings>
+        <list name="sipAgent" default="deny">
+            <node type="allow" cidr="10.100.125.0/24"/>
+        </list>
+    </Aclsettings>
+    <signalingsettings>
+        <interface ip="10.100.125.147" port="2223" transport="UDP"/>
+        <interface ip="10.100.125.147" port="2223" transport="TCP"/>
+    </signalingsettings>
+    <rtpsettings>
+        <external ip="10.100.126.230"/>
+        <external ip="10.100.126.232"/>
+        <internal ip="10.100.125.147"/>
+        <internal ip="10.100.125.148"/>
+        <param rtpThreads="10"/>
+        <param srtpThreads="10"/>
+        <param portMin="10000"/>
+        <param portMax="60000"/>
+    </rtpsettings>
+</profile>
