@@ -84,3 +84,8 @@ void tracelog(const char* moduleName, int level, const char* file, int line, con
         va_end(args);
     }
 }
+
+char* getLogMemoryInfo()
+{
+    return ResourceManager::getInstance()->logMemoryInfo();
+}

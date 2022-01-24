@@ -17,6 +17,7 @@ public:
     void pushlog(void* data);
     void* poplog();
     void updateTime();
+    char* logMemoryInfo();
 private:
     ResourceManager();
     ResourceManager(const ResourceManager& r);

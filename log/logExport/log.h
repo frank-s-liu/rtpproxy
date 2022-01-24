@@ -24,7 +24,7 @@ int regiterLog(const char* moduleName, int level);
 int modifylogLevel(const char* moduleName, int level);
 void deRegLog(const char* module);
 void tracelog(const char* moduleName, int level, const char* file, int line, const char* fmt, ... );
-
+char* getLogMemoryInfo();
 
 #ifdef __cplusplus
 }

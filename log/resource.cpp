@@ -42,14 +42,10 @@ __attribute__((constructor)) static void init_log_pool()
     logmempool.pool_capability[BLOCK_48_INDEX] = CHUNK_128;
     logmempool.chunk_capability[BLOCK_48_INDEX] = CHUNK_128;
 
-    logmempool.pool_capability[BLOCK_256_INDEX] = CHUNK_65536*16;
-    logmempool.chunk_capability[BLOCK_256_INDEX] = CHUNK_65536;
-    logmempool.pool_capability[BLOCK_512_INDEX] = CHUNK_65536;
-    logmempool.chunk_capability[BLOCK_512_INDEX] = CHUNK_65536;
-    logmempool.pool_capability[BLOCK_1024_INDEX] = CHUNK_2048;
-    logmempool.chunk_capability[BLOCK_1024_INDEX] = CHUNK_2048;
-    logmempool.pool_capability[BLOCK_2048_INDEX] = CHUNK_1024;
-    logmempool.chunk_capability[BLOCK_2048_INDEX] = CHUNK_1024;
+    logmempool.pool_capability[BLOCK_256_INDEX] = CHUNK_1024;
+    logmempool.chunk_capability[BLOCK_256_INDEX] = CHUNK_256;
+    logmempool.pool_capability[BLOCK_512_INDEX] = CHUNK_256;
+    logmempool.chunk_capability[BLOCK_512_INDEX] = CHUNK_256;
     
     initMemoryPool(&logmempool);
     ResourceManager::getInstance();
@@ -172,4 +168,12 @@ void ResourceManager::updateTime()
              timeinfo.tm_sec,
              (int)tv.tv_usec/1000);
                                 
+}
+
+char* ResourceManager::logMemoryInfo()
+{
+    char* mem_info = new char[4096];
+    mem_info[0] = '\0';
+    memory_info(mem_info, 4096, &logmempool);
+    return mem_info;
 }
