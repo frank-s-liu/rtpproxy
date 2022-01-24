@@ -12,7 +12,9 @@ extern "C"
 #endif
 
 
+#ifndef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE         64 
+#endif
 typedef struct memqueue_t
 {
     struct
@@ -37,14 +39,14 @@ typedef struct memqueue_t
 }memqueue_s;
 
 __attribute((always_inline)) static inline memqueue_s* memQinit(uint32_t capacity)
-{       
+{
     memqueue_s* q = NULL;
     uint32_t cap = 0;
     if(capacity > 31)
-    {   
+    {
         return NULL;
-    }   
-    cap = (1<<capacity);                                                                       
+    }
+    cap = (1<<capacity);
     q = (memqueue_s*)malloc(sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
     memset(q, 0, sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
     q->mask = cap-1;

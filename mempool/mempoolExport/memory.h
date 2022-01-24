@@ -228,7 +228,7 @@ __attribute__((visibility("default"))) void  freeMemory(void* ptr);
 __attribute__((visibility("default"))) void  destroy(MemPools* mempools);
 __attribute__((visibility("default"))) void* reallocMemory(void *ptr, size_t size, MemPools* mempools);
 __attribute__((visibility("default"))) void* callocMemory(unsigned int n, unsigned int size, MemPools* mempools);
-__attribute__((visibility("default"))) void memory_info(char** info, MemPools* mempools);
+__attribute__((visibility("default"))) void memory_info(char* info,int buflen, MemPools* mempools);
 
 __attribute__((visibility("default"))) void* realloc_memory(void *ptr, size_t size, fs_mempool_s* mempools);
 __attribute__((visibility("default"))) fs_mempool_s* create_pool(unsigned long reuse, int needlock);

@@ -30,8 +30,6 @@ typedef struct memstack_t
     }msgs[1];
 }memstack_s;
 
-
-
 //__attribute((always_inline)) 
 static inline memstack_s* memQinit(uint32_t capacity)
 {
@@ -157,6 +155,14 @@ static inline void* mempop(memstack_s* q)
     return ret;
 }
 
+
+static inline uint64_t memsize(memstack_s* q)
+{
+    uint64_t size, top;
+    top = q->top;
+    size = top & 0xFFFFFFFF;
+    return size;
+}
 
 #ifdef __cplusplus
 }

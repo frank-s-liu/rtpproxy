@@ -116,8 +116,15 @@ int initMemoryPool(MemPools* mempools)
                    
             continue;
         }
-        block_size_align = mempools->pools[index].block_size + infoAlign; 
-
+        // consider of cache line size is 64
+        if(blockAlign + mempools->pools[index].block_size <= 32)
+        {
+            block_size_align = (blockAlign + mempools->pools[index].block_size + 31)/32 * 32; 
+        }
+        else
+        {
+            block_size_align = (blockAlign + mempools->pools[index].block_size + 63)/64 * 64;
+        }
         {
             int chunkindex = 0;
             unsigned int chunk_len = mempools->chunk_capability[index]; 
@@ -146,7 +153,7 @@ int initMemoryPool(MemPools* mempools)
                     block = (memblock_t*)(start+(blockindex * block_size_align));
                     block->malloc_flag = 0;
                     block->block_size = mempools->pools[index].block_size;
-                    block->memQ = chunk->memQ;
+                    //block->memQ = chunk->memQ;
                     block->chunk = chunk;
                     mempush(chunk->memQ, block);
                 }
@@ -392,13 +399,13 @@ __attribute((always_inline)) static inline unsigned int size_to_class(unsigned i
 
 __attribute((always_inline)) static  inline void* mallocMemory(unsigned int mem_size)
 {
-    unsigned int size = infoAlign + mem_size;
+    unsigned int size = blockAlign + mem_size;
     memblock_t* block = (memblock_t*)__real_malloc(size);
     block->malloc_flag = 1; // lazy add, no pos
     block->block_size = mem_size;
     block->chunk = NULL;
     //__sync_add_and_fetch(&big_mem_counter, 1);
-    return (void*)((char*)block + infoAlign);
+    return (void*)((char*)block + blockAlign);
 }
 
 __attribute((always_inline)) static inline 
@@ -406,13 +413,15 @@ void* getMemoryFromPool(mempool_t* pool, unsigned int mem_size)
 {
     if(pool->chunks)
     {
-        unsigned long pos = __sync_fetch_and_add(&pool->pos_mask, 0x100000000);
-        memchunk_t* chunk = pool->chunks[(pos >>32) & (pos & 0xFFFFFFFF)];  
+        //unsigned long pos = __sync_fetch_and_add(&pool->pos_mask, 0x100000000);
+        static __thread unsigned long random = 0;
+        //unsigned long random = (unsigned long)&random;
+        memchunk_t* chunk = pool->chunks[pool->pos_mask & random++];  
         char* using = (char*)mempop(chunk->memQ);
         if(using)
         {
             //__sync_sub_and_fetch(&chunk->free_block_counter,1);
-            return (using + infoAlign);
+            return (using + blockAlign);
         }
     }
     {
@@ -453,11 +462,11 @@ void freeMemory(void* ptr)
     {
         return;
     }
-    blockheader = (memblock_header*)((char*)ptr-infoAlign);
+    blockheader = (memblock_header*)((char*)ptr-blockAlign);
     if(0 == blockheader->malloc_flag)
     {
         //__sync_add_and_fetch(&blockheader->chunk->free_block_counter,1);
-        mempush(blockheader->memQ, blockheader);
+        mempush(blockheader->chunk->memQ, blockheader);
     }
     else
     {
@@ -489,7 +498,7 @@ void* reallocMemory(void *ptr, size_t size, MemPools* mempools)
            return NULL;
        }
 
-       block = (memblock_t*)(tmp-infoAlign);
+       block = (memblock_t*)(tmp-blockAlign);
        if(size > block->block_size)
        {    
            tmp = (char*)getMemory(size, mempools);
@@ -524,18 +533,32 @@ void* callocMemory(unsigned int n, unsigned int size, MemPools* mempools)
     return ptr;
 }
 
-void memory_info(char** info, MemPools* mempools)
+void memory_info(char* buffer, int buflen, MemPools* mempools)
 {
     int index = 0;
+    int len = 0;
     for(index=0; index<POOL_SIZE; index++)
     {
-        memset(info[index], 0, 128);
-        if(( mempools && mempools->pools && mempools->pools[index].chunks[0]->free_block_counter < (mempools->pools[index].chunks[0]->init_block_counter>>1)))
+        if(len >= buflen)
         {
-            snprintf(info[index], 128, "pool %d,  free %d, init %d", index,
-                     mempools->pools[index].chunks[0]->free_block_counter, 
-                     mempools->pools[index].chunks[0]->init_block_counter);
+            break;
         }
+        if(mempools->pools[index].chunks)
+        {
+            int i = 0;
+            for(i=0; i<=mempools->pools[index].pos_mask; i++)
+            {
+                snprintf(&buffer[len], buflen-len, "[%lu-size] pool, chunk[%d],  free %lu, init %u \n", mempools->pools[index].block_size, i,
+                         memsize(mempools->pools[index].chunks[i]->memQ), 
+                         mempools->pools[index].chunks[i]->init_block_counter);
+                len = strlen(buffer);
+            }
+        }
+        else
+        {
+            snprintf(&buffer[len], buflen-len, "[%lu-size] pool,  not init \n", mempools->pools[index].block_size);
+        }
+        len = strlen(buffer);
     }
 }
 
