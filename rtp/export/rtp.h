@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-
+int initRTP(const char* config_file);
 
 #ifdef __cplusplus
 }

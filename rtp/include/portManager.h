@@ -1,8 +1,0 @@
-
-class PortManager
-{
-public:
-    
-private:
-
-};
