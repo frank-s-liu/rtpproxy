@@ -11,8 +11,7 @@ public:
     virtual void doStop();
 
 private:
-    int m_ep_fd;
-
+    int m_fd_pipe[2];
 };
 
 #endif
