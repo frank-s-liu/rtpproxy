@@ -2,14 +2,16 @@
 #define __RTP_EPOLL_DATA_H__
 
 
-typedef struct epoll_data                                                                                                                             
-{                                                                                                                                                     
-    int epoll_fd_type;                                                                                                                                
+typedef struct epolldata
+{
+    int epoll_fd_type;
+    void* data;
 }Epoll_data;
 
 enum socket_type
 {
-    RTP_RES_CMD_SOCKET_FD = 1,
+    RTP_RES_CMD_SOCKET_ACCEPT_FD = 1,
+    RTP_RES_CMD_SOCKET_FD,
     RTP_RECV_SOCKET_FD,
     RTP_SEND_SOCKET_FD,
     RTCP_RECV_SOCKET_FD,
