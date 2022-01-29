@@ -197,8 +197,26 @@ void* ControlProcess::run()
                         new_client_fd = accept(srvSocketInfo->fd, (struct sockaddr*)&client_addr, &cliaddr_len);
                         if(-1 != new_client_fd)
                         {
+                            struct epoll_event event;
+                            Epoll_data* tcpclientdata = new Epoll_data();
+                            SocketInfo* socketinfo = new SocketInfo();
+                            socketinfo->fd = new_client_fd;
+                            socketinfo->fd_tcp_state = CONNECTED;
+                            socketinfo->udp_remote = NULL;
+                            tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
+                            tcpclientdata->data = (void*)socketinfo;
                             setnoblock(new_client_fd);
                             setkeepalive(new_client_fd, 3600);
+                            event.data.ptr = (void*)tcpclientdata;
+                            event.events = EPOLLIN;
+                            if(-1 == epoll_ctl(ep_fd, EPOLL_CTL_ADD, new_client_fd, &event))
+                            {
+                                tracelog("CLI", WARNING_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD error %d", errno);
+                                close(new_client_fd);
+                                delete socketinfo;
+                                delete tcpclientdata;
+                            }
+                            continue;
                         }
                         else
                         {
