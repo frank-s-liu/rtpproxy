@@ -18,7 +18,7 @@ enum hash_status
     HASH_NO_MEMORY
 };
 
-__attribute__((visibility("default"))) long BKDRHash(const char* str, int len);
+__attribute__((visibility("default"))) unsigned long BKDRHash(const char* str, int len);
 
 #ifdef __cplusplus
 }
