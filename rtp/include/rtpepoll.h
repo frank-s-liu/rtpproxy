@@ -1,17 +1,19 @@
 #ifndef __RTP_EPOLL_DATA_H__
 #define __RTP_EPOLL_DATA_H__
 
+#include <netinet/in.h>
 
 typedef struct epolldata
 {
     int epoll_fd_type;
-    void* data;
+    void* data;  //socket info
 }Epoll_data;
 
 typedef struct socketinfo
 {
+    sockaddr_in*         udp_remote;
     int                  fd;
-    unsigned char        fd_state; // 0: closed 1: connected 2: listened 3: udp
+    unsigned char        fd_tcp_state; // 0: closed 1: connected 2: listened
 }SocketInfo;
 
 typedef enum socketstate

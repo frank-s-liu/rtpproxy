@@ -155,13 +155,12 @@ void* ControlProcess::run()
                     tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, " listen on listen_socket failed, err no is %d", errno);
                     assert(0);
                 }
-                m_fd_socketInfo[i].fd_state = LISTENED;
+                m_fd_socketInfo[i].fd_tcp_state = LISTENED;
                 m_epoll_socket_data[i].epoll_fd_type = RTP_RES_CMD_SOCKET_ACCEPT_FD;
             }
             else
             {
                 m_epoll_socket_data[i].epoll_fd_type = RTP_RES_CMD_SOCKET_UDP_FD;
-                m_fd_socketInfo[i].fd_state = UDP;
             }
             m_epoll_socket_data[i].data = &m_fd_socketInfo[i];
             event.data.ptr = &m_epoll_socket_data[i];
@@ -221,7 +220,7 @@ void* ControlProcess::run()
                         SocketInfo* info = (SocketInfo*)data->data;
                         epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
                         close(info->fd);
-                        info->fd_state = 0;
+                        info->fd_tcp_state = CLOSED;
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
                         break;// must beak and start a new epoll
                     }
