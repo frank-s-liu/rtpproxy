@@ -4,6 +4,8 @@
 #include "thread.h"
 #include "rtpepoll.h"
 
+
+
 class ControlProcess : public Thread
 {
 public:
@@ -14,7 +16,7 @@ public:
 
 private:
     int             m_fd_pipe[2];
-    int*            m_fd_socket;
+    SocketInfo*     m_fd_socketInfo;
     Epoll_data*     m_epoll_socket_data;
     unsigned char   m_fd_socket_num;
 };

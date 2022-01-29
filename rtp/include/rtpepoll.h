@@ -8,10 +8,26 @@ typedef struct epolldata
     void* data;
 }Epoll_data;
 
+typedef struct socketinfo
+{
+    int                  fd;
+    unsigned char        fd_state; // 0: closed 1: connected 2: listened 3: udp
+}SocketInfo;
+
+typedef enum socketstate
+{
+    CLOSED = 0,
+    CONNECTED,
+    LISTENED,
+    UDP,
+    MAX
+}SOCKET_STATE;
+
 enum socket_type
 {
     RTP_RES_CMD_SOCKET_ACCEPT_FD = 1,
-    RTP_RES_CMD_SOCKET_FD,
+    RTP_RES_CMD_SOCKET_UDP_FD,
+    RTP_RES_CMD_SOCKET_TCP_FD,
     RTP_RECV_SOCKET_FD,
     RTP_SEND_SOCKET_FD,
     RTCP_RECV_SOCKET_FD,
