@@ -1,4 +1,8 @@
 #include "cmdSessionState.h"
+#include "cmdSession.h"
+
+
+#include <stdlib.h>
 
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
