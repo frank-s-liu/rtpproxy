@@ -5,8 +5,8 @@
 
 typedef struct epolldata
 {
-    int epoll_fd_type;
     void* data;  //socket info
+    char epoll_fd_type;
 }Epoll_data;
 
 typedef struct socketinfo
