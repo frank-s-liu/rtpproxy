@@ -24,10 +24,15 @@ int parseBencodeCmd(char* cmdstr)
     if(cookie)
     {
         *cookie = '\0';
-        //SessionKey* sk = new SessionKey(cookie);
-        //CmdSession* cs = new CmdSession(cookie);
+        SessionKey* sk = new SessionKey(cookie);
         *cookie = ' ';
-        //CmdSessionManager* CmdSessionManager::getInstance()->
+        CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
+        if(!cs)
+        {
+            cs = new CmdSession();
+            cs->m_session_key = sk;
+            CmdSessionManager::getInstance()->putinCmdSession(cs);
+        }
     }
     else
     {

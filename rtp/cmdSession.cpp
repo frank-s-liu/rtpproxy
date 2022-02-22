@@ -39,6 +39,12 @@ bool SessionKey::operator <(const SessionKey &k) const
     return false;
 }
 
+CmdSession::CmdSession()
+{
+    m_css = new CmdSessionInitState(this);
+    m_socketInfo = NULL;
+}
+
 CmdSession::CmdSession(char* cookie)
 {
     m_css = new CmdSessionInitState(this);

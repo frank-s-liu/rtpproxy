@@ -29,6 +29,7 @@ public:
 class CmdSession
 {
 public:
+    CmdSession();
     CmdSession(char* cookie);
     virtual ~CmdSession();
     void set_client_addr(char* ip, int port);
