@@ -1,6 +1,7 @@
 #include "rtpepoll.h"
 #include "log.h"
-
+#include "cmdSession.h"
+#include "cmdSessionManager.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,7 +9,32 @@
 #include <errno.h>
 #include <unistd.h>
 
-int parseBencodeCmd(char* cmdstr);
+typedef enum bencode_error
+{
+    SUCCESS = 0,
+    FORMAT_ERR,
+    TOO_LONG_STR,
+    BENCODE_ERRNO_MAX
+}BENCODE_ERRNO;
+
+int parseBencodeCmd(char* cmdstr)
+{
+    char* start = cmdstr;
+    char* cookie = strstr(start, " d");
+    if(cookie)
+    {
+        *cookie = '\0';
+        //SessionKey* sk = new SessionKey(cookie);
+        //CmdSession* cs = new CmdSession(cookie);
+        *cookie = ' ';
+        //CmdSessionManager* CmdSessionManager::getInstance()->
+    }
+    else
+    {
+        
+    }
+    return 0;   
+}
 
 
 int tcpRecvBencode(Epoll_data* data)
@@ -65,7 +91,3 @@ retprocess:
     return ret;
 }
 
-int parseBencodeCmd(char* cmdstr)
-{
-    return 0;   
-}

@@ -37,10 +37,11 @@ public:
 
 public:
     long  m_call_id;
+    SessionKey*         m_session_key;
+     
 
 private:
     CmdSessionState*    m_css;
-    SessionKey*         m_session_key;
     SocketInfo*         m_socketInfo;
     int                 m_direction;
     int                 m_cmd;

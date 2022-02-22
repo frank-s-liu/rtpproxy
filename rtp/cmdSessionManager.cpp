@@ -1,6 +1,7 @@
 #include "cmdSessionManager.h"
 #include "cmdSession.h"
 #include "hash.h"
+#include "log.h"
 
 #include <errno.h>
 
@@ -11,6 +12,8 @@ static unsigned long CMD_ANSWER = BKDRHash("answer",6);
 static unsigned long CMD_DELETE = BKDRHash("delete",6);
 static unsigned long CMD_QUERY = BKDRHash("query",5);
 
+
+CmdSessionManager* CmdSessionManager::s_instance = NULL;
 
 CmdSessionManager::CmdSessionManager()
 {
@@ -26,8 +29,41 @@ CmdSessionManager::~CmdSessionManager()
     }
 }
 
-int CmdSessionManager::processCmd()
+CmdSessionManager* CmdSessionManager::getInstance()
 {
-    return 0;
+    if(!s_instance)
+    {
+        s_instance = new CmdSessionManager();
+    }
+    return s_instance;
 }
 
+int CmdSessionManager::putinCmdSession(CmdSession* cs)
+{
+    SessionKey* key = cs->m_session_key;
+    cdm_sessions_map::iterator iter = m_cmdSessionsMap.find(key);
+    if(iter != m_cmdSessionsMap.end())
+    {   
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "same session key found");
+        return 1;
+    }
+    else 
+    {
+        m_cmdSessionsMap[key] = cs;
+    }   
+    return 0;
+}
+ 
+CmdSession* CmdSessionManager::getCmdSession(SessionKey* sk)
+{
+    cdm_sessions_map::iterator iter = m_cmdSessionsMap.find(sk);
+    if(iter != m_cmdSessionsMap.end())
+    {
+        return iter->second;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "getCmdSession failed, no cmd session whose session key  is %s", sk->m_cookie);
+    }
+    return NULL;
+}
