@@ -26,27 +26,27 @@ static void setkeepalive(int fd, int interval)
     int val = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) == -1)
     {   
-        tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "set socket SO_KEEPALIVE failed, err no is %d", errno);
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set socket SO_KEEPALIVE failed, err no is %d", errno);
         return;
     }
     #ifdef __linux__
     val = interval;
     if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val)) < 0)
     {   
-        tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPIDLE failed, err no is %d", errno);
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPIDLE failed, err no is %d", errno);
         return;
     }
     val = interval/3; 
     if (val == 0) val = 1;
     if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val)) < 0) 
     {
-        tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPINTVL failed, err no is %d", errno);
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPINTVL failed, err no is %d", errno);
         return;
     }   
     val = 3;
     if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val)) < 0)
     {
-        tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPCNT failed, err no is %d", errno);
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set socket TCP_KEEPCNT failed, err no is %d", errno);
         return;
     }
     #endif
@@ -126,7 +126,7 @@ void* ControlProcess::run()
                 // when restart service, if socket is in timewait state, maybe something wrong, So need to set SO_REUSEADDR.
                 if(-1 == setsockopt(m_fd_socketInfo[i].fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)))
                 {
-                    tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "set option of listen socket failed, err no is %d", errno);
+                    tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set option of listen socket failed, err no is %d", errno);
                     assert(0);
                 }
             }
@@ -145,14 +145,14 @@ void* ControlProcess::run()
             server.sin_port = htons(port);
             if(-1 == bind(m_fd_socketInfo[i].fd, (struct sockaddr*)&server, sizeof(server)))
             {
-                tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "bind rtp control listen socket failed, err no is %d", errno);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "bind rtp control listen socket failed, err no is %d", errno);
                 assert(0);
             }
             if(RTP_CTL_TCP == rtpconfig->rtpctl_interfaces[i].transport)
             {
                 if(-1 == listen(m_fd_socketInfo[i].fd, SOMAXCONN))
                 {
-                    tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, " listen on listen_socket failed, err no is %d", errno);
+                    tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, " listen on listen_socket failed, err no is %d", errno);
                     assert(0);
                 }
                 m_fd_socketInfo[i].fd_tcp_state = LISTENED;
@@ -167,7 +167,7 @@ void* ControlProcess::run()
             event.events = EPOLLIN;
             if(-1 == epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_fd_socketInfo[i].fd, &event))
             {
-                tracelog("CLI", ERROR_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD cmd socket error %d, ip %s", errno, rtpconfig->rtpctl_interfaces[i].ip);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD cmd socket error %d, ip %s", errno, rtpconfig->rtpctl_interfaces[i].ip);
                 assert(0);
             }
         }
@@ -202,7 +202,7 @@ void* ControlProcess::run()
                             SocketInfo* socketinfo = new SocketInfo();
                             socketinfo->fd = new_client_fd;
                             socketinfo->fd_tcp_state = CONNECTED;
-                            socketinfo->udp_remote = NULL;
+                            socketinfo->data = NULL;
                             tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
                             tcpclientdata->data = (void*)socketinfo;
                             setnoblock(new_client_fd);
@@ -211,7 +211,7 @@ void* ControlProcess::run()
                             event.events = EPOLLIN;
                             if(-1 == epoll_ctl(ep_fd, EPOLL_CTL_ADD, new_client_fd, &event))
                             {
-                                tracelog("CLI", WARNING_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD error %d", errno);
+                                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD error %d", errno);
                                 close(new_client_fd);
                                 delete socketinfo;
                                 delete tcpclientdata;
@@ -220,9 +220,18 @@ void* ControlProcess::run()
                         }
                         else
                         {
-                            tracelog("CLI", WARNING_LOG,__FILE__, __LINE__, "accept  errno  %d", errno);
+                            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "accept  errno  %d", errno);
                             break;
                         }
+                    }
+                    else if(type == RTP_RES_CMD_SOCKET_TCP_FD)
+                    {
+                        //SocketInfo* socketinfo = (SocketInfo*)data->data;
+                        
+                    }
+                    else if(type == RTP_RES_CMD_SOCKET_UDP_FD)
+                    {
+
                     }
                 }
                 else if( (events[i].events & EPOLLERR) ||
@@ -239,6 +248,7 @@ void* ControlProcess::run()
                         epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
                         close(info->fd);
                         info->fd_tcp_state = CLOSED;
+                        info->fd = -1;
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
                         break;// must beak and start a new epoll
                     }
