@@ -242,13 +242,13 @@ void* ControlProcess::run()
                         tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "rtp cmd listen socket error, event is %d", events[i].events);
                         goto returnpoint;
                     }
-                    else// maybe client disconnect with server becauseof network issue, So when srv send msg to client, may got this error
+                    else// maybe client disconnect with server becauseof network issue, So when srv send keepalive msg to client, may got this error
                     {
                         SocketInfo* info = (SocketInfo*)data->data;
                         epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
                         close(info->fd);
-                        info->fd_tcp_state = CLOSED;
-                        info->fd = -1;
+                        delete info;
+                        data->data = NULL;
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
                         break;// must beak and start a new epoll
                     }
