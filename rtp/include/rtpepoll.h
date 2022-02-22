@@ -6,14 +6,15 @@
 typedef struct epolldata
 {
     void* data;  //socket info
-    char epoll_fd_type;
+    int   session_count;
+    char  epoll_fd_type;
 }Epoll_data;
 
 typedef struct socketinfo
 {
-    void*                data;
+    //void*                data;
     int                  fd;
-    unsigned char        fd_tcp_state; // 0: closed 1: connected 2: listened
+    //unsigned char        fd_tcp_state; // 0: closed 1: connected 2: listened
 }SocketInfo;
 
 typedef enum socketstate

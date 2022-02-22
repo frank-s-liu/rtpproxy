@@ -155,7 +155,7 @@ void* ControlProcess::run()
                     tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, " listen on listen_socket failed, err no is %d", errno);
                     assert(0);
                 }
-                m_fd_socketInfo[i].fd_tcp_state = LISTENED;
+                //m_fd_socketInfo[i].fd_tcp_state = LISTENED;
                 m_epoll_socket_data[i].epoll_fd_type = RTP_RES_CMD_SOCKET_ACCEPT_FD;
             }
             else
@@ -201,8 +201,8 @@ void* ControlProcess::run()
                             Epoll_data* tcpclientdata = new Epoll_data();
                             SocketInfo* socketinfo = new SocketInfo();
                             socketinfo->fd = new_client_fd;
-                            socketinfo->fd_tcp_state = CONNECTED;
-                            socketinfo->data = NULL;
+                            //socketinfo->fd_tcp_state = CONNECTED;
+                            //socketinfo->data = NULL;
                             tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
                             tcpclientdata->data = (void*)socketinfo;
                             setnoblock(new_client_fd);
@@ -247,9 +247,16 @@ void* ControlProcess::run()
                         SocketInfo* info = (SocketInfo*)data->data;
                         epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
                         close(info->fd);
-                        delete info;
-                        data->data = NULL;
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
+                        delete info;
+                        if(0 == data->session_count)
+                        {
+                            delete data;
+                        }
+                        else
+                        {
+                            data->data = NULL;
+                        }
                         break;// must beak and start a new epoll
                     }
                 }
