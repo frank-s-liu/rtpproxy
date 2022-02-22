@@ -2,54 +2,70 @@
 #include "log.h"
 
 
-int tcpRecvBencode(SocketInfo* socket)
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+
+int parseBencodeCmd(char* cmdstr);
+
+
+int tcpRecvBencode(Epoll_data* data)
 {
-    char bufer[2048];
+    char buffer[2048];
     char* cmd = NULL;
     char* cmdnew = NULL;
     int len = 0;
     int ret = 0;
-    len = recv(socket->fd, bufer, sizeof(bufer)-1, 0);
+    SocketInfo* socket = (SocketInfo*)data->data;
+    len = recv(socket->fd, buffer, sizeof(buffer)-1, 0);
     if(len > 0)
     {
-        bufer[len] = '\0';
-        if(!socket->data)
+        buffer[len] = '\0';
+        if(!socket->cmd_not_completed)
         {
             cmd = buffer;
         }
         else
         {
-            int l = strlen((const char*)socket->data);
+            int l = strlen(socket->cmd_not_completed);
             l += len;
             cmdnew = new char[l+1];
-            snprintf(cmdnew, l+1, "%s%s",(const char*)socket->data, bufer); 
+            snprintf(cmdnew, l+1, "%s%s",socket->cmd_not_completed, buffer); 
             tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd, tcp packet splicing");
             cmd = cmdnew;
         }
+        parseBencodeCmd(cmd);
+        goto retprocess;
     }
     else if(len == 0)
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
+        ret = -1;
         goto errprocess;
     }
     else
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
+        ret = -1;
         goto errprocess;
     }
 
 errprocess:
     close(socket->fd);
     socket->fd = -1;
-    socket->fd_tcp_state = CLOSED;
+    //socket->fd_tcp_state = CLOSED;
+retprocess:
     if(cmdnew)
     {
         delete[] cmdnew;
+        cmdnew = NULL;
     }
-    return -1;
+    return ret;
 }
 
 int parseBencodeCmd(char* cmdstr)
 {
-    
+    return 0;   
 }

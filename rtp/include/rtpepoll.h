@@ -12,7 +12,7 @@ typedef struct epolldata
 
 typedef struct socketinfo
 {
-    //void*                data;
+    char*                cmd_not_completed;
     int                  fd;
     //unsigned char        fd_tcp_state; // 0: closed 1: connected 2: listened
 }SocketInfo;

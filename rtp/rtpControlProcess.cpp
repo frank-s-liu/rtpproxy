@@ -1,6 +1,7 @@
 #include "rtpControlProcess.h"
 #include "rtpConfiguration.h"
 #include "log.h"
+#include "bencode.h"
 
 #include <sys/types.h>
 #include <sys/epoll.h>
@@ -202,7 +203,7 @@ void* ControlProcess::run()
                             SocketInfo* socketinfo = new SocketInfo();
                             socketinfo->fd = new_client_fd;
                             //socketinfo->fd_tcp_state = CONNECTED;
-                            //socketinfo->data = NULL;
+                            socketinfo->cmd_not_completed = NULL;
                             tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
                             tcpclientdata->data = (void*)socketinfo;
                             setnoblock(new_client_fd);
@@ -227,7 +228,7 @@ void* ControlProcess::run()
                     else if(type == RTP_RES_CMD_SOCKET_TCP_FD)
                     {
                         //SocketInfo* socketinfo = (SocketInfo*)data->data;
-                        
+                        tcpRecvBencode(data);
                     }
                     else if(type == RTP_RES_CMD_SOCKET_UDP_FD)
                     {
@@ -248,6 +249,10 @@ void* ControlProcess::run()
                         epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
                         close(info->fd);
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
+                        if(info->cmd_not_completed)
+                        {
+                            delete[] info->cmd_not_completed;
+                        }
                         delete info;
                         if(0 == data->session_count)
                         {
