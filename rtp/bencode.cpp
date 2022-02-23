@@ -235,11 +235,12 @@ int tcpRecvBencode(Epoll_data* data)
                 int len = strlen(cmd);
                 socket->cmd_not_completed = new char[len+1];
                 snprintf(socket->cmd_not_completed, len+1, "%s", cmd);
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd not completed");
+                tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "recv bencode cmd not completed");
                 break;
             }
             else
             {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd str format error, [%s]", cmd);
                 goto errprocess;
             }
         }
