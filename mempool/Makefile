@@ -6,7 +6,7 @@ DEPS = $(addprefix $(ODIR),$(SRCS:.c=.d))
 MAJ ?= 1
 MIN ?= 0
 
-INCLUDE := -I./mempoolExport
+INCLUDE := -I./export
 #DEFINE := -DMEMPOOL_DEBUG
 
 # note -pthread in compling process can trigger GCC to define -D_REENTRANT
@@ -38,13 +38,15 @@ $(ODIR)%.o: %.c
 
 #using '-', indicate that if make don't find the depentfile, don't care the errors,
 #at begining, still don't produce the dependent file
+ifneq ($(MAKECMDGOALS),clean) 
 -include $(DEPS)
+endif
 
 $(ODIR)%.d:%.c
 	test -d $(ODIR) || mkdir -p $(ODIR)
 	@set -e; rm -f $@;
 	gcc -MM  $(CFLAGS)  $< > $@.123456;
-	sed 's,\($*\)\.o[ :]*, $(ODIR)\1.o $@ : ,g' < $@.123456 > $@;
+	sed 's,\($*\)\.o[ :], $(ODIR)\1.o $@ : ,g' < $@.123456 > $@;
 	rm -f $@.123456
 
 
