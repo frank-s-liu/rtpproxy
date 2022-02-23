@@ -26,7 +26,7 @@ $(ODIR)%.d:%.cpp
 	test -d $(ODIR) || mkdir -p $(ODIR)
 	@set -e; rm -f $@;
 	g++ -MM  $(CXXFLAGS)  $< > $@.123456;
-	sed 's,\($*\)\.o[ :]*, $(ODIR)\1.o $@ : ,g' < $@.123456 > $@;
+	sed 's,\($*\)\.o[ :], $(ODIR)\1.o $@ : ,g' < $@.123456 > $@;
 	rm -f $@.123456
 
 
