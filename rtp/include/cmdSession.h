@@ -34,7 +34,8 @@ public:
     virtual ~CmdSession();
     void set_client_addr(char* ip, int port);
     int process_cmd(int cmd);
-    void setSocketInfo(SocketInfo* info);
+    void setSocketInfo(Epoll_data* data);
+    void setCmdStr(const char* cmdStr);
 
 public:
     long  m_call_id;
@@ -43,7 +44,8 @@ public:
 
 private:
     CmdSessionState*    m_css;
-    SocketInfo*         m_socketInfo;
+    Epoll_data*         m_socket_data;
+    char*               m_cmd_str;
     int                 m_direction;
     int                 m_cmd;
     int                 m_client_port;

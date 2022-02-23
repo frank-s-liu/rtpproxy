@@ -34,11 +34,17 @@ int parseBencodeCmd(char* cmdstr)
             cs = new CmdSession();
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);
+            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, cookie is [%s]", sk->m_cookie);
         }
+        else
+        {
+            delete sk;
+        }
+        cs->setCmdStr(cookie+2);
     }
     else
     {
-        
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "new cmd session, no cookie");
     }
     return 0;   
 }
@@ -213,6 +219,12 @@ int tcpRecvBencode(Epoll_data* data)
         {
             int l = strlen(socket->cmd_not_completed);
             l += len;
+            if(l>8192)
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd too long");
+                ret = -1;
+                goto errprocess;
+            }
             cmdnew = new char[l+1];
             snprintf(cmdnew, l+1, "%s%s",socket->cmd_not_completed, buffer); 
             tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd, tcp packet splicing");
