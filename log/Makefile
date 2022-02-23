@@ -3,7 +3,7 @@ ODIR = ./logobjs/
 OBJS = $(addprefix $(ODIR),$(SRCS:.cpp=.o))  
 DEPS = $(addprefix $(ODIR),$(SRCS:.cpp=.d)) 
 
-INCLUDE = -I./logExport -I ../export/utilExport -I ../export/mempoolExport
+INCLUDE = -I./export -I ../export/utilExport -I ../export/mempoolExport
 CXXFLAGS = -g -fPIC -fstack-protector -Wall -Werror=declaration-after-statement  $(INCLUDE) 
 LDFLAGS = -pthread
 
