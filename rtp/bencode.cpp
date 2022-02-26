@@ -40,7 +40,7 @@ int parseBencodeCmd(char* cmdstr)
         {
             delete sk;
         }
-        //cs->setCmdStr(cookie+2);
+        cs->process_cmd(cookie+2);
     }
     else
     {

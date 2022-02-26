@@ -126,7 +126,58 @@ int CmdSession::process_cmd(char* cmdstr)
     int cmd = 0;
     int cmdlen = strlen(cmdstr);
     parsingCmd(cmdstr, cmdlen);
+    
     return m_css->processCMD(cmd);
+}
+
+int CmdSession::getCmd()
+{
+    std::string cmdkey("command");
+    cdmParameters_map::iterator iter = m_cmdparams.find(cmdkey);
+    if(iter != m_cmdparams.end())
+    {
+        std::string* cmd_v = iter->second;
+        if(0 == cmd_v->compare(0,strlen("ping"), "ping"))
+        {
+            return PING_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("answer"), "answer"))
+        {
+            return ANSWER_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("offer"), "offer"))
+        {
+            return OFFER_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("delete"), "delete"))
+        {
+            return DELETE_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("PING"), "PING"))
+        {
+            return PING_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("ANSWER"), "ANSWER"))
+        {
+            return ANSWER_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("OFFER"), "OFFER"))
+        {
+            return OFFER_CMD;
+        }
+        else if(0 == cmd_v->compare(0,strlen("DELETE"), "DELETE"))
+        {
+            return DELETE_CMD;
+        }
+        else
+        {
+            return MAX_CONTROL_CMD;
+        }
+    }
+    else
+    {
+        return MAX_CONTROL_CMD;
+    }
 }
 
 int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
@@ -174,7 +225,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
     return ret;
 }
 
-int CmdSession::getCmdValueByStrKey(const char* key, int keylen)
+int CmdSession::getCmdValueByStrKey(const char* key)
 {
     int ret = 0;
 //retprocess:

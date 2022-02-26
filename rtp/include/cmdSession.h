@@ -13,6 +13,7 @@ typedef enum cmd_type
     OFFER_CMD=0,
     ANSWER_CMD,
     DELETE_CMD,
+    PING_CMD,
     MAX_CONTROL_CMD
 }CONTROL_CMD;
 
@@ -39,7 +40,7 @@ public:
     virtual ~CmdSession();
     int process_cmd(char* cmdstr);
     void setSocketInfo(Epoll_data* data);
-    int getCmdValueByStrKey(const char* key, int keylen);
+    int getCmdValueByStrKey(const char* key);
     
 public:
     SessionKey*         m_session_key;
@@ -47,6 +48,7 @@ public:
 
 private:
     int parsingCmd(char* cmd, int len);
+    int getCmd();
 
 private:
     CmdSessionState*    m_css;
