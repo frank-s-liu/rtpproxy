@@ -14,6 +14,9 @@ typedef enum cmd_type
     ANSWER_CMD,
     DELETE_CMD,
     PING_CMD,
+
+//  internal cmd
+    PING_CHECK_CMD,
     MAX_CONTROL_CMD
 }CONTROL_CMD;
 
@@ -39,6 +42,7 @@ public:
     CmdSession(char* cookie);
     virtual ~CmdSession();
     int process_cmd(char* cmdstr);
+    int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
     int getCmdValueByStrKey(const char* key);
     

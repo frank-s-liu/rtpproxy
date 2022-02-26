@@ -20,6 +20,9 @@ public:
     CmdSessionInitState(CmdSession* cs);
     virtual ~CmdSessionInitState();
     virtual int processCMD(int cmd);
+public:
+    unsigned long m_count;
+
 };
 
 class CmdSessionOfferProcessingState : public CmdSessionState

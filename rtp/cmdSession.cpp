@@ -125,8 +125,14 @@ int CmdSession::process_cmd(char* cmdstr)
 {
     int cmd = 0;
     int cmdlen = strlen(cmdstr);
+    tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd str is[%s]", cmdstr);
     parsingCmd(cmdstr, cmdlen);
-    
+    cmd = getCmd();
+    return m_css->processCMD(cmd);
+}
+
+int CmdSession::process_cmd(int cmd)
+{
     return m_css->processCMD(cmd);
 }
 
@@ -171,11 +177,13 @@ int CmdSession::getCmd()
         }
         else
         {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "unknown cmd, [%s]", cmd_v->c_str());
             return MAX_CONTROL_CMD;
         }
     }
     else
     {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no cmd parameter");
         return MAX_CONTROL_CMD;
     }
 }

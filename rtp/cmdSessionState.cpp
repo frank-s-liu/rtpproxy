@@ -1,8 +1,17 @@
 #include "cmdSessionState.h"
 #include "cmdSession.h"
+#include "log.h"
+#include "args.h"
+#include "task.h"
 
 
 #include <stdlib.h>
+
+static void processPingCheck(void* args)
+{
+    
+}
+
 
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
@@ -16,7 +25,7 @@ CmdSessionState::~CmdSessionState()
 
 CmdSessionInitState::CmdSessionInitState(CmdSession* cs):CmdSessionState(cs)
 {
-
+    m_count = 0;
 }
 
 CmdSessionInitState::~CmdSessionInitState()
@@ -36,6 +45,24 @@ int CmdSessionInitState::processCMD(int cmd)
         }
         case ANSWER_CMD:
         case DELETE_CMD:
+        case PING_CMD:
+        {
+            m_count++;
+            PingCheckArgs* args = new PingCheckArgs();
+            args->ping_recv_count = m_count;
+            args->cs = m_cs;
+            if(0 != add_task(120000, processPingCheck, args))
+            {
+                delete args;
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
+            //m_cs->respPong();
+            break;
+        }
+        case PING_CHECK_CMD:
+        {
+            break;
+        }
         default:
         {
             ret = 1;
