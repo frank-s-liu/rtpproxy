@@ -111,7 +111,38 @@ void CmdSession::setCmdStr(const char* cmdStr)
     snprintf(m_cmd_str, len, "%s", cmdStr);
 }
 
-int CmdSession::process_cmd(int cmd)
+int CmdSession::process_cmd()
 {
+    int cmd = 0;
     return m_css->processCMD(cmd);
 }
+
+int CmdSession::getCmdValueByStrKey(const char* key, int keylen)
+{
+    int ret = 0;
+    char keytmp[160];
+    if(m_cmd_str && keylen < 128)
+    {
+        snprintf(keytmp, sizeof(keytmp), "%d:%s", keylen, key);
+        char* targetkey = strstr(m_cmd_str, keytmp);
+        if(targetkey)
+        {
+        
+        }
+        else
+        {
+            ret = -1;
+            goto retprocess;
+        } 
+    }
+    else
+    {
+        ret = -1;
+        goto retprocess;
+    }
+
+retprocess:
+    return ret;
+}
+
+
