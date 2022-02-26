@@ -156,7 +156,9 @@ int tcpBencodeCheck(char* cmdstr, char** end)
             }
             else if(*p == 'i') // int type value
             {
-                ret = parsingInt(p, &begin);
+                //ret = parsingInt(p, &begin);
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "not support int type value");
+                return FORMAT_ERR;
             }
             else
             {
