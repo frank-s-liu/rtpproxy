@@ -3,6 +3,9 @@
 
 #include "rtpepoll.h"
 
+#include <map>
+#include <string>
+
 class CmdSessionState;
 
 typedef enum cmd_type
@@ -26,30 +29,29 @@ public:
     int           m_cookie_len;
 };
 
+typedef std::map<std::string, std::string*> cdmParameters_map;
+
 class CmdSession
 {
 public:
     CmdSession();
     CmdSession(char* cookie);
     virtual ~CmdSession();
-    //void set_client_addr(char* ip, int port);
-    int process_cmd();
+    int process_cmd(char* cmdstr);
     void setSocketInfo(Epoll_data* data);
-    void setCmdStr(const char* cmdStr);
     int getCmdValueByStrKey(const char* key, int keylen);
     
 public:
-    //long  m_call_id;
     SessionKey*         m_session_key;
      
 
 private:
+    int parsingCmd(char* cmd, int len);
+
+private:
     CmdSessionState*    m_css;
     Epoll_data*         m_socket_data;
-    char*               m_cmd_str;
-    //int                 m_direction;
-    //int                 m_cmd;
-    //int                 m_client_port;
+    cdmParameters_map   m_cmdparams;
 };
 
 #endif

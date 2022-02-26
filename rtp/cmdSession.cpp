@@ -1,10 +1,30 @@
 #include "cmdSession.h"
 #include "cmdSessionState.h"
 #include "hash.h"
+#include "log.h"
 
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
+{
+    char* p = cmdstr;
+    char* keyend = strchr(p, ':');
+    if(keyend)
+    {
+        *keyend = '\0';
+        *keylen = atoi(p);
+        *keyend = ':';
+        *keystart = keyend+1;
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
 
 SessionKey::SessionKey(char* cookie)
 {
@@ -76,10 +96,11 @@ CmdSession::~CmdSession()
         }
         m_socket_data = NULL;
     }
-    if(m_cmd_str)
+    cdmParameters_map::iterator ite;
+    for (ite = m_cmdparams.begin(); ite != m_cmdparams.end(); )
     {
-        delete[] m_cmd_str;
-        m_cmd_str = NULL;
+        delete ite->second;
+        m_cmdparams.erase(ite++);
     }
 }
 
@@ -100,48 +121,63 @@ void CmdSession::setSocketInfo(Epoll_data* data)
     m_socket_data = data;
 }
 
-void CmdSession::setCmdStr(const char* cmdStr)
-{
-    int len = strlen(cmdStr) +1;
-    if(m_cmd_str)
-    {
-        delete m_cmd_str;
-    }
-    m_cmd_str = new char[len];
-    snprintf(m_cmd_str, len, "%s", cmdStr);
-}
-
-int CmdSession::process_cmd()
+int CmdSession::process_cmd(char* cmdstr)
 {
     int cmd = 0;
+    int cmdlen = strlen(cmdstr);
+    parsingCmd(cmdstr, cmdlen);
     return m_css->processCMD(cmd);
+}
+
+int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
+{
+    char* p = cmdstr;
+    char* begin = p;
+    int ret = 0;
+    int parsingCmdLen = 0;
+    while(p && *p!='\0' && parsingCmdLen>0 && parsingCmdLen<cmdlen)
+    {
+        int keylen = 0;
+        ret = parsingBencodeString(p, &keylen, &begin);
+        if(ret == 0)
+        {
+            std::string key(begin, keylen);
+            p = begin+keylen;
+            ret = parsingBencodeString(p, &keylen, &begin);
+            if(ret == 0)
+            {
+                std::string* value = new std::string(begin, keylen);
+                p = begin+keylen;
+                cdmParameters_map::iterator iter = m_cmdparams.find(key);
+                if(iter != m_cmdparams.end())
+                {
+                    std::string* oldvalue = iter->second;
+                    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s modify key %s old value[%s] to new balue [%s]", 
+                                                                  m_session_key->m_cookie, key.c_str(), oldvalue->c_str(), value->c_str());
+                    delete oldvalue;
+                }
+                m_cmdparams[key] = value;
+            }
+            else
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd value failed, cmd [%s], value[%s]", cmdstr, p);
+                break;
+            }
+        }
+        else
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd key failed, cmd [%s] key[%s]", cmdstr, p);
+            break;
+        }
+        parsingCmdLen = p-cmdstr;
+    }
+    return ret;
 }
 
 int CmdSession::getCmdValueByStrKey(const char* key, int keylen)
 {
     int ret = 0;
-    char keytmp[160];
-    if(m_cmd_str && keylen < 128)
-    {
-        snprintf(keytmp, sizeof(keytmp), "%d:%s", keylen, key);
-        char* targetkey = strstr(m_cmd_str, keytmp);
-        if(targetkey)
-        {
-        
-        }
-        else
-        {
-            ret = -1;
-            goto retprocess;
-        } 
-    }
-    else
-    {
-        ret = -1;
-        goto retprocess;
-    }
-
-retprocess:
+//retprocess:
     return ret;
 }
 
