@@ -35,6 +35,7 @@ public:
     CmdSessionOfferProcessingState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessingState();
     virtual int processCMD(int cmd);
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
 };
 
 class CmdSessionOfferProcessedState : public CmdSessionState
@@ -43,6 +44,7 @@ public:
     CmdSessionOfferProcessedState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessedState();
     virtual int processCMD(int cmd);
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
 };
 
 #endif

@@ -101,6 +101,14 @@ CmdSession::~CmdSession()
     }
 }
 
+int CmdSession::sendPongResp()
+{
+    int len = m_session_key->m_cookie_len + 32;
+    char* pongresp = new char[len];
+    snprintf(pongresp, len, "%s d6:result4:ponge", m_session_key->m_cookie);
+    return 0;
+}
+
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
     int ret = m_css->checkPingKeepAlive(pingArg);

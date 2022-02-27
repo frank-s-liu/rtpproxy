@@ -47,6 +47,7 @@ public:
     void setSocketInfo(Epoll_data* data);
     int getCmdValueByStrKey(const char* key);
     int checkPingKeepAlive(PingCheckArgs* pingArg);    
+    int sendPongResp();
 
 public:
     SessionKey*         m_session_key;
