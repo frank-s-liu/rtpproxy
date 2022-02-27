@@ -104,6 +104,11 @@ CmdSession::~CmdSession()
     }
 }
 
+int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
+{
+    return m_css->checkPingKeepAlive(pingArg);
+}
+
 void CmdSession::setSocketInfo(Epoll_data* data)
 {
     if(m_socket_data)

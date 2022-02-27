@@ -7,6 +7,7 @@
 #include <string>
 
 class CmdSessionState;
+class PingCheckArgs;
 
 typedef enum cmd_type
 {
@@ -45,7 +46,8 @@ public:
     int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
     int getCmdValueByStrKey(const char* key);
-    
+    int checkPingKeepAlive(PingCheckArgs* pingArg);    
+
 public:
     SessionKey*         m_session_key;
      

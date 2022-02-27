@@ -36,6 +36,15 @@ CmdSessionInitState::~CmdSessionInitState()
 
 }
 
+int CmdSessionInitState::checkPingKeepAlive(PingCheckArgs* pingArg)
+{
+    if(pingArg->ping_recv_count == m_count)
+    {
+        return -1;
+    }
+    return 0;
+}
+
 int CmdSessionInitState::processCMD(int cmd)
 {
     int ret = 0;
@@ -60,10 +69,6 @@ int CmdSessionInitState::processCMD(int cmd)
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             //m_cs->respPong();
-            break;
-        }
-        case PING_CHECK_CMD:
-        {
             break;
         }
         default:

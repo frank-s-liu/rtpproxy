@@ -35,7 +35,7 @@ public:
         CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
         if(cs)
         {
-            return cs->process_cmd(cmdtype);
+            return cs->checkPingKeepAlive(this);
         }
         else
         {

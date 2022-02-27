@@ -2,6 +2,8 @@
 #define __CMD_SESSION_STATE_H__
 
 class CmdSession;
+class PingCheckArgs;
+
 
 class CmdSessionState
 {
@@ -9,6 +11,7 @@ public:
     CmdSessionState(CmdSession* cs);
     virtual ~CmdSessionState();
     virtual int processCMD(int cmd) = 0;
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg) = 0;
 
 protected:
     CmdSession* m_cs;
@@ -20,6 +23,7 @@ public:
     CmdSessionInitState(CmdSession* cs);
     virtual ~CmdSessionInitState();
     virtual int processCMD(int cmd);
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
 public:
     unsigned long m_count;
 
