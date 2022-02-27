@@ -65,6 +65,7 @@ ControlProcess::ControlProcess():Thread("rtpCtl")
     m_fd_socket_num = 0;
     m_fd_socketInfo = NULL;
     m_epoll_socket_data = NULL;
+    m_pipe_timer_events = initQ(10);
 }
 
 ControlProcess::~ControlProcess()
@@ -86,6 +87,7 @@ ControlProcess::~ControlProcess()
     }
     delete[] m_fd_socketInfo;
     delete[] m_epoll_socket_data;
+    
 }
 
 void* ControlProcess::run()
@@ -233,6 +235,36 @@ void* ControlProcess::run()
                     else if(type == RTP_RES_CMD_SOCKET_UDP_FD)
                     {
 
+                    }
+                    else if(type == RTP_EPOLL_PIPE_FD)
+                    {
+                        char buf[1] = {1};
+                        int len = read(m_fd_pipe[0], buf, sizeof(buf));
+                        if(len > 0)
+                        {
+                            //Endpoint* u = NULL;
+                            //if(buf[0] == 'a')
+                            //{
+                                //pop(m_user_q, (void**)&u);
+                                //if(u)
+                                //{
+                                    //u->set_epoll_fd_type(SOCKET_TYPE);
+                                    //u->addSock2Epoll_recv(m_ep_fd);
+                                //}
+                                //else
+                                //{
+                                //    tracelog("SIP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, pop user is null");
+                                //}
+                            //}
+                        }       
+                        else if(len == 0)
+                        {       
+                            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknown issue, read len is 0");
+                        }           
+                        else    
+                        {       
+                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "pipe read error, no. is %d", errno);
+                        }
                     }
                 }
                 else if( (events[i].events & EPOLLERR) ||

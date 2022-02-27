@@ -36,9 +36,19 @@ enum socket_type
     RTCP_RECV_SOCKET_FD,
     RTCP_SEND_SOCKET_FD,
     RTP_STATISTICS_SOCKET_FD,
+
+// none socket type
     RTP_EPOLL_PIPE_FD,
     RTP_TIMER_FD,
     RTP_MAX_FD_TYPE
+};
+
+
+// must be less 255, unsigned char
+enum pipe_event_type
+{
+    RTP_TIMER_EVENT = 0,
+    RTP_EVENT_MAX_TYPE
 };
 
 enum transport_type
