@@ -1,5 +1,6 @@
 #include "cmdSessionState.h"
 #include "cmdSession.h"
+#include "rtpControlProcess.h"
 #include "log.h"
 #include "args.h"
 #include "task.h"
@@ -7,9 +8,11 @@
 
 #include <stdlib.h>
 
+// timer thread call back
 static void processPingCheck(void* args)
 {
-    
+    PingCheckArgs* pingArg = (PingCheckArgs*)args;
+    ControlProcess::getInstance()->add_pipe_timer_event(pingArg);
 }
 
 
@@ -50,6 +53,7 @@ int CmdSessionInitState::processCMD(int cmd)
             m_count++;
             PingCheckArgs* args = new PingCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->ping_recv_count = m_count;
+            args->cmdtype = PING_CHECK_CMD;
             if(0 != add_task(120000, processPingCheck, args))
             {
                 delete args;

@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <string.h>
 
+ControlProcess* ControlProcess::s_instance = NULL;
+
 static void setnoblock(int fd)
 {
     int old_option = fcntl(fd, F_GETFL);
@@ -98,6 +100,15 @@ ControlProcess::~ControlProcess()
         free(m_pipe_events);
         m_pipe_events = NULL;
     }
+}
+
+ControlProcess* ControlProcess::getInstance()
+{
+    if(!s_instance)
+    {
+        s_instance = new ControlProcess();
+    }
+    return s_instance;
 }
 
 int ControlProcess::add_pipe_timer_event(Args* args)
@@ -300,7 +311,7 @@ void* ControlProcess::run()
                                     case RTP_TIMER_EVENT:
                                     {
                                         Args* arg = pipeArg->args_data;
-                                        arg->processCmd(pipeArg->cmd);
+                                        arg->processCmd();
                                         delete pipeArg;
                                         break;
                                     }

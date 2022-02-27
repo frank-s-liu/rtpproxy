@@ -10,7 +10,7 @@ class Args
 {
 public:
     virtual ~Args(){};
-    virtual int processCmd(int cmdtype) = 0;
+    virtual int processCmd() = 0;
 };
 
 class PingCheckArgs : public Args
@@ -30,7 +30,7 @@ public:
            cs_cookie = NULL;
        }
     }
-    virtual int processCmd(int cmdtype)
+    virtual int processCmd()
     {
         CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
         if(cs)
@@ -46,6 +46,7 @@ public:
 public:
     unsigned long      ping_recv_count;
     char*              cs_cookie;
+    unsigned char      cmdtype;
 };
 
 class PipeEventArgs
@@ -63,7 +64,6 @@ public:
 public:
     Args*                   args_data;
     unsigned char           event_type;
-    unsigned char           cmd;
 };
 
 #endif

@@ -17,13 +17,15 @@ public:
     virtual void doStop();
     virtual void* run();
     int add_pipe_timer_event(Args* args);
+    static ControlProcess* getInstance();
 
 private:
-    int             m_fd_pipe[2];
-    SocketInfo*     m_fd_socketInfo;
-    Epoll_data*     m_epoll_socket_data;
-    timerEvents*    m_pipe_events;
-    unsigned char   m_fd_socket_num;
+    int                           m_fd_pipe[2];
+    SocketInfo*                   m_fd_socketInfo;
+    Epoll_data*                   m_epoll_socket_data;
+    timerEvents*                  m_pipe_events;
+    static ControlProcess*        s_instance;
+    unsigned char                 m_fd_socket_num;
 };
 
 #endif
