@@ -54,6 +54,14 @@ int CmdSessionManager::putinCmdSession(CmdSession* cs)
     return 0;
 }
  
+CmdSession* CmdSessionManager::getCmdSession(char* key)
+{
+    SessionKey* sk = new SessionKey(key);
+    CmdSession* cs = getCmdSession(sk);
+    delete sk;
+    return cs;
+}
+
 CmdSession* CmdSessionManager::getCmdSession(SessionKey* sk)
 {
     cdm_sessions_map::iterator iter = m_cmdSessionsMap.find(sk);

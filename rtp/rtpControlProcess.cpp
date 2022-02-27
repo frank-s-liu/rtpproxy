@@ -66,7 +66,7 @@ ControlProcess::ControlProcess():Thread("rtpCtl")
     m_fd_socket_num = 0;
     m_fd_socketInfo = NULL;
     m_epoll_socket_data = NULL;
-    m_pipe_timer_events = initQ(10);
+    m_pipe_events = initQ(10);
 }
 
 ControlProcess::~ControlProcess()
@@ -88,16 +88,55 @@ ControlProcess::~ControlProcess()
     }
     delete[] m_fd_socketInfo;
     delete[] m_epoll_socket_data;
-    if(m_pipe_timer_events)
+    if(m_pipe_events)
     {
-        PipeTimerEventArgs* args = NULL;
-        while(0 == pop(m_pipe_timer_events,(void**)&args))
+        PipeEventArgs* args = NULL;
+        while(0 == pop(m_pipe_events,(void**)&args))
         {
             delete args;
         }
-        free(m_pipe_timer_events);
-        m_pipe_timer_events = NULL;
-    }   
+        free(m_pipe_events);
+        m_pipe_events = NULL;
+    }
+}
+
+int ControlProcess::add_pipe_timer_event(Args* args)
+{
+    int ret = 0;
+    if(!m_isStop)
+    {
+        PipeEventArgs* timer_event   = new PipeEventArgs();
+        timer_event->args_data       = args;
+        timer_event->event_type      = RTP_TIMER_EVENT;
+        if(push(m_pipe_events, timer_event))
+        {
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "pipe_events queue is full");
+            delete timer_event;
+            ret = -1;
+            goto retprocess;
+        }
+        else
+        {
+            char buf[1] = {'a'};
+            int len = write(m_fd_pipe[1], buf, sizeof(buf));
+            if(len <=0 )
+            {
+                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "write pipe failed, errno is %d", errno);
+                ret = -1;
+                goto retprocess;
+            }
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd ControlProcess thread has exit, don't add event");
+        delete args;
+        ret = -1;
+        goto retprocess;
+    }
+
+retprocess:
+    return ret;
 }
 
 void* ControlProcess::run()
@@ -252,20 +291,29 @@ void* ControlProcess::run()
                         int len = read(m_fd_pipe[0], buf, sizeof(buf));
                         if(len > 0)
                         {
-                            //Endpoint* u = NULL;
-                            //if(buf[0] == 'a')
-                            //{
-                                //pop(m_user_q, (void**)&u);
-                                //if(u)
-                                //{
-                                    //u->set_epoll_fd_type(SOCKET_TYPE);
-                                    //u->addSock2Epoll_recv(m_ep_fd);
-                                //}
-                                //else
-                                //{
-                                //    tracelog("SIP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, pop user is null");
-                                //}
-                            //}
+                            PipeEventArgs* pipeArg = NULL;
+                            if(0 == pop(m_pipe_events,(void**)&pipeArg))
+                            {
+                                int events = pipeArg->event_type;
+                                switch (events)
+                                {
+                                    case RTP_TIMER_EVENT:
+                                    {
+                                        Args* arg = pipeArg->args_data;
+                                        arg->processCmd(pipeArg->cmd);
+                                        delete pipeArg;
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknown issue, this must not happen");
+                            }
                         }       
                         else if(len == 0)
                         {       

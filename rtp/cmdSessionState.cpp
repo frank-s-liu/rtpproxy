@@ -48,9 +48,8 @@ int CmdSessionInitState::processCMD(int cmd)
         case PING_CMD:
         {
             m_count++;
-            PingCheckArgs* args = new PingCheckArgs();
+            PingCheckArgs* args = new PingCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->ping_recv_count = m_count;
-            args->cs = m_cs;
             if(0 != add_task(120000, processPingCheck, args))
             {
                 delete args;

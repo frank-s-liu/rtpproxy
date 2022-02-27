@@ -22,6 +22,7 @@ public:
     virtual ~CmdSessionManager();
     int putinCmdSession(CmdSession* cs);
     CmdSession* getCmdSession(SessionKey* sk);
+    CmdSession* getCmdSession(char* key);
     static CmdSessionManager* getInstance();
 private:
     CmdSessionManager();

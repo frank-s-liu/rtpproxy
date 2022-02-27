@@ -44,7 +44,6 @@ enum socket_type
 };
 
 
-// must be less 255, unsigned char
 enum pipe_event_type
 {
     RTP_TIMER_EVENT = 0,

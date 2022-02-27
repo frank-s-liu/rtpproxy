@@ -2,33 +2,68 @@
 #define _RTPPROXY_ARGS_H__
 
 #include "cmdSession.h"
+#include "cmdSessionManager.h"
+
+#include <stdio.h>
 
 class Args
 {
-    
+public:
+    virtual ~Args(){};
+    virtual int processCmd(int cmdtype) = 0;
 };
 
 class PingCheckArgs : public Args
 {
 public:
-    virtual ~PingCheckArgs(){}; // don't need to delete cm here
+    PingCheckArgs(char* cs_key, int len)
+    {
+        cs_cookie = new char[len+1];
+        snprintf(cs_cookie, len+1, "%s", cs_key);
+    }
+
+    virtual ~PingCheckArgs()
+    {
+       if(cs_cookie)
+       {
+           delete[] cs_cookie;
+           cs_cookie = NULL;
+       }
+    }
+    virtual int processCmd(int cmdtype)
+    {
+        CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
+        if(cs)
+        {
+            return cs->process_cmd(cmdtype);
+        }
+        else
+        {
+            return -1;
+        }
+    }
 
 public:
     unsigned long      ping_recv_count;
-    CmdSession*        cs;
+    char*              cs_cookie;
 };
 
-class PipeTimerEventArgs
+class PipeEventArgs
 {
 public:
-    virtual ~PipeTimerEventArgs()
+    virtual ~PipeEventArgs()
     {
-        delete args_data;
+        if(args_data)
+        {
+            delete args_data;
+            args_data = NULL;
+        }
     }
 
 public:
     Args*                   args_data;
     unsigned char           event_type;
+    unsigned char           cmd;
 };
 
 #endif
