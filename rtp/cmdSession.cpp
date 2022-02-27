@@ -86,11 +86,8 @@ CmdSession::~CmdSession()
     }
     if(m_socket_data)
     {
-        if(m_socket_data->session_count > 1)
-        {
-            m_socket_data->session_count --;
-        }
-        else
+        m_socket_data->session_count --;
+        if(m_socket_data->session_count == 0)
         {
             delete m_socket_data;
         }
@@ -106,22 +103,23 @@ CmdSession::~CmdSession()
 
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
-    return m_css->checkPingKeepAlive(pingArg);
+    int ret = m_css->checkPingKeepAlive(pingArg);
+    if(0 != ret)
+    {
+        m_socket_data->fd_state = CLOSED;
+    }
+    return ret;
 }
 
 void CmdSession::setSocketInfo(Epoll_data* data)
 {
     if(m_socket_data)
     {
-        if(m_socket_data->session_count > 1)
-        {
-            m_socket_data->session_count --;
-        }
-        else
+        m_socket_data->session_count --;
+        if(0 == m_socket_data->session_count)
         {
             delete m_socket_data;
         }
-        
     }
     m_socket_data = data;
 }

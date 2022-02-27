@@ -264,10 +264,10 @@ void* ControlProcess::run()
                             Epoll_data* tcpclientdata = new Epoll_data();
                             SocketInfo* socketinfo = new SocketInfo();
                             socketinfo->fd = new_client_fd;
-                            //socketinfo->fd_tcp_state = CONNECTED;
                             socketinfo->cmd_not_completed = NULL;
                             tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
-                            tcpclientdata->data = (void*)socketinfo;
+                            tcpclientdata->data = socketinfo;
+                            tcpclientdata->fd_state = CONNECTED;
                             setnoblock(new_client_fd);
                             setkeepalive(new_client_fd, 3600);
                             event.data.ptr = (void*)tcpclientdata;
@@ -362,6 +362,7 @@ void* ControlProcess::run()
                         else
                         {
                             data->data = NULL;
+                            data->fd_state = CLOSED;
                         }
                         break;// must beak and start a new epoll
                     }

@@ -2,27 +2,32 @@
 #define __RTP_EPOLL_DATA_H__
 
 #include <netinet/in.h>
+#include <stdlib.h>
 
-typedef struct epolldata
-{
-    void* data;  //socket info
-    int   session_count;
-    char  epoll_fd_type;
-}Epoll_data;
 
 typedef struct socketinfo
 {
     char*                cmd_not_completed;
     int                  fd;
-    //unsigned char        fd_tcp_state; // 0: closed 1: connected 2: listened
 }SocketInfo;
+
+class Epoll_data
+{
+public:
+    virtual ~Epoll_data();
+    int rm_fd_from_epoll();
+public:
+    socketinfo*          data;  //socket info
+    int                  session_count;
+    int                  epoll_fd;
+    char                 epoll_fd_type;
+    unsigned char        fd_state; 
+};
 
 typedef enum socketstate
 {
     CLOSED = 0,
-    CONNECTED,
-    LISTENED,
-    UDP,
+    CONNECTED, // just mean fd is OK, tcp mean TCP connected, udp means not closed.
     MAX
 }SOCKET_STATE;
 

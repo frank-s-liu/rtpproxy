@@ -75,3 +75,15 @@ CmdSession* CmdSessionManager::getCmdSession(SessionKey* sk)
     }
     return NULL;
 }
+
+CmdSession* CmdSessionManager::popCmdSession(SessionKey* sk)
+{
+    CmdSession* cs = NULL;
+    cdm_sessions_map::iterator iter = m_cmdSessionsMap.find(sk);
+    if(iter != m_cmdSessionsMap.end())
+    {
+        cs = iter->second;
+        m_cmdSessionsMap.erase(iter);
+    }
+    return cs;
+}

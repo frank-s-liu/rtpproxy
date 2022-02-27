@@ -32,10 +32,18 @@ public:
     }
     virtual int processCmd()
     {
+        int ret = 0;
         CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
         if(cs)
         {
-            return cs->checkPingKeepAlive(this);
+             ret = cs->checkPingKeepAlive(this);
+             if(0 != ret)
+             {
+                 CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
+                 delete cs;
+                 return -1;
+             }
+             return 0;
         }
         else
         {

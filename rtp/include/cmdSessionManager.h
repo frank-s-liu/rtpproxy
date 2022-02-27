@@ -23,6 +23,7 @@ public:
     int putinCmdSession(CmdSession* cs);
     CmdSession* getCmdSession(SessionKey* sk);
     CmdSession* getCmdSession(char* key);
+    CmdSession* popCmdSession(SessionKey* sk);
     static CmdSessionManager* getInstance();
 private:
     CmdSessionManager();
