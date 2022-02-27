@@ -20,12 +20,15 @@ public:
 
 class PipeTimerEventArgs
 {
-    Args*                   args_data;
-    unsigned char           event_type;
+public:
     virtual ~PipeTimerEventArgs()
     {
         delete args_data;
     }
+
+public:
+    Args*                   args_data;
+    unsigned char           event_type;
 };
 
 #endif

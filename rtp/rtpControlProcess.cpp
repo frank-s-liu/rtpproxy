@@ -2,6 +2,7 @@
 #include "rtpConfiguration.h"
 #include "log.h"
 #include "bencode.h"
+#include "args.h"
 
 #include <sys/types.h>
 #include <sys/epoll.h>
@@ -87,7 +88,16 @@ ControlProcess::~ControlProcess()
     }
     delete[] m_fd_socketInfo;
     delete[] m_epoll_socket_data;
-    
+    if(m_pipe_timer_events)
+    {
+        PipeTimerEventArgs* args = NULL;
+        while(0 == pop(m_pipe_timer_events,(void**)&args))
+        {
+            delete args;
+        }
+        free(m_pipe_timer_events);
+        m_pipe_timer_events = NULL;
+    }   
 }
 
 void* ControlProcess::run()
