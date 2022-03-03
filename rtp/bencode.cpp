@@ -2,6 +2,7 @@
 #include "log.h"
 #include "cmdSession.h"
 #include "cmdSessionManager.h"
+#include "bencode.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,15 +10,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-typedef enum bencode_error
-{
-    SUCCESS = 0,
-    FORMAT_ERR,
-    TOO_LONG_STR,
-    BENCODE_NOT_COMPLETED,
-    BENCODE_SPLICE,
-    BENCODE_ERRNO_MAX
-}BENCODE_ERRNO;
 
 int parseBencodeCmd(char* cmdstr)
 {
@@ -130,7 +122,7 @@ int parsingInt(char* bencode_str_start, char** bencode_str_end)
     return SUCCESS;
 }
 
-int tcpBencodeCheck(char* cmdstr, char** end)
+int bencodeCheck(char* cmdstr, char** end)
 {
     char* p = cmdstr;
     char* begin = p;
@@ -200,89 +192,4 @@ int tcpBencodeCheck(char* cmdstr, char** end)
     return SUCCESS;
 }
 
-int tcpRecvBencode(Epoll_data* data)
-{
-    char buffer[2048];
-    char* cmd = NULL;
-    char* cmdnew = NULL;
-    int len = 0;
-    int ret = 0;
-    SocketInfo* socket = (SocketInfo*)data->data;
-    len = recv(socket->fd, buffer, sizeof(buffer)-1, 0);
-    if(len > 0)
-    {
-        char* end = NULL;
-        buffer[len] = '\0';
-        if(!socket->cmd_not_completed)
-        {
-            cmd = buffer;
-        }
-        else
-        {
-            int l = strlen(socket->cmd_not_completed);
-            l += len;
-            if(l>8192)
-            {
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd too long");
-                ret = -1;
-                goto errprocess;
-            }
-            cmdnew = new char[l+1];
-            snprintf(cmdnew, l+1, "%s%s",socket->cmd_not_completed, buffer); 
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd, tcp packet splicing");
-            cmd = cmdnew;
-            delete[] socket->cmd_not_completed;
-            socket->cmd_not_completed = NULL;
-        }
-        end = cmd;
-
-        while(end && *end != '\0')
-        {
-            ret = tcpBencodeCheck(cmd, &end);
-            if(ret == SUCCESS)
-            {
-                cmd = end;
-                continue;
-            }
-            else if(ret == BENCODE_NOT_COMPLETED)
-            {
-                int len = strlen(cmd);
-                socket->cmd_not_completed = new char[len+1];
-                snprintf(socket->cmd_not_completed, len+1, "%s", cmd);
-                tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "recv bencode cmd not completed");
-                break;
-            }
-            else
-            {
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd str format error, [%s]", cmd);
-                goto errprocess;
-            }
-        }
-        goto retprocess;
-    }
-    else if(len == 0)
-    {
-        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
-        ret = -1;
-        goto errprocess;
-    }
-    else
-    {
-        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
-        ret = -1;
-        goto errprocess;
-    }
-
-errprocess:
-    close(socket->fd);
-    socket->fd = -1;
-    //socket->fd_tcp_state = CLOSED;
-retprocess:
-    if(cmdnew)
-    {
-        delete[] cmdnew;
-        cmdnew = NULL;
-    }
-    return ret;
-}
 

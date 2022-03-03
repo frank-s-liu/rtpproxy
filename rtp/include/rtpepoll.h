@@ -5,31 +5,59 @@
 #include <stdlib.h>
 
 
-typedef struct socketinfo
+class SocketInfo
 {
+public:
+    SocketInfo();
+    virtual ~SocketInfo();
+    virtual int sendMsg(char* buf, int len) = 0;    
+    virtual int recvBencode() = 0;
+
+public:
+    int                  m_fd;
+};
+
+class TcpSocketInfo: public SocketInfo
+{
+public:
+    TcpSocketInfo();
+    virtual ~TcpSocketInfo();
+    virtual int sendMsg(char* buf, int len);
+    virtual int recvBencode();
+
+public:
     char*                cmd_not_completed;
-    int                  fd;
-}SocketInfo;
+};
+
+class UdpSocketInfo : public SocketInfo
+{
+public:
+    UdpSocketInfo();
+    virtual ~UdpSocketInfo();
+    virtual int sendMsg(char* buf, int len);
+    virtual int recvBencode();
+
+public:
+    
+
+};
+
 
 class Epoll_data
 {
 public:
     virtual ~Epoll_data();
     int rm_fd_from_epoll();
+    int sendMsg(char* buf, int len);
+    int recvBencodeCmd();
+
 public:
-    socketinfo*          data;  //socket info
-    int                  session_count;
-    int                  epoll_fd;
-    char                 epoll_fd_type;
-    unsigned char        fd_state; 
+    SocketInfo*          m_socket;  //socket info
+    int                  m_session_count;
+    int                  m_epoll_fd;
+    unsigned char        m_epoll_fd_type;
 };
 
-typedef enum socketstate
-{
-    CLOSED = 0,
-    CONNECTED, // just mean fd is OK, tcp mean TCP connected, udp means not closed.
-    MAX
-}SOCKET_STATE;
 
 enum socket_type
 {
@@ -47,8 +75,6 @@ enum socket_type
     RTP_TIMER_FD,
     RTP_MAX_FD_TYPE
 };
-
-
 
 enum transport_type
 {

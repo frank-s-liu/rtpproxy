@@ -86,8 +86,8 @@ CmdSession::~CmdSession()
     }
     if(m_socket_data)
     {
-        m_socket_data->session_count --;
-        if(m_socket_data->session_count == 0)
+        m_socket_data->m_session_count --;
+        if(m_socket_data->m_session_count == 0)
         {
             delete m_socket_data;
         }
@@ -104,18 +104,21 @@ CmdSession::~CmdSession()
 int CmdSession::sendPongResp()
 {
     int len = m_session_key->m_cookie_len + 32;
+    int ret = 0;
     char* pongresp = new char[len];
     snprintf(pongresp, len, "%s d6:result4:ponge", m_session_key->m_cookie);
-    return 0;
+    ret = sendcmd(pongresp);
+    return ret;
+}
+
+int CmdSession::sendcmd(char* cmdmsg)
+{
+return 0;   
 }
 
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
     int ret = m_css->checkPingKeepAlive(pingArg);
-    if(0 != ret)
-    {
-        m_socket_data->fd_state = CLOSED;
-    }
     return ret;
 }
 
@@ -123,13 +126,14 @@ void CmdSession::setSocketInfo(Epoll_data* data)
 {
     if(m_socket_data)
     {
-        m_socket_data->session_count --;
-        if(0 == m_socket_data->session_count)
+        m_socket_data->m_session_count --;
+        if(0 == m_socket_data->m_session_count)
         {
             delete m_socket_data;
         }
     }
     m_socket_data = data;
+    m_socket_data->m_session_count++;
 }
 
 int CmdSession::process_cmd(char* cmdstr)

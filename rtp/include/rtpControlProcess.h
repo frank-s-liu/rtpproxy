@@ -21,7 +21,7 @@ public:
 
 private:
     int                           m_fd_pipe[2];
-    SocketInfo*                   m_fd_socketInfo;
+    SocketInfo**                  m_fd_socketInfo;
     Epoll_data*                   m_epoll_socket_data;
     timerEvents*                  m_pipe_events;
     static ControlProcess*        s_instance;

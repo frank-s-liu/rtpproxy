@@ -85,8 +85,7 @@ ControlProcess::~ControlProcess()
     }
     for(int i=0; i<m_fd_socket_num; i++)
     {
-        close(m_fd_socketInfo[i].fd);
-        m_fd_socketInfo[i].fd = -1;
+        delete m_fd_socketInfo[i];
     }
     delete[] m_fd_socketInfo;
     delete[] m_epoll_socket_data;
@@ -157,15 +156,15 @@ void* ControlProcess::run()
     Epoll_data pipe_data;
     RTP_CONFIG* rtpconfig = getRtpConf();
     m_fd_socket_num = rtpconfig->rtp_ctl_interfaces_num;
-    m_fd_socketInfo = new SocketInfo[m_fd_socket_num];
+    m_fd_socketInfo = new SocketInfo* [m_fd_socket_num];
     m_epoll_socket_data = new Epoll_data[m_fd_socket_num];
 
     {
         struct epoll_event event;
         int ret;
         memset(&event, 0, sizeof(event));
-        pipe_data.epoll_fd_type = RTP_EPOLL_PIPE_FD;
-        pipe_data.data = NULL;
+        pipe_data.m_epoll_fd_type = RTP_EPOLL_PIPE_FD;
+        pipe_data.m_socket = NULL;
         event.data.ptr = &pipe_data;
         event.events = EPOLLIN;
         ret = epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_fd_pipe[0], &event);
@@ -185,9 +184,11 @@ void* ControlProcess::run()
             if(RTP_CTL_TCP == rtpconfig->rtpctl_interfaces[i].transport)
             {
                 int reuse_addr = 1;
-                m_fd_socketInfo[i].fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                m_fd_socketInfo[i] = new TcpSocketInfo();
+                m_fd_socketInfo[i]->m_fd = fd;
                 // when restart service, if socket is in timewait state, maybe something wrong, So need to set SO_REUSEADDR.
-                if(-1 == setsockopt(m_fd_socketInfo[i].fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)))
+                if(-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)))
                 {
                     tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "set option of listen socket failed, err no is %d", errno);
                     assert(0);
@@ -195,7 +196,9 @@ void* ControlProcess::run()
             }
             else if(RTP_CTL_UDP == rtpconfig->rtpctl_interfaces[i].transport)
             {
-                m_fd_socketInfo[i].fd = socket(AF_INET, SOCK_DGRAM, 0);
+                int fd = socket(AF_INET, SOCK_DGRAM, 0);
+                m_fd_socketInfo[i] = new UdpSocketInfo();
+                m_fd_socketInfo[i]->m_fd = fd;
             }
             else
             {
@@ -206,29 +209,28 @@ void* ControlProcess::run()
             server.sin_family = AF_INET;
             server.sin_addr.s_addr = inet_addr(rtpconfig->rtpctl_interfaces[i].ip);
             server.sin_port = htons(port);
-            if(-1 == bind(m_fd_socketInfo[i].fd, (struct sockaddr*)&server, sizeof(server)))
+            if(-1 == bind(m_fd_socketInfo[i]->m_fd, (struct sockaddr*)&server, sizeof(server)))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "bind rtp control listen socket failed, err no is %d", errno);
                 assert(0);
             }
             if(RTP_CTL_TCP == rtpconfig->rtpctl_interfaces[i].transport)
             {
-                if(-1 == listen(m_fd_socketInfo[i].fd, SOMAXCONN))
+                if(-1 == listen(m_fd_socketInfo[i]->m_fd, SOMAXCONN))
                 {
                     tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, " listen on listen_socket failed, err no is %d", errno);
                     assert(0);
                 }
-                //m_fd_socketInfo[i].fd_tcp_state = LISTENED;
-                m_epoll_socket_data[i].epoll_fd_type = RTP_RES_CMD_SOCKET_ACCEPT_FD;
+                m_epoll_socket_data[i].m_epoll_fd_type = RTP_RES_CMD_SOCKET_ACCEPT_FD;
             }
             else
             {
-                m_epoll_socket_data[i].epoll_fd_type = RTP_RES_CMD_SOCKET_UDP_FD;
+                m_epoll_socket_data[i].m_epoll_fd_type = RTP_RES_CMD_SOCKET_UDP_FD;
             }
-            m_epoll_socket_data[i].data = &m_fd_socketInfo[i];
+            m_epoll_socket_data[i].m_socket = m_fd_socketInfo[i];
             event.data.ptr = &m_epoll_socket_data[i];
             event.events = EPOLLIN;
-            if(-1 == epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_fd_socketInfo[i].fd, &event))
+            if(-1 == epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_fd_socketInfo[i]->m_fd, &event))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "epoll_ctl EPOLL_CTL_ADD cmd socket error %d, ip %s", errno, rtpconfig->rtpctl_interfaces[i].ip);
                 assert(0);
@@ -248,26 +250,24 @@ void* ControlProcess::run()
             for(int i = 0; i < fd_cnt; i++)
             {
                 Epoll_data* data = (Epoll_data*)events[i].data.ptr;
-                int type = data->epoll_fd_type;
+                int type = data->m_epoll_fd_type;
                 if(events[i].events & EPOLLIN)
                 {
                     if(type == RTP_RES_CMD_SOCKET_ACCEPT_FD)
                     {
                         int new_client_fd = -1;
-                        SocketInfo* srvSocketInfo = (SocketInfo*)data->data;
+                        SocketInfo* srvSocketInfo = (SocketInfo*)data->m_socket;
                         struct sockaddr_in client_addr;
                         socklen_t cliaddr_len = sizeof(client_addr);
-                        new_client_fd = accept(srvSocketInfo->fd, (struct sockaddr*)&client_addr, &cliaddr_len);
+                        new_client_fd = accept(srvSocketInfo->m_fd, (struct sockaddr*)&client_addr, &cliaddr_len);
                         if(-1 != new_client_fd)
                         {
                             struct epoll_event event;
                             Epoll_data* tcpclientdata = new Epoll_data();
-                            SocketInfo* socketinfo = new SocketInfo();
-                            socketinfo->fd = new_client_fd;
-                            socketinfo->cmd_not_completed = NULL;
-                            tcpclientdata->epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
-                            tcpclientdata->data = socketinfo;
-                            tcpclientdata->fd_state = CONNECTED;
+                            SocketInfo* socketinfo = new TcpSocketInfo();
+                            socketinfo->m_fd = new_client_fd;
+                            tcpclientdata->m_epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
+                            tcpclientdata->m_socket = socketinfo;
                             setnoblock(new_client_fd);
                             setkeepalive(new_client_fd, 3600);
                             event.data.ptr = (void*)tcpclientdata;
@@ -287,14 +287,9 @@ void* ControlProcess::run()
                             break;
                         }
                     }
-                    else if(type == RTP_RES_CMD_SOCKET_TCP_FD)
+                    else if(type == RTP_RES_CMD_SOCKET_TCP_FD || type==RTP_RES_CMD_SOCKET_UDP_FD)
                     {
-                        //SocketInfo* socketinfo = (SocketInfo*)data->data;
-                        tcpRecvBencode(data);
-                    }
-                    else if(type == RTP_RES_CMD_SOCKET_UDP_FD)
-                    {
-
+                        data->recvBencodeCmd();
                     }
                     else if(type == RTP_EPOLL_PIPE_FD)
                     {
@@ -334,23 +329,14 @@ void* ControlProcess::run()
                     }
                     else// maybe client disconnect with server becauseof network issue, So when srv send keepalive msg to client, may got this error
                     {
-                        SocketInfo* info = (SocketInfo*)data->data;
-                        epoll_ctl(ep_fd, EPOLL_CTL_DEL, info->fd, NULL);
-                        close(info->fd);
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
-                        if(info->cmd_not_completed)
-                        {
-                            delete[] info->cmd_not_completed;
-                        }
-                        delete info;
-                        if(0 == data->session_count)
+                        data->rm_fd_from_epoll();
+                        delete data->m_socket;
+                        data->m_socket = NULL;
+                        data->m_session_count--;
+                        if(0 == data->m_session_count)
                         {
                             delete data;
-                        }
-                        else
-                        {
-                            data->data = NULL;
-                            data->fd_state = CLOSED;
                         }
                         break;// must beak and start a new epoll
                     }

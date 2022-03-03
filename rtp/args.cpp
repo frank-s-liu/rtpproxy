@@ -39,6 +39,44 @@ int PingCheckArgs::processCmd()
     }        
 }
 
+
+SendCMDArgs::SendCMDArgs(char* cs_key, int len)
+{  
+    cs_cookie = new char[len+1];
+    snprintf(cs_cookie, len+1, "%s", cs_key);
+}
+
+SendCMDArgs:: ~SendCMDArgs()
+{
+   if(cs_cookie)
+   {
+       delete[] cs_cookie;
+       cs_cookie = NULL;
+   }   
+}
+
+int SendCMDArgs::processCmd()
+{
+    int ret = 0;
+    CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
+    if(cs)
+    {  
+         //ret = cs->checkPingKeepAlive(this);
+         //if(0 != ret)
+         //{
+         //    CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
+         //    delete cs;
+         //    return -1;
+         //}
+         //return 0;
+    }    
+    else 
+    {        
+        return -1;
+    }
+    return ret;        
+}
+
 PipeEventArgs::~PipeEventArgs()
 {
     if(args_data)  

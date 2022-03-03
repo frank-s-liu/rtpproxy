@@ -5,6 +5,7 @@
 
 #include <map>
 #include <string>
+#include <list>
 
 class CmdSessionState;
 class PingCheckArgs;
@@ -48,6 +49,8 @@ public:
     int getCmdValueByStrKey(const char* key);
     int checkPingKeepAlive(PingCheckArgs* pingArg);    
     int sendPongResp();
+    int sendcmd(char* cmdmsg);
+    int sendcmd(std::string* cmdmsg);
 
 public:
     SessionKey*         m_session_key;
@@ -58,9 +61,10 @@ private:
     int getCmd();
 
 private:
-    CmdSessionState*    m_css;
-    Epoll_data*         m_socket_data;
-    cdmParameters_map   m_cmdparams;
+    CmdSessionState*          m_css;
+    Epoll_data*               m_socket_data;
+    cdmParameters_map         m_cmdparams;
+    std::list<std::string*>   m_sendmsgs_l;
 };
 
 #endif
