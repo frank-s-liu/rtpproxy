@@ -47,10 +47,12 @@ public:
     int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
     int getCmdValueByStrKey(const char* key);
-    int checkPingKeepAlive(PingCheckArgs* pingArg);    
+    int checkPingKeepAlive(PingCheckArgs* pingArg);
+    int doAction2PrepareSend();
     int sendPongResp();
     int sendcmd(char* cmdmsg);
     int sendcmd(std::string* cmdmsg);
+    void rmSocketInfo();
 
 public:
     SessionKey*         m_session_key;

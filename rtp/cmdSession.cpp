@@ -87,15 +87,7 @@ CmdSession::~CmdSession()
         delete m_session_key;
         m_session_key = NULL;
     }
-    if(m_socket_data)
-    {
-        m_socket_data->m_session_count --;
-        if(m_socket_data->m_session_count == 0)
-        {
-            delete m_socket_data;
-        }
-        m_socket_data = NULL;
-    }
+    rmSocketInfo();
     cdmParameters_map::iterator ite;
     for (ite = m_cmdparams.begin(); ite != m_cmdparams.end(); )
     {
@@ -111,6 +103,10 @@ int CmdSession::sendPongResp()
     char* pongresp = new char[len];
     snprintf(pongresp, len, "%s d6:result4:ponge", m_session_key->m_cookie);
     ret = sendcmd(pongresp);
+    if(ret !=0 )
+    {
+        rmSocketInfo();
+    }
     return ret;
 }
 
@@ -128,12 +124,7 @@ int CmdSession::sendcmd(char* cmdmsg)
         else if(ret <= 0)
         {
             tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
-            m_socket_data->m_session_count--;
-            if(0 == m_socket_data->m_session_count)
-            {
-                delete m_socket_data;
-            }
-            m_socket_data = NULL;
+            rmSocketInfo();
             ret = -1;
             goto retprocess;
         }
@@ -161,10 +152,35 @@ retprocess:
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
     int ret = m_css->checkPingKeepAlive(pingArg);
+    if(ret != 0)
+    {
+        rmSocketInfo();
+    }
+    return ret;
+}
+
+int CmdSession::doAction2PrepareSend()
+{
+    int ret = 0;
+    if(m_socket_data)
+    {
+        ret = m_socket_data->modify_write_event2Epoll();
+        if(ret != 0)
+        {
+            rmSocketInfo();
+        }
+    }
     return ret;
 }
 
 void CmdSession::setSocketInfo(Epoll_data* data)
+{
+    rmSocketInfo();
+    m_socket_data = data;
+    m_socket_data->m_session_count++;
+}
+
+void CmdSession::rmSocketInfo()
 {
     if(m_socket_data)
     {
@@ -174,8 +190,7 @@ void CmdSession::setSocketInfo(Epoll_data* data)
             delete m_socket_data;
         }
     }
-    m_socket_data = data;
-    m_socket_data->m_session_count++;
+    m_socket_data = NULL;
 }
 
 int CmdSession::process_cmd(char* cmdstr)

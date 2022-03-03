@@ -12,6 +12,8 @@ public:
     virtual ~SocketInfo();
     virtual int sendMsg(char* buf, int len) = 0;    
     virtual int recvBencode() = 0;
+    virtual int modify_write_event2Epoll(int ep_fd, void* event_data) = 0;
+    virtual int modify_read_event2Epoll(int ep_fd, void* event_data) = 0;
 
 public:
     int                  m_fd;
@@ -24,6 +26,9 @@ public:
     virtual ~TcpSocketInfo();
     virtual int sendMsg(char* buf, int len);
     virtual int recvBencode();
+    virtual int modify_write_event2Epoll(int ep_fd, void* event_data);
+    virtual int modify_read_event2Epoll(int ep_fd, void* event_data);
+    
 
 public:
     char*                cmd_not_completed;
@@ -36,6 +41,8 @@ public:
     virtual ~UdpSocketInfo();
     virtual int sendMsg(char* buf, int len);
     virtual int recvBencode();
+    virtual int modify_write_event2Epoll(int ep_fd, void* event_data);
+    virtual int modify_read_event2Epoll(int ep_fd, void* event_data);
 
 public:
     
@@ -50,6 +57,8 @@ public:
     int rm_fd_from_epoll();
     int sendMsg(char* buf, int len);
     int recvBencodeCmd();
+    int modify_write_event2Epoll();
+    int modify_read_event2Epoll();
 
 public:
     SocketInfo*          m_socket;  //socket info

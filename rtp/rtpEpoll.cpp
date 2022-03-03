@@ -51,7 +51,6 @@ int TcpSocketInfo::sendMsg(char* buf, int len)
     return ret;
 }
 
-
 int TcpSocketInfo::recvBencode()
 {
     char buffer[2048];
@@ -137,6 +136,36 @@ retprocess:
     return ret;
 }
 
+int TcpSocketInfo::modify_write_event2Epoll(int ep_fd, void* event_data)
+{
+    int ret = 0;
+    struct epoll_event event;
+    memset(&event, 0, sizeof(event));
+    event.data.ptr = event_data;
+    event.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
+    ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_fd, &event);
+    if(ret < 0) 
+    {
+        tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop,  reason %d ", errno);
+    }
+    return ret;
+}
+
+int TcpSocketInfo::modify_read_event2Epoll(int ep_fd, void* event_data)
+{
+    int ret = 0;
+    struct epoll_event event;
+    memset(&event, 0, sizeof(event));
+    event.data.ptr = event_data;
+    event.events = EPOLLIN | EPOLLRDHUP;
+    ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_fd, &event);
+    if(ret < 0) 
+    {
+        tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop, reason %d ", errno);
+    }
+    return ret;
+}
+
 UdpSocketInfo::UdpSocketInfo()
 {
 }
@@ -144,6 +173,16 @@ UdpSocketInfo::UdpSocketInfo()
 UdpSocketInfo::~UdpSocketInfo()
 {
 
+}
+
+int UdpSocketInfo::modify_write_event2Epoll(int ep_fd, void* event_data)
+{
+    return 0;
+}
+
+int UdpSocketInfo::modify_read_event2Epoll(int ep_fd, void* event_data)
+{
+    return 0;
 }
 
 int UdpSocketInfo::sendMsg(char* buf, int len)
@@ -202,4 +241,29 @@ int Epoll_data::recvBencodeCmd()
     {
         return -1;
     }
+}
+
+int Epoll_data::modify_write_event2Epoll()
+{
+    if(m_socket)
+    {
+        return m_socket->modify_write_event2Epoll(m_epoll_fd, this);
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int Epoll_data::modify_read_event2Epoll()
+{
+    if(m_socket)
+    {
+        return m_socket->modify_read_event2Epoll(m_epoll_fd, this);
+    }
+    else
+    {
+        return -1;
+    }
+
 }
