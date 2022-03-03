@@ -12,7 +12,7 @@
 static void processPingCheck(void* args)
 {
     PingCheckArgs* pingArg = (PingCheckArgs*)args;
-    ControlProcess::getInstance()->add_pipe_timer_event(pingArg);
+    ControlProcess::getInstance()->add_pipe_event(pingArg);
 }
 
 

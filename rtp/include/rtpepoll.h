@@ -49,11 +49,6 @@ enum socket_type
 };
 
 
-enum pipe_event_type
-{
-    RTP_TIMER_EVENT = 0,
-    RTP_EVENT_MAX_TYPE
-};
 
 enum transport_type
 {

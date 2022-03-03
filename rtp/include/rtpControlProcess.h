@@ -16,7 +16,7 @@ public:
     virtual ~ControlProcess();
     virtual void doStop();
     virtual void* run();
-    int add_pipe_timer_event(Args* args);
+    int add_pipe_event(Args* args);
     static ControlProcess* getInstance();
 
 private:

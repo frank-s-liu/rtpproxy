@@ -4,6 +4,13 @@
 
 #include <stdio.h>
 
+enum pipe_event_type
+{
+    RTP_TIMER_EVENT = 0,
+    RTP_SEND_CMD_EVENT,
+    RTP_EVENT_MAX_TYPE
+};
+
 class Args
 {
 public:
@@ -21,18 +28,17 @@ public:
 public:
     unsigned long      ping_recv_count;
     char*              cs_cookie;
-    //unsigned char      cmdtype;
 };
 
-class SessionKeyArgs : public Args
+class SendCMDArgs : public Args
 {
 public:
-    SessionKeyArgs(char* cs_key, int len);
-    virtual ~SessionKeyArgs();
+    SendCMDArgs(char* cs_key, int len);
+    virtual ~SendCMDArgs();
     virtual int processCmd();
 
 public:
-    char*              cs_cookie;    
+    char*              cs_cookie;
 };
 
 class PipeEventArgs
@@ -42,7 +48,6 @@ public:
 
 public:
     Args*                   args_data;
-    unsigned char           event_type;
 };
 
 #endif

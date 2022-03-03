@@ -111,18 +111,18 @@ ControlProcess* ControlProcess::getInstance()
     return s_instance;
 }
 
-int ControlProcess::add_pipe_timer_event(Args* args)
+int ControlProcess::add_pipe_event(Args* args)
 {
     int ret = 0;
     if(!m_isStop)
     {
-        PipeEventArgs* timer_event   = new PipeEventArgs();
-        timer_event->args_data       = args;
-        timer_event->event_type      = RTP_TIMER_EVENT;
-        if(push(m_pipe_events, timer_event))
+        PipeEventArgs* pipe_event   = new PipeEventArgs();
+        pipe_event->args_data       = args;
+        //timer_event->event_type      = RTP_TIMER_EVENT;
+        if(push(m_pipe_events, pipe_event))
         {
             tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "pipe_events queue is full");
-            delete timer_event;
+            delete pipe_event;
             ret = -1;
             goto retprocess;
         }
@@ -305,21 +305,9 @@ void* ControlProcess::run()
                             PipeEventArgs* pipeArg = NULL;
                             if(0 == pop(m_pipe_events,(void**)&pipeArg))
                             {
-                                int events = pipeArg->event_type;
-                                switch (events)
-                                {
-                                    case RTP_TIMER_EVENT:
-                                    {
-                                        Args* arg = pipeArg->args_data;
-                                        arg->processCmd();
-                                        delete pipeArg;
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        break;
-                                    }
-                                }
+                                Args* arg = pipeArg->args_data;
+                                arg->processCmd();
+                                delete pipeArg;
                             }
                             else
                             {
