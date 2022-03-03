@@ -1,7 +1,9 @@
 #include "cmdSession.h"
 #include "cmdSessionState.h"
+#include "rtpControlProcess.h"
 #include "hash.h"
 #include "log.h"
+#include "args.h"
 
 
 #include <string.h>
@@ -25,6 +27,7 @@ static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
         return -1;
     }
 }
+
 
 SessionKey::SessionKey(char* cookie)
 {
@@ -113,7 +116,46 @@ int CmdSession::sendPongResp()
 
 int CmdSession::sendcmd(char* cmdmsg)
 {
-return 0;   
+    int ret = 0;
+    int len = strlen(cmdmsg);
+    if(m_socket_data)
+    {
+        ret = m_socket_data->sendMsg(cmdmsg, len);
+        if(ret == len)
+        {
+            ret = 0;
+        }
+        else if(ret <= 0)
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
+            m_socket_data->m_session_count--;
+            if(0 == m_socket_data->m_session_count)
+            {
+                delete m_socket_data;
+            }
+            m_socket_data = NULL;
+            ret = -1;
+            goto retprocess;
+        }
+        else if(ret < len)
+        { 
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg ");
+            const char* ptr = &cmdmsg[len];
+            std::string* last_cmd = new std::string(ptr);
+            m_sendmsgs_l.push_back(last_cmd);
+            SendCMDArgs* sendArg = new SendCMDArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
+            ControlProcess::getInstance()->add_pipe_event(sendArg);
+            ret = 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] has no socket info", m_session_key->m_cookie);
+        ret = -1;
+    }
+
+retprocess:
+    return ret;
 }
 
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
