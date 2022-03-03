@@ -61,7 +61,7 @@ int SendCMDArgs::processCmd()
     CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_cookie);
     if(cs)
     {  
-         //ret = cs->checkPingKeepAlive(this);
+         ret = cs->doAction2PrepareSend();
          //if(0 != ret)
          //{
          //    CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
