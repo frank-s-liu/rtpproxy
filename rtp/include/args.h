@@ -4,12 +4,6 @@
 
 #include <stdio.h>
 
-enum pipe_event_type
-{
-    RTP_TIMER_EVENT = 0,
-    RTP_SEND_CMD_EVENT,
-    RTP_EVENT_MAX_TYPE
-};
 
 class Args
 {
