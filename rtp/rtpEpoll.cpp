@@ -320,11 +320,11 @@ int Epoll_data::flushmsgs()
                 tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, session key is null");
             }
 
+            ite = m_sessions_l->erase(ite);
             if(0 != ret)
             {
                 break;
             }
-            ite = m_sessions_l->erase(ite);
         }
     }
     else
