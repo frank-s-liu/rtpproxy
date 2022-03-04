@@ -134,9 +134,13 @@ int CmdSession::sendcmd(char* cmdmsg)
             const char* ptr = &cmdmsg[len];
             std::string* last_cmd = new std::string(ptr);
             m_sendmsgs_l.push_back(last_cmd);
-            SendCMDArgs* sendArg = new SendCMDArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
-            ControlProcess::getInstance()->add_pipe_event(sendArg);
-            ret = 0;
+            //SendCMDArgs* sendArg = new SendCMDArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
+            //ControlProcess::getInstance()->add_pipe_event(sendArg);
+            ret = doAction2PrepareSend();
+            if(ret != 0)
+            {
+                rmSocketInfo();
+            }
         }
     }
     else
@@ -170,6 +174,10 @@ int CmdSession::doAction2PrepareSend()
             rmSocketInfo();
         }
     }
+    else
+    {
+        ret = -1;
+    }
     return ret;
 }
 
@@ -189,8 +197,8 @@ void CmdSession::rmSocketInfo()
         {
             delete m_socket_data;
         }
+        m_socket_data = NULL;
     }
-    m_socket_data = NULL;
 }
 
 int CmdSession::process_cmd(char* cmdstr)
