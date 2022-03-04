@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
 {
@@ -103,14 +104,14 @@ int CmdSession::sendPongResp()
     char* pongresp = new char[len];
     snprintf(pongresp, len, "%s d6:result4:ponge", m_session_key->m_cookie);
     ret = sendcmd(pongresp);
-    if(ret !=0 )
+    if(ret < 0 )
     {
         rmSocketInfo();
     }
     return ret;
 }
 
-int CmdSession::sendcmd(char* cmdmsg)
+int CmdSession::sendcmd(const char* cmdmsg)
 {
     int ret = 0;
     int len = strlen(cmdmsg);
@@ -130,16 +131,18 @@ int CmdSession::sendcmd(char* cmdmsg)
         }
         else if(ret < len)
         { 
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg ");
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg, %d EAGAIN=%d", errno,EAGAIN);
             const char* ptr = &cmdmsg[len];
             std::string* last_cmd = new std::string(ptr);
             m_sendmsgs_l.push_back(last_cmd);
-            //SendCMDArgs* sendArg = new SendCMDArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
-            //ControlProcess::getInstance()->add_pipe_event(sendArg);
             ret = doAction2PrepareSend();
             if(ret != 0)
             {
                 rmSocketInfo();
+            }
+            else
+            {
+                ret = 1;
             }
         }
     }
@@ -151,6 +154,61 @@ int CmdSession::sendcmd(char* cmdmsg)
 
 retprocess:
     return ret;
+}
+
+int CmdSession::sendcmd(std::string* cmdstr)
+{
+    int ret = 0;
+    int len = cmdstr->length();
+    if(m_socket_data)
+    {
+        const char* cmdmsg = cmdstr->c_str();
+        ret = m_socket_data->sendMsg(cmdmsg, len);
+        if(ret == len)
+        {
+            ret = 0;
+        }
+        else if(ret <= 0)
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
+            rmSocketInfo();
+            ret = -1;
+            goto retprocess;
+        }
+        else if(ret < len)
+        { 
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg, %d EAGAIN=%d", errno,EAGAIN);
+            const char* ptr = &cmdmsg[len];
+            std::string* last_cmd = new std::string(ptr);
+            m_sendmsgs_l.push_front(last_cmd);
+            ret = 1;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] has no socket info", m_session_key->m_cookie);
+        ret = -1;
+    }
+
+retprocess:
+    return ret;
+}
+
+int CmdSession::flushmsgs()
+{
+    int ret = 0;
+    while(m_sendmsgs_l.size() > 0)
+    {
+        std::string* cmd = m_sendmsgs_l.front();
+        m_sendmsgs_l.pop_front();
+        ret = sendcmd(cmd);
+        delete cmd;
+        if(ret > 0)
+        {
+            break;
+        }
+    }
+    return ret==0? 0:-1;
 }
 
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)

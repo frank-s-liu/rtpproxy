@@ -319,6 +319,14 @@ void* ControlProcess::run()
                         }
                     }
                 }
+                else if(events[i].events & EPOLLOUT)
+                {
+                    int ret = data->flushmsgs();
+                    if(ret == 0)
+                    {
+                        data->modify_read_event2Epoll();
+                    }
+                }
                 else if( (events[i].events & EPOLLERR) ||
                          (events[i].events & EPOLLHUP) )
                 {

@@ -2,6 +2,7 @@
 #include "log.h"
 #include "bencode.h"
 #include "cmdSession.h"
+#include "cmdSessionManager.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -37,7 +38,7 @@ TcpSocketInfo::~TcpSocketInfo()
     }
 }
 
-int TcpSocketInfo::sendMsg(char* buf, int len)
+int TcpSocketInfo::sendMsg(const char* buf, int len)
 {
     int ret  = 0;
     if(m_fd >= 0) 
@@ -186,7 +187,7 @@ int UdpSocketInfo::modify_read_event2Epoll(int ep_fd, void* event_data)
     return 0;
 }
 
-int UdpSocketInfo::sendMsg(char* buf, int len)
+int UdpSocketInfo::sendMsg(const char* buf, int len)
 {
 #if 0
         struct sockaddr_in rmt_addr;
@@ -236,7 +237,7 @@ int Epoll_data::rm_fd_from_epoll()
     return ret;
 }
 
-int Epoll_data::sendMsg(char* buf, int len)
+int Epoll_data::sendMsg(const char* buf, int len)
 {
     if(m_socket)
     {
@@ -290,4 +291,45 @@ int Epoll_data::modify_read_event2Epoll()
         return -1;
     }
 
+}
+
+int Epoll_data::flushmsgs()
+{
+    int ret = 0;
+    if(m_sessions_l)
+    {
+        Sessions_l::iterator ite = m_sessions_l->begin();
+        for(; ite != m_sessions_l->end(); )
+        {
+            SessionKey* sk = *ite;
+            if(sk)
+            {
+                CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
+                if(cs)
+                {
+                    ret = cs->flushmsgs();
+                }
+                else
+                {
+                    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "when send msg for cs of %s, cs has beed delete", sk->m_cookie);
+                }
+                delete sk;
+            }
+            else
+            {
+                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, session key is null");
+            }
+
+            if(0 != ret)
+            {
+                break;
+            }
+            ite = m_sessions_l->erase(ite);
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "write event triggered, but no msg need to send");
+    }
+    return ret;
 }

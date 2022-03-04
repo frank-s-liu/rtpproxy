@@ -50,9 +50,10 @@ public:
     int checkPingKeepAlive(PingCheckArgs* pingArg);
     int doAction2PrepareSend();
     int sendPongResp();
-    int sendcmd(char* cmdmsg);
+    int sendcmd(const char* cmdmsg);
     int sendcmd(std::string* cmdmsg);
     void rmSocketInfo();
+    int flushmsgs();
 
 public:
     SessionKey*         m_session_key;
