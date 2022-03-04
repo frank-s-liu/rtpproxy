@@ -168,7 +168,7 @@ int CmdSession::doAction2PrepareSend()
     int ret = 0;
     if(m_socket_data)
     {
-        ret = m_socket_data->modify_write_event2Epoll();
+        ret = m_socket_data->modify_write_event2Epoll(m_session_key);
         if(ret != 0)
         {
             rmSocketInfo();

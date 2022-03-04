@@ -1,6 +1,7 @@
 #include "rtpepoll.h"
 #include "log.h"
 #include "bencode.h"
+#include "cmdSession.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -205,6 +206,23 @@ Epoll_data::~Epoll_data()
         delete m_socket;
         m_socket = NULL;
     }
+    if(m_sessions_l)
+    {
+        Sessions_l::iterator ite = m_sessions_l->begin();
+        for(; ite != m_sessions_l->end(); )
+        {
+            if(*ite)
+            {
+                delete *ite;
+            }
+            else
+            {
+                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, session key is null");
+            }
+            ite = m_sessions_l->erase(ite);
+        }
+        
+    }
 }
 
 int Epoll_data::rm_fd_from_epoll()
@@ -243,10 +261,16 @@ int Epoll_data::recvBencodeCmd()
     }
 }
 
-int Epoll_data::modify_write_event2Epoll()
+int Epoll_data::modify_write_event2Epoll(SessionKey* sk)
 {
     if(m_socket)
     {
+        if(!m_sessions_l)
+        {
+            m_sessions_l = new Sessions_l;
+        }
+        SessionKey* nsk = new SessionKey(sk->m_cookie);
+        m_sessions_l->push_back(nsk);
         return m_socket->modify_write_event2Epoll(m_epoll_fd, this);
     }
     else

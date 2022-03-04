@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <list>
 
 
 class SocketInfo
@@ -49,7 +50,9 @@ public:
 
 };
 
+class SessionKey;
 
+typedef std::list<SessionKey*> Sessions_l;
 class Epoll_data
 {
 public:
@@ -57,14 +60,15 @@ public:
     int rm_fd_from_epoll();
     int sendMsg(char* buf, int len);
     int recvBencodeCmd();
-    int modify_write_event2Epoll();
+    int modify_write_event2Epoll(SessionKey* sk);
     int modify_read_event2Epoll();
 
 public:
-    SocketInfo*          m_socket;  //socket info
-    int                  m_session_count;
-    int                  m_epoll_fd;
-    unsigned char        m_epoll_fd_type;
+    SocketInfo*              m_socket;   //socket info
+    Sessions_l*              m_sessions_l; // sessions need to send msg but blocked in socket  
+    int                      m_session_count;
+    int                      m_epoll_fd;
+    unsigned char            m_epoll_fd_type;
 };
 
 
