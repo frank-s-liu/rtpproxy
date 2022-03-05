@@ -10,7 +10,7 @@
 #include <stdlib.h>
 //#include <iostream>
 
-const char* LOGNAME = "sipp.log";
+char* LOGNAME = NULL;
 const char* DEFAULTFILENAME = "./test.log";
 const int LOGSIZE= 268435456; // 256M
 const unsigned int IOBUFFERSIZE = 65536;
@@ -25,11 +25,11 @@ Logserver::Logserver():Thread("log2File")
     m_filePath_name = NULL;
 }
 
-Logserver::Logserver(const char* path):Thread("log2File")
+Logserver::Logserver(const char* path, const char* name):Thread("log2File")
 {
     if(NULL != path)
     {
-        setPath(path);
+        setPath(path, name);
     }
     else
     {
@@ -223,11 +223,14 @@ void Logserver::flushcache()
     fflush(m_logfile);
 }
 
-void Logserver::setPath(const char* path)
+void Logserver::setPath(const char* path, const char* name)
 {
-    int pathlen = strlen(path);
-    int len = pathlen + strlen(LOGNAME) +4;
+    int pathlen = strlen(path)+1;
+    int namelen = strlen(name)+1;
+    int len = pathlen + namelen +4;
     m_filePath_name = (char*)ResourceManager::getInstance()->getresource(len);
     strncpy(m_filePath_name, path, pathlen);
     m_filePath_name[pathlen] = '\0';
+    LOGNAME = new char[strlen(name)+1];
+    snprintf(LOGNAME, namelen, "%s", name);
 }

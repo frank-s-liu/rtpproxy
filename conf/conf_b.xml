@@ -1,6 +1,7 @@
 <profile name="all">
     <logsettings>
-        <param logpath="/home/frank/mysql/pbx_mysql_test/sipplog"/>
+        <param logpath="/home/frank/rtpproxy/logs"/>
+        <param logname="rtpproxy.log"/>
         <param module="TIMER" loglevel="INFO"/>
         <param module="RTP" loglevel="INFO"/>
         <param module="SIGNAL" loglevel="INFO"/> <!-- ERROR, WARN, INFO, DEBUG-->

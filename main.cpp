@@ -24,8 +24,9 @@ typedef struct logmodule
 
 typedef struct logconfig
 {
-    char*        logpath;
-    LogModule_l* modules;
+    char*          logpath;
+    char*          logname;
+    LogModule_l*   modules;
 }LogConfigure;
 
 void daemonize()
@@ -119,6 +120,12 @@ int parseXMLconfiguration(const char* path_name, LogConfigure* logconfigs)
                 int len = strlen(value)+1;
                 logconfigs->logpath = new char[len];
                 snprintf(logconfigs->logpath,len, "%s", value);
+            }
+            else if(strncmp(name,"logname", strlen("logname")) == 0)
+            {
+                int len = strlen(value)+1;
+                logconfigs->logname = new char[len];
+                snprintf(logconfigs->logname,len, "%s", value);
             }
             else if(strncmp(name,"module", strlen("module")) == 0)
             {
@@ -238,11 +245,13 @@ void  processSignal()
 static const  char* configurationFile = "./conf/conf.xml";
 void init()
 {
-    LogConfigure log_conf = {.logpath = NULL, .modules = NULL};   
+    LogConfigure log_conf = {.logpath=NULL, .logname=NULL, .modules=NULL};   
     parseXMLconfiguration(configurationFile, &log_conf);
-    initLog(log_conf.logpath);
+    initLog(log_conf.logpath, log_conf.logname);
     delete log_conf.logpath;
+    delete log_conf.logname;
     log_conf.logpath = NULL;
+    log_conf.logname = NULL;
     LogModule_l* module = log_conf.modules;
     while(module)
     {
@@ -297,7 +306,7 @@ int main(int argc, char* argv[])
                 }
                 case 'h':
                 default:
-                    printf("sipp --cwp= or \r\n sipp -c  \r\n");
+                    printf("rtpproxy --cwp= or \r\n rtpproxy -c  \r\n");
                     return 0;
             }
         }

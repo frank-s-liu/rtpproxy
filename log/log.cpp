@@ -7,9 +7,9 @@
 #include <stdlib.h>
 
 
-void initLog(const char* logPath)
+void initLog(const char* logPath, const char* logname)
 {
-    Logserver::getInstance()->setPath(logPath);
+    Logserver::getInstance()->setPath(logPath, logname);
     Logserver::getInstance()->init();
     Logserver::getInstance()->start();
     Logclient::getInstance();

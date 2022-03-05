@@ -12,12 +12,12 @@ public:
     virtual void* run();
     void flushcache();
     static Logserver* getInstance();
-    void setPath(const char* path);
+    void setPath(const char* path, const char* name);
     void init();
     virtual void doStop();
 private:
     Logserver();
-    Logserver(const char* path);
+    Logserver(const char* path, const char* name);
     Logserver(const Logserver& l);
     Logserver& operator = (const Logserver& other);
     void writeLog2File();

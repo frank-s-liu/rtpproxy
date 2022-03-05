@@ -56,7 +56,7 @@ $(Cxx_ODIR)%d:%cpp
 	test -d $(Cxx_ODIR) || mkdir -p $(Cxx_ODIR)
 	@set -e; rm -f $@;
 	g++ -MM $(CXXFLAGS) $< > $@.123456;
-	sed 's,\($*\)\.o[ :]*, $(Cxx_ODIR)\1.o $@ : ,g' < $@.123456 > $@;
+	sed 's,\($*\)\.o[ :], $(Cxx_ODIR)\1.o $@ : ,g' < $@.123456 > $@;
 	rm -f $@.123456
 
 
@@ -64,7 +64,7 @@ $(C_ODIR)%.d:%.c
 	test -d $(C_ODIR) || mkdir -p $(C_ODIR)
 	@set -e; rm -f $@;
 	gcc -MM $(CFLAGS) $< > $@.123456;
-	sed 's,\($*\)\.o[ :]*, $(C_ODIR)\1.o $@ : ,g' < $@.123456 > $@;
+	sed 's,\($*\)\.o[ :], $(C_ODIR)\1.o $@ : ,g' < $@.123456 > $@;
 	rm -f $@.123456
 
 
@@ -79,6 +79,7 @@ install:
 	install ./tinyxml/libs/libtinyxml.so*  ./libs
 	install ./timerEvent/timerEventObjs/lib*.so* ./libs
 	install ./linklibs/lib*.so*  ./libs
+	install ./rtp/rtp_objs/lib*.so*  ./libs
 	mkdir -p rtpproxy
 	cp -rf bin libs conf rtpproxy
 	tar -zcvf rtpproxy.tar.gz rtpproxy

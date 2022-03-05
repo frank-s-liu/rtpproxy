@@ -18,7 +18,7 @@ enum LogLeval
 };
 
 
-void initLog(const char* logPath);
+void initLog(const char* logPath, const char* name);
 void deInitLog();
 int regiterLog(const char* moduleName, int level);
 int modifylogLevel(const char* moduleName, int level);
