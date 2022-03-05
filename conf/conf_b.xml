@@ -10,14 +10,14 @@
         <param CLIip="10.100.125.147"/> <!-- local cli ip -->
         <param CLIport="8989"/> <!-- local cli port -->
     </clisettings>
-    <Aclsettings>
-        <list name="sipAgent" default="deny">
-            <node type="allow" cidr="10.100.125.0/24"/>
-        </list>
-    </Aclsettings>
     <rtpconctolsettings>
         <interface ip="10.100.125.147" port="2223" transport="UDP"/>
         <interface ip="10.100.125.147" port="2223" transport="TCP"/>
+        <Aclsettings>
+            <list name="sipAgent" default="deny">
+                <node type="allow" cidr="10.100.125.0/24"/>
+            </list>
+        </Aclsettings>
     </rtpconctolsettings>
     <rtpsettings>
         <external ip="10.100.126.230"/>
