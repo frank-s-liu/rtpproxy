@@ -1,7 +1,9 @@
 <profile name="all">
     <logsettings>
         <param logpath="/home/frank/mysql/pbx_mysql_test/sipplog"/>
-        <param loglevel="INFO"/>
+        <param module="TIMER" loglevel="INFO"/>
+        <param module="RTP" loglevel="INFO"/>
+        <param module="SIGNAL" loglevel="INFO"/> <!-- ERROR, WARN, INFO, DEBUG-->
     </logsettings>
     <clisettings>
         <param CLIip="10.100.125.147"/> <!-- local cli ip -->

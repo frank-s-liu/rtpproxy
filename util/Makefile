@@ -1,18 +1,18 @@
 ODIR := ./utilobjs/
 
-Cxx_SRCS := thread.cpp   lock.cpp  timer.cpp  timerThread.cpp 
+Cxx_SRCS := thread.cpp   lock.cpp   
 Cxx_ODIR := ./utilobjs/cxxobjs/
 Cxx_OBJS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.o))  
 Cxx_DEPS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.d)) 
 
 
-C_SRCS := queue.c freeLockQueue.c c_queue.c hashcode.c
+C_SRCS := hashcode.c
 C_ODIR := ./utilobjs/cobjs/
 C_OBJS := $(addprefix $(C_ODIR),$(C_SRCS:.c=.o))  
 C_DEPS := $(addprefix $(C_ODIR),$(C_SRCS:.c=.d)) 
 
 
-INCLUDE_DIR := -I../export/logExport -I ./utilExport -I ../export/mempoolExport -I ../include 
+INCLUDE_DIR := -I../export/logExport -I ./export -I ../export/mempoolExport -I ../include 
 CXXFLAGS := -g -fPIC -Wall -Werror -O2  $(INCLUDE_DIR)
 
 LDFLAGS := -fvisibility=hidden
