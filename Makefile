@@ -17,7 +17,7 @@ MAJ ?= 2
 MIN ?= 0
 export MAJ MIN
 
-INCLUDE_DIR := -I./export/logExport -I ./export/utilExport -I ./export/mempoolExport -I ./tinyxml/export -I ./export/timerEventExport
+INCLUDE_DIR := -I./export/logExport -I ./export/utilExport -I ./export/mempoolExport -I ./tinyxml/export -I ./export/timerEventExport -I ./export/rtpExport
 CXXFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector  $(INCLUDE_DIR)
 CFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector $(INCLUDE_DIR)
 

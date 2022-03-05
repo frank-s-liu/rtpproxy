@@ -12,10 +12,12 @@ fi
 rtpproxypath=$(dirname $0)
 
 cd ${rtpproxypath}
-cd ..
+startpath=$(pwd)
 
+cd ..
 workpath=$(pwd);
-cd ${rtpproxypath}
+
+cd ${startpath}
 
 #valgrind --tool=memcheck --leak-check=full --log-file=./vg.txt --show-leak-kinds=all --error-limit=no ./rtpproxy --cwd="${pwddir}"
 ./rtpproxy --cwd="${workpath}"
