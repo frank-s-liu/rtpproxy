@@ -117,33 +117,48 @@ int CmdSession::sendcmd(const char* cmdmsg)
     int len = strlen(cmdmsg);
     if(m_socket_data)
     {
-        ret = m_socket_data->sendMsg(cmdmsg, len);
-        if(ret == len)
+        if(m_sendmsgs_l.empty())
         {
-            ret = 0;
-        }
-        else if(ret <= 0)
-        {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
-            rmSocketInfo();
-            ret = -1;
-            goto retprocess;
-        }
-        else if(ret < len)
-        { 
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg, %d EAGAIN=%d", errno,EAGAIN);
-            const char* ptr = &cmdmsg[len];
-            std::string* last_cmd = new std::string(ptr);
-            m_sendmsgs_l.push_back(last_cmd);
-            ret = doAction2PrepareSend();
-            if(ret != 0)
+            ret = m_socket_data->sendMsg(cmdmsg, len);
+            if(ret == len)
             {
+                ret = 0;
+            }
+            else if(ret <= 0)
+            {
+                if(errno == EAGAIN)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s , send buffer full, send agin", m_session_key->m_cookie);
+                    std::string* last_cmd = new std::string(cmdmsg);
+                    m_sendmsgs_l.push_back(last_cmd);
+                    ret = doAction2PrepareSend();
+                    if(ret != 0)
+                    {
+                        rmSocketInfo();
+                    }
+                }
+                else
+                {
+                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
+                    rmSocketInfo();
+                    ret = -1;
+                }
+                goto retprocess;
+            }
+            else 
+            { 
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknow issue send msg len != real msg len, cmd session %s", m_session_key->m_cookie);
                 rmSocketInfo();
+                ret = -1;
+                goto retprocess;
             }
-            else
-            {
-                ret = 1;
-            }
+        }
+        else
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s , send buffer full, put msg to msg list agin", m_session_key->m_cookie);
+            std::string* last_cmd = new std::string(cmdmsg);
+            m_sendmsgs_l.push_back(last_cmd);
+            ret = 0;
         }
     }
     else
@@ -170,18 +185,26 @@ int CmdSession::sendcmd(std::string* cmdstr)
         }
         else if(ret <= 0)
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
-            rmSocketInfo();
-            ret = -1;
+            if(errno == EAGAIN)
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "send cmd msg failed because of socket buffer, cmd session %s", m_session_key->m_cookie);
+                m_sendmsgs_l.push_front(cmdstr);
+                ret = 1;
+            }
+            else
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info, errno %d", m_session_key->m_cookie, errno);
+                rmSocketInfo();
+                ret = -1;
+            }
             goto retprocess;
         }
-        else if(ret < len)
-        { 
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "only send part of cmd msg, %d EAGAIN=%d", errno,EAGAIN);
-            const char* ptr = &cmdmsg[len];
-            std::string* last_cmd = new std::string(ptr);
-            m_sendmsgs_l.push_front(last_cmd);
-            ret = 1;
+        else
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, send len != real len", m_session_key->m_cookie);
+            ret = -1;
+            rmSocketInfo();
+            goto retprocess;
         }
     }
     else
@@ -202,8 +225,11 @@ int CmdSession::flushmsgs()
         std::string* cmd = m_sendmsgs_l.front();
         m_sendmsgs_l.pop_front();
         ret = sendcmd(cmd);
-        delete cmd;
-        if(ret > 0)
+        if(ret <= 0)
+        {
+            delete cmd;
+        }
+        if(ret != 0)
         {
             break;
         }
