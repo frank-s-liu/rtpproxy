@@ -174,6 +174,7 @@ int parseXMLconfiguration(const char* path_name, LogConfigure* logconfigs)
             if(tail == NULL)
             {
                 tail = module;
+                logconfigs->modules = module;
             }
             else
             {
@@ -259,6 +260,7 @@ void init()
     {
         regiterLog(module->module_name, module->level);
         LogModule_l* tmp = module;
+        delete module->module_name;
         module = module->next;
         delete tmp;
     }
@@ -326,7 +328,7 @@ int main(int argc, char* argv[])
     tracelog("INIT", INFO_LOG, __FILE__, __LINE__, "start rtpproxy finished \n");
     while(1)
     {
-        usleep(600);
+        usleep(20000);
     }
     return 0;
 }
