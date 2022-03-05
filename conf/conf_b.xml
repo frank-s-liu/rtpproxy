@@ -11,8 +11,10 @@
         <param CLIport="8989"/> <!-- local cli port -->
     </clisettings>
     <rtpconctolsettings>
-        <interface ip="10.100.125.147" port="2223" transport="UDP"/>
-        <interface ip="10.100.125.147" port="2223" transport="TCP"/>
+        <interfaces>
+            <param ip="10.100.125.147" port="2223" transport="UDP"/>
+            <param ip="10.100.125.147" port="2223" transport="TCP"/>
+        </interfaces>
         <Aclsettings>
             <list name="sipAgent" default="deny">
                 <node type="allow" cidr="10.100.125.0/24"/>
@@ -20,12 +22,17 @@
         </Aclsettings>
     </rtpconctolsettings>
     <rtpsettings>
-        <external ip="10.100.126.230"/>
-        <external ip="10.100.126.232"/>
-        <internal ip="10.100.125.147"/>
-        <internal ip="10.100.125.148"/>
-        <param rtpThreads="10"/>
-        <param portMin="10000"/>
-        <param portMax="60000"/>
+        <external>
+            <param ip="10.100.126.230"/>
+            <param ip="10.100.126.232"/>
+        </external>
+        <internal>
+           <param ip="10.100.125.147"/>
+        </internal>
+        <params>
+            <param rtpThreads="10"/>
+            <param portMin="10000"/>
+            <param portMax="60000"/>
+       </params>
     </rtpsettings>
 </profile>

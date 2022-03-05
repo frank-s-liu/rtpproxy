@@ -1,6 +1,8 @@
 #include "tinyxml.h"
 #include "rtpConfiguration.h"
+#include "rtpControlProcess.h"
 #include "rtpepoll.h"
+#include "rtp.h"
 
 #include <assert.h>
 
@@ -31,18 +33,19 @@ void parseRtpConfiguration(const char* path_name)
     }
     // rtp control interface info start
     s_rtp_config.rtp_ctl_interfaces_num = 0;
-    TiXmlElement* rtpcontrol_inf = rtpcontrol_settings->FirstChildElement("interface");
-    for(; rtpcontrol_inf!=NULL; rtpcontrol_inf=rtpcontrol_inf->NextSiblingElement())
+    TiXmlElement* rtpcontrol_inf = rtpcontrol_settings->FirstChildElement("interfaces");
+    TiXmlElement* param_nic = rtpcontrol_inf->FirstChildElement("param");
+    for(; param_nic!=NULL; param_nic=param_nic->NextSiblingElement())
     {
         s_rtp_config.rtp_ctl_interfaces_num++; 
     }
     assert(s_rtp_config.rtp_ctl_interfaces_num>0);
     s_rtp_config.rtpctl_interfaces = new RTP_CTL_ITF_S[s_rtp_config.rtp_ctl_interfaces_num];
     memset(s_rtp_config.rtpctl_interfaces, 0, sizeof(RTP_CTL_ITF_S)*s_rtp_config.rtp_ctl_interfaces_num);
-    rtpcontrol_inf = rtpcontrol_settings->FirstChildElement("interface");
-    for(; rtpcontrol_inf!=NULL; rtpcontrol_inf=rtpcontrol_inf->NextSiblingElement())
+    param_nic = rtpcontrol_inf->FirstChildElement("param");
+    for(; param_nic!=NULL; param_nic=param_nic->NextSiblingElement())
     {
-        TiXmlAttribute* attributeOfParam = rtpcontrol_inf->FirstAttribute();
+        TiXmlAttribute* attributeOfParam = param_nic->FirstAttribute();
         for( ; attributeOfParam != NULL; attributeOfParam = attributeOfParam->Next())
         {
             const char* name = attributeOfParam->Name();
@@ -74,7 +77,7 @@ void parseRtpConfiguration(const char* path_name)
         }
         index++;
     }
-    // signaling interface info end
+    // rtp control interface info end
 
     TiXmlElement* rtp_settings = xml_root->FirstChildElement("rtpsettings");
     if(!rtp_settings)
@@ -85,17 +88,18 @@ void parseRtpConfiguration(const char* path_name)
     // rtp external interfaces start
     s_rtp_config.external_interface_num = 0;
     TiXmlElement* rtp_external_interface = rtp_settings->FirstChildElement("external");
-    for(; rtp_external_interface != NULL; rtp_external_interface=rtp_external_interface->NextSiblingElement())
+    TiXmlElement* external_param = rtp_external_interface->FirstChildElement("param");
+    for(; external_param != NULL; external_param=external_param->NextSiblingElement())
     {
         s_rtp_config.external_interface_num++;
     }
     assert(s_rtp_config.external_interface_num>0);
     s_rtp_config.external_interfaces = new RTP_ITF_S[s_rtp_config.external_interface_num];
-    rtp_external_interface = rtp_settings->FirstChildElement("external");
+    external_param = rtp_external_interface->FirstChildElement("param");
     index = 0;
-    for(; rtp_external_interface!=NULL; rtp_external_interface=rtp_external_interface->NextSiblingElement())
+    for(; external_param!=NULL; external_param=external_param->NextSiblingElement())
     {
-        TiXmlAttribute* attributeOfParam = rtp_external_interface->FirstAttribute();
+        TiXmlAttribute* attributeOfParam = external_param->FirstAttribute();
         memset(&s_rtp_config.external_interfaces[index], 0, sizeof(RTP_ITF_S));
         for( ; attributeOfParam != NULL; attributeOfParam = attributeOfParam->Next())
         {
@@ -114,22 +118,23 @@ void parseRtpConfiguration(const char* path_name)
         index++;
     }
     // rtp external interfaces end
-    
+ 
     // rtp internal interfaces start
     s_rtp_config.internal_interface_num = 0;
     TiXmlElement* rtp_internal_interface = rtp_settings->FirstChildElement("internal");
-    for(; rtp_internal_interface != NULL; rtp_internal_interface=rtp_internal_interface->NextSiblingElement())
+    TiXmlElement* internal_param = rtp_internal_interface->FirstChildElement("param");
+    for(; internal_param != NULL; internal_param=internal_param->NextSiblingElement())
     {
         s_rtp_config.internal_interface_num++;  // to get the rtp internal interface number
     }
     assert(s_rtp_config.internal_interface_num>0);
     s_rtp_config.internal_interfaces = new RTP_ITF_S[s_rtp_config.internal_interface_num];
-    rtp_internal_interface = rtp_settings->FirstChildElement("internal");
+    internal_param = rtp_internal_interface->FirstChildElement("param");
     index = 0;
-    for(; rtp_internal_interface!=NULL; rtp_internal_interface=rtp_internal_interface->NextSiblingElement())
+    for(; internal_param!=NULL; internal_param=internal_param->NextSiblingElement())
     {
-        TiXmlAttribute* attributeOfParam = rtp_internal_interface->FirstAttribute();
-        memset(&s_rtp_config.internal_interfaces[s_rtp_config.internal_interface_num], 0, sizeof(RTP_ITF_S));
+        TiXmlAttribute* attributeOfParam = internal_param->FirstAttribute();
+        memset(&s_rtp_config.internal_interfaces[index], 0, sizeof(RTP_ITF_S));
         for( ; attributeOfParam != NULL; attributeOfParam = attributeOfParam->Next())
         {
             const char* name = attributeOfParam->Name();
@@ -147,15 +152,15 @@ void parseRtpConfiguration(const char* path_name)
         index++;
     }
     // rtp internal interfaces end
-
     // rtp parameters start
     s_rtp_config.rtpThreads=1;
     s_rtp_config.minRtpPort=10000;
     s_rtp_config.maxRtpPort=60000;
-    TiXmlElement* rtp_params = rtp_settings->FirstChildElement("param");
-    for(; rtp_params!=NULL; rtp_params=rtp_params->NextSiblingElement())
+    TiXmlElement* rtp_params = rtp_settings->FirstChildElement("params");
+    TiXmlElement* param = rtp_params->FirstChildElement("param");
+    for(; param!=NULL; param=param->NextSiblingElement())
     {
-        TiXmlAttribute* attributeOfParam = rtp_params->FirstAttribute();
+        TiXmlAttribute* attributeOfParam = param->FirstAttribute();
         for( ; attributeOfParam != NULL; attributeOfParam = attributeOfParam->Next())
         {
             const char* name = attributeOfParam->Name();
@@ -186,6 +191,7 @@ int initRTP(const char* config_file)
     bool result = 0;
     parseRtpConfiguration(config_file);
     //ControlProcess
+    ControlProcess::getInstance()->start();
     return result;
 }
 
