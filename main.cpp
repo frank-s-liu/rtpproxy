@@ -1,6 +1,7 @@
 #include "log.h"
 #include "tinyxml.h"
 #include "task.h"
+#include "rtp.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -14,6 +15,7 @@
 
 //DEBUG
 #include <stdio.h>
+#include <unistd.h>
 
 typedef struct logmodule
 {
@@ -263,6 +265,7 @@ void init()
     log_conf.modules = NULL;
 
     processSignal();
+    initRTP(configurationFile);
     //initcli(s_configures.cliip, s_configures.cliport); 
     initTask();
 }
@@ -320,6 +323,7 @@ int main(int argc, char* argv[])
         }
         init();
     }
+    tracelog("INIT", INFO_LOG, __FILE__, __LINE__, "start rtpproxy finished \n");
     while(1)
     {
         usleep(600);
