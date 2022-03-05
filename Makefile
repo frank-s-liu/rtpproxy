@@ -21,7 +21,7 @@ INCLUDE_DIR := -I./export/logExport -I ./export/utilExport -I ./export/mempoolEx
 CXXFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector  $(INCLUDE_DIR)
 CFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector $(INCLUDE_DIR)
 
-LDFLAGS :=  -llog -lmemory -lutilself -ltinyxml -pthread -lssl -lcrypto  -ltimerEvent  -lrtp  -L./mempool/mempoolobjs -L./log/logobjs -L./tinyxml/libs -L./linklibs -L./timerEvent/timerEventObjs  -L ./rtp/rtp_objs -Wl,-rpath=../libs -Wl,-rpath-link=../libs
+LDFLAGS :=  -llog -lmemory -lutilself -ltinyxml -pthread -lssl -lcrypto  -ltimerEvent  -lrtpp  -L./mempool/mempoolobjs -L./log/logobjs -L./tinyxml/libs -L./linklibs -L./timerEvent/timerEventObjs  -L ./rtp/rtp_objs -L./util/utilobjs  -Wl,-rpath=../libs -Wl,-rpath-link=../libs
 
 $(TARGET): ALL
 	cd ./mempool; make || exit "$$"; cd -
@@ -80,8 +80,7 @@ install:
 	install ./timerEvent/timerEventObjs/lib*.so* ./libs
 	install ./linklibs/lib*.so*  ./libs
 	mkdir -p rtpproxy
-	cp -rf bin libs rtpproxy
-	cp -f conf/*  rtpproxy/conf/
+	cp -rf bin libs conf rtpproxy
 	tar -zcvf rtpproxy.tar.gz rtpproxy
 	rm -rf rtpproxy
 

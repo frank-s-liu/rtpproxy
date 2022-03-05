@@ -14,7 +14,7 @@ class ControlProcess : public Thread
 public:
     ControlProcess();
     virtual ~ControlProcess();
-    virtual void doStop();
+    //virtual void doStop();
     virtual void* run();
     int add_pipe_event(Args* args);
     static ControlProcess* getInstance();

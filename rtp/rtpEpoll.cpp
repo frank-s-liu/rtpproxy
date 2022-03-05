@@ -177,6 +177,11 @@ UdpSocketInfo::~UdpSocketInfo()
 
 }
 
+int UdpSocketInfo::recvBencode()
+{
+    return 0;
+}
+
 int UdpSocketInfo::modify_write_event2Epoll(int ep_fd, void* event_data)
 {
     return 0;
