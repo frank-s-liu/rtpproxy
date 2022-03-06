@@ -114,14 +114,18 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
     }
     else if(len == 0)
     {
-        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
         ret = -1;
+        close(m_fd);
+        m_fd = -1;
         goto retprocess;
     }
     else
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
         ret = -1;
+        close(m_fd);
+        m_fd = -1;
         goto retprocess;
     }
 
@@ -230,12 +234,12 @@ Epoll_data::~Epoll_data()
 int Epoll_data::rm_fd_from_epoll()
 {
     int ret = 0;
-    if(m_socket)
+    if(m_socket && m_socket->m_fd>=0)
     {
         ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_socket->m_fd, NULL);
         if(ret < 0)  
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "can not rm socket from epool loop, errno is %d", errno);
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "can not rm socket from epool loop,ret=%d errno is %d", ret, errno);
         }
     }
     return ret;

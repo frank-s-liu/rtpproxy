@@ -292,7 +292,7 @@ void* ControlProcess::run()
                         int ret = data->recvBencodeCmd();
                         if(ret != 0)
                         {
-                            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "recv Bencode error, delete socket");
+                            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "recv Bencode error, delete socket");
                             data->rm_fd_from_epoll();
                             delete data->m_socket;
                             data->m_socket = NULL;
