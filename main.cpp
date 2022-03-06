@@ -251,8 +251,8 @@ void init()
     LogConfigure log_conf = {.logpath=NULL, .logname=NULL, .modules=NULL};   
     parseXMLconfiguration(configurationFile, &log_conf);
     initLog(log_conf.logpath, log_conf.logname);
-    delete log_conf.logpath;
-    delete log_conf.logname;
+    delete[] log_conf.logpath;
+    delete[] log_conf.logname;
     log_conf.logpath = NULL;
     log_conf.logname = NULL;
     LogModule_l* module = log_conf.modules;
@@ -260,16 +260,16 @@ void init()
     {
         regiterLog(module->module_name, module->level);
         LogModule_l* tmp = module;
-        delete module->module_name;
+        delete[] module->module_name;
         module = module->next;
         delete tmp;
     }
     log_conf.modules = NULL;
 
     processSignal();
+    initTask();
     initRTP(configurationFile);
     //initcli(s_configures.cliip, s_configures.cliport); 
-    initTask();
 }
 
 int main(int argc, char* argv[])
