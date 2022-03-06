@@ -128,6 +128,7 @@ int CmdSession::sendPongResp()
     {
         rmSocketInfo();
     }
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
     return ret;
 }
 
