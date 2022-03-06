@@ -289,7 +289,19 @@ void* ControlProcess::run()
                     }
                     else if(type == RTP_RES_CMD_SOCKET_TCP_FD || type==RTP_RES_CMD_SOCKET_UDP_FD)
                     {
-                        data->recvBencodeCmd();
+                        int ret = data->recvBencodeCmd();
+                        if(ret != 0)
+                        {
+                            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "recv Bencode error, delete socket");
+                            data->rm_fd_from_epoll();
+                            delete data->m_socket;
+                            data->m_socket = NULL;
+                            if(0 == data->m_session_count)
+                            {
+                                delete data;
+                            }
+                            break;// must beak and start a new epoll
+                        }
                     }
                     else if(type == RTP_EPOLL_PIPE_FD)
                     {
@@ -341,7 +353,6 @@ void* ControlProcess::run()
                         data->rm_fd_from_epoll();
                         delete data->m_socket;
                         data->m_socket = NULL;
-                        data->m_session_count--;
                         if(0 == data->m_session_count)
                         {
                             delete data;

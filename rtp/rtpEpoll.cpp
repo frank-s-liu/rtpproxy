@@ -77,7 +77,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
             {
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd too long");
                 ret = -1;
-                goto errprocess;
+                goto retprocess;
             }
             cmdnew = new char[l+1];
             snprintf(cmdnew, l+1, "%s%s",cmd_not_completed, buffer); 
@@ -107,7 +107,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
             else
             {
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd str format error, [%s]", cmd);
-                goto errprocess;
+                goto retprocess;
             }
         }
         goto retprocess;
@@ -116,19 +116,15 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
         ret = -1;
-        goto errprocess;
+        goto retprocess;
     }
     else
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
         ret = -1;
-        goto errprocess;
+        goto retprocess;
     }
 
-errprocess:
-    close(m_fd);
-    m_fd = -1;
-    //socket->fd_tcp_state = CLOSED;
 retprocess:
     if(cmdnew)
     {
@@ -228,16 +224,19 @@ Epoll_data::~Epoll_data()
             ite = m_sessions_l->erase(ite);
         }
     }
-    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "delete socket");
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete socket");
 }
 
 int Epoll_data::rm_fd_from_epoll()
 {
     int ret = 0;
-    ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_socket->m_fd, NULL);
-    if(ret < 0)  
+    if(m_socket)
     {
-        tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "can not rm socket from epool loop, errno is %d", errno);
+        ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_socket->m_fd, NULL);
+        if(ret < 0)  
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "can not rm socket from epool loop, errno is %d", errno);
+        }
     }
     return ret;
 }
