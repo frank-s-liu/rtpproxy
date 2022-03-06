@@ -326,6 +326,8 @@ int main(int argc, char* argv[])
         init();
     }
     tracelog("INIT", INFO_LOG, __FILE__, __LINE__, "start rtpproxy finished \n");
+    usleep(50000);
+    clearRTPconfigMemory();
     while(1)
     {
         usleep(20000);

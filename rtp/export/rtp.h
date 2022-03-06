@@ -7,6 +7,8 @@ extern "C"
 #endif
 
 int initRTP(const char* config_file);
+void clearRTPconfigMemory();
+
 
 #ifdef __cplusplus
 }
