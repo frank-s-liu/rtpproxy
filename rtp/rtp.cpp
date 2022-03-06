@@ -192,6 +192,13 @@ int initRTP(const char* config_file)
     parseRtpConfiguration(config_file);
     //ControlProcess
     ControlProcess::getInstance()->start();
+
+    delete[] s_rtp_config.rtpctl_interfaces;
+    s_rtp_config.rtpctl_interfaces = NULL;
+    delete[] s_rtp_config.external_interfaces;
+    s_rtp_config.external_interfaces = NULL;
+    delete[] s_rtp_config.internal_interfaces;
+    s_rtp_config.internal_interfaces = NULL;
     return result;
 }
 
