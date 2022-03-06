@@ -69,10 +69,6 @@ CmdSession* CmdSessionManager::getCmdSession(SessionKey* sk)
     {
         return iter->second;
     }
-    else
-    {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "getCmdSession failed, no cmd session whose session key  is %s", sk->m_cookie);
-    }
     return NULL;
 }
 

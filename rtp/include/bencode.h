@@ -11,9 +11,4 @@ typedef enum bencode_error
     BENCODE_ERRNO_MAX
 }BENCODE_ERRNO;
 
-int parseBencodeCmd(char* cmdstr);
-int parsingString(char* bencode_str_start, char** bencode_str_end);
-int parsingInt(char* bencode_str_start, char** bencode_str_end);
-int bencodeCheck(char* cmdstr, char** end);
-
 #endif

@@ -23,6 +23,12 @@ static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
         *keystart = keyend+1;
         return 0;
     }
+    else if(p && *p=='e')
+    {
+        *keylen = 0;
+        *keystart = NULL;
+        return 0;
+    }
     else
     {
         return -1;
@@ -376,7 +382,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
     {
         int keylen = 0;
         ret = parsingBencodeString(p, &keylen, &begin);
-        if(ret == 0)
+        if(ret == 0 && keylen>0)
         {
             std::string key(begin, keylen);
             p = begin+keylen;
@@ -401,6 +407,10 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd value failed, cmd [%s], value[%s]", cmdstr, p);
                 break;
             }
+        }
+        else if(ret == 0 && keylen == 0)
+        {
+            break;
         }
         else
         {
