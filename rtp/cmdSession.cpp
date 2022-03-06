@@ -95,6 +95,20 @@ CmdSession::~CmdSession()
         delete ite->second;
         m_cmdparams.erase(ite++);
     }
+
+    MsgSend_l::iterator ite_l = m_sendmsgs_l.begin();
+    for(; ite_l != m_sendmsgs_l.end(); )
+    {
+        if(*ite_l)
+        {
+            delete *ite_l;
+        }
+        else
+        {
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, cmd str need to send is null");
+        }
+        ite_l = m_sendmsgs_l.erase(ite_l);
+    }
 }
 
 int CmdSession::sendPongResp()
@@ -358,7 +372,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
     char* begin = p;
     int ret = 0;
     int parsingCmdLen = 0;
-    while(p && *p!='\0' && parsingCmdLen>0 && parsingCmdLen<cmdlen)
+    while(p && *p!='\0' && parsingCmdLen>=0 && parsingCmdLen<cmdlen)
     {
         int keylen = 0;
         ret = parsingBencodeString(p, &keylen, &begin);
@@ -380,6 +394,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
                     delete oldvalue;
                 }
                 m_cmdparams[key] = value;
+                tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameter %s: value:%s", m_session_key->m_cookie, key.c_str(), value->c_str());
             }
             else
             {

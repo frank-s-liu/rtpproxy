@@ -36,6 +36,7 @@ public:
 };
 
 typedef std::map<std::string, std::string*> cdmParameters_map;
+typedef std::list<std::string*> MsgSend_l;
 
 class CmdSession
 {
@@ -67,7 +68,7 @@ private:
     CmdSessionState*          m_css;
     Epoll_data*               m_socket_data;
     cdmParameters_map         m_cmdparams;
-    std::list<std::string*>   m_sendmsgs_l;
+    MsgSend_l                 m_sendmsgs_l;
 };
 
 #endif
