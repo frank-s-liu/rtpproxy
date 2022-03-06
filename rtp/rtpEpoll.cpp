@@ -227,8 +227,8 @@ Epoll_data::~Epoll_data()
             }
             ite = m_sessions_l->erase(ite);
         }
-        
     }
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "delete socket");
 }
 
 int Epoll_data::rm_fd_from_epoll()
