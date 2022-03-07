@@ -144,6 +144,7 @@ runpoint:
                     }
                     while(exp>=1)
                     {
+                        //tracelog("TIMER", DEBUG_LOG, __FILE__, __LINE__, "timer event fd_ms timer expired %d timers", exp);
                         int position = ms_meter_pos & TICK_PER_WHEEL_MASK;
                         TimerEvents::iterator it = m_ms_meter[position].begin();
                         while(!m_ms_meter[position].empty())
@@ -153,13 +154,6 @@ runpoint:
                             {
                                 TimeEvent* event = *it;
                                 event->cb(event->args);
-                                //int ret = pushTimeEvent(event);
-                                //if(0 != ret)
-                                //{
-                                //    tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "can not process task, process queue is full");
-                                //    event->duration = 64 + random()%1024;
-                                //    bindEvent2Meter(event);
-                                //}
                                 m_ms_meter[position].erase(it);
                                 delete event;
                             }
@@ -186,6 +180,7 @@ runpoint:
                         TimeEvent* event = NULL;
                         pop((TimeEventPollQ*)m_events_add_Q, (void**)&event);
                         bindEvent2Meter(event);
+                        //tracelog("TIMER", DEBUG_LOG, __FILE__, __LINE__, "new bind timer event");
                         continue;
                     }
                     else if(len == 0)
