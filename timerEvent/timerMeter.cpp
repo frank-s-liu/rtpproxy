@@ -277,7 +277,7 @@ int TimerMeter::addTask(unsigned int duration, void (*cb)(void* e), void* args, 
     else
     {
         // the caller must delete the memory args
-        return -1;       
+        return -1;
     }
 }
 
