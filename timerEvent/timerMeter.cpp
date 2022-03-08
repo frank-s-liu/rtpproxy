@@ -7,6 +7,7 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <errno.h>
 
 
 static const int TIME_ACCURARY = 16; // ms 
@@ -137,37 +138,49 @@ runpoint:
                 if(type == TIME_MS_FD_TYPE)
                 {
                     uint64_t exp = 0;
-                    read(m_tfd_ms, &exp, sizeof(uint64_t));
-                    if(exp > 1)
+                    int ret = read(m_tfd_ms, &exp, sizeof(uint64_t));
+                    if(ret >0)
                     {
-                        tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "timer event fd_ms timer %d, expired for %u times ", m_tfd_ms, exp);
-                    }
-                    while(exp>=1)
-                    {
-                        //tracelog("TIMER", DEBUG_LOG, __FILE__, __LINE__, "timer event fd_ms timer expired %d timers", exp);
-                        int position = ms_meter_pos & TICK_PER_WHEEL_MASK;
-                        TimerEvents::iterator it = m_ms_meter[position].begin();
-                        while(!m_ms_meter[position].empty())
+                        if(exp > 1)
                         {
-                            it = m_ms_meter[position].begin();
-                            if((*it)->pos == ms_meter_pos)
-                            {
-                                TimeEvent* event = *it;
-                                event->cb(event->args);
-                                m_ms_meter[position].erase(it);
-                                delete event;
-                            }
-                            else if((*it)->pos > ms_meter_pos)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "missing timer click? it must not  come here");
-                            }
+                            tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "timer event fd_ms timer %d, expired for %u times ", m_tfd_ms, exp);
                         }
-                        ms_meter_pos++;
-                        exp--;
+                        while(exp>=1)
+                        {
+                            //tracelog("TIMER", DEBUG_LOG, __FILE__, __LINE__, "timer event fd_ms timer expired %d timers", exp);
+                            int position = ms_meter_pos & TICK_PER_WHEEL_MASK;
+                            TimerEvents::iterator it = m_ms_meter[position].begin();
+                            while(!m_ms_meter[position].empty())
+                            {
+                                it = m_ms_meter[position].begin();
+                                if((*it)->pos == ms_meter_pos)
+                                {
+                                    TimeEvent* event = *it;
+                                    event->cb(event->args);
+                                    m_ms_meter[position].erase(it);
+                                    delete event;
+                                }
+                                else if((*it)->pos > ms_meter_pos)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "missing timer click? it must not  come here");
+                                }
+                            }
+                            ms_meter_pos++;
+                            exp--;
+                        }
+                    }
+                    else if(ret<0 && errno==EAGAIN)
+                    {
+                        tracelog("TIMER", INFO_LOG, __FILE__, __LINE__, "read interupted, EAGAIN");
+                        break;
+                    }
+                    else
+                    {
+                        tracelog("TIMER", WARNING_LOG, __FILE__, __LINE__, "read error %d", errno);
                     }
                     continue;
                 }
@@ -270,6 +283,7 @@ int TimerMeter::addTask(unsigned int duration, void (*cb)(void* e), void* args, 
         {
             char buf[1] = {'a'};
             // POSIX.1-2001 says that write(2)s of less than PIPE_BUF bytes must be atomic:
+            //tracelog("TIMER", DEBUG_LOG, __FILE__, __LINE__, "add timer event task");
             write(m_fd_pipe[1], buf, sizeof(buf));
         }
         return 0;   
