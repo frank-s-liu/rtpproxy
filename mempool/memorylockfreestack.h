@@ -7,8 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <emmintrin.h>
-#include<malloc.h>
 #include <sched.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -21,7 +23,8 @@ typedef struct memstack_t
 {
 
     volatile uint64_t top;
-    char pad1[CACHE_LINE_SIZE - sizeof(uint64_t)];
+    uint64_t memory_size;
+    char pad1[CACHE_LINE_SIZE - sizeof(uint64_t)-sizeof(uint64_t)];
 
     struct
     {
@@ -35,15 +38,27 @@ static inline memstack_s* memQinit(uint32_t capacity)
 {
     memstack_s* q = NULL;
     uint64_t cap = 0;
+    uint64_t size = 0;
+    int pagesize = getpagesize();
     if(capacity > 31)
-    {   
+    {
         return NULL;
-    }   
-    cap = (1<<capacity);                                                                       
-    q = (memstack_s*)memalign(64,sizeof(memstack_s) + cap * sizeof(q->msgs[0]));
-    memset(q, 0, sizeof(memstack_s) + cap * sizeof(q->msgs[0]));
+    }
+    cap = (1<<capacity);
+    size = sizeof(memstack_s) + cap * sizeof(q->msgs[0]);
+    size = (size + pagesize -1)/pagesize * pagesize;
+    q = (memstack_s*)mmap(NULL, size, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if(MAP_FAILED == q)
+    {
+        assert(0);
+        return NULL;
+    }
+    
+    memset(q, 0, size);
     q->top = 0x01;
     q->top |= (cap<<32);
+    q->memory_size = size;
     return q;
 }   
  
@@ -162,6 +177,14 @@ static inline uint64_t memsize(memstack_s* q)
     top = q->top;
     size = top & 0xFFFFFFFF;
     return size;
+}
+
+static inline void freeMemQ(memstack_s* q)
+{
+    if(q)
+    {
+        munmap(q, q->memory_size);
+    }
 }
 
 #ifdef __cplusplus
