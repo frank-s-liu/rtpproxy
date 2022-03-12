@@ -43,7 +43,7 @@ TimerMeter::~TimerMeter()
     }
     if(m_events_add_Q)
     {
-       freeQ(m_events_add_Q);
+       freeQ((TimeEventPollQ*)m_events_add_Q);
        m_events_add_Q = NULL;
     }
 }

@@ -11,7 +11,7 @@
 typedef memqueue_s TimeEventProcessQ;
 typedef memqueue_s TimeEventPollQ;
 
-static const int QSIZE = 16;
+static const int QSIZE = 10;
 static const unsigned int TICK_PER_WHEEL = 1024;
 static const unsigned int TICK_PER_WHEEL_MATH = 10;
 static const unsigned int TICK_PER_WHEEL_MASK = TICK_PER_WHEEL-1;
