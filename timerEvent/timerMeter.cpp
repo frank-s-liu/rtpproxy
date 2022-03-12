@@ -41,6 +41,11 @@ TimerMeter::~TimerMeter()
         close(m_fd_pipe[1]);
         m_fd_pipe[1] = -1;
     }
+    if(m_events_add_Q)
+    {
+       freeQ(m_events_add_Q);
+       m_events_add_Q = NULL;
+    }
 }
 
 void TimerMeter::initTimerMeter()

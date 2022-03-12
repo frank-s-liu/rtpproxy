@@ -198,6 +198,14 @@ __attribute((always_inline)) static inline int size(memqueue_s* q)
 }
 
 
+__attribute((always_inline)) static inline void freeQ(memqueue_s* q)
+{
+    if(q)
+    {
+        munmap(q, q->memory_size);
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -96,7 +96,7 @@ ControlProcess::~ControlProcess()
         {
             delete args;
         }
-        free(m_pipe_events);
+        freeQ(m_pipe_events);
         m_pipe_events = NULL;
     }
 }

@@ -1,6 +1,6 @@
 ODIR := ./timerEventObjs/
 
-Cxx_SRCS := timerMeter.cpp timerProcess.cpp task.cpp
+Cxx_SRCS := timerMeter.cpp  task.cpp
 Cxx_ODIR := $(ODIR)cxxobjs/
 Cxx_OBJS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.o))  
 Cxx_DEPS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.d)) 
