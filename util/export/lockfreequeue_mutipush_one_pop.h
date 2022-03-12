@@ -6,6 +6,11 @@
 #include <string.h>
 #include <emmintrin.h>
 #include <assert.h>
+#include <sys/mman.h>
+#include <stdio.h>
+#include <memory.h>
+#include <unistd.h>
+
 
 #ifdef __cplusplus
 extern "C"
@@ -29,7 +34,8 @@ typedef struct memqueue_t
     } tail;
 
     uint32_t mask;
-    char pad[CACHE_LINE_SIZE - sizeof(uint32_t)];
+    uint32_t memory_size;
+    char pad[CACHE_LINE_SIZE - sizeof(uint32_t) - sizeof(uint32_t)];
 
     struct 
     {
@@ -42,17 +48,26 @@ __attribute((always_inline)) static inline memqueue_s* initQ(uint32_t capacity)
 {       
     memqueue_s* q = NULL;
     uint32_t cap = 0;
-    if(capacity > 31)
-    {   
+    if(capacity > 16)
+    {
         return NULL;
-    }   
-    cap = (1<<capacity);                                                                       
-    q = (memqueue_s*)malloc(sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
-    memset(q, 0, sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
+    }
+    cap = (1<<capacity);
+    int pagesize = getpagesize(); 
+    unsigned int size = sizeof(memqueue_s) + cap * sizeof(q->msgs[0]);
+    size = (size + pagesize -1)/pagesize * pagesize;
+    q = (memqueue_s*)mmap(NULL, size, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if(MAP_FAILED == q)
+    {
+        assert(0);
+        return NULL;
+    }
+    memset(q, 0, size);
     q->mask = cap-1;
-    
+    q->memory_size = size;
     return q;
-}   
+}
  
 __attribute((always_inline)) static inline int push(memqueue_s* q, void* memory)
 {
