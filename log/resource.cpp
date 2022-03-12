@@ -62,7 +62,7 @@ ResourceManager* ResourceManager::getInstance()
 
 ResourceManager::ResourceManager()
 {
-    s_logqueue = initQ(18);
+    s_logqueue = initQ(11);
     pthread_mutex_init(&s_mutex, NULL);
     //pthread_cond_init( &s_not_full, NULL);
     pthread_cond_init( &s_not_empty, NULL);
