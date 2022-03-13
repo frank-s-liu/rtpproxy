@@ -349,6 +349,9 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
     char* cookie = strstr(p, " d");
     if(cookie)
     {
+        const char* call_id_key = NULL;
+        const char* call_id_v = NULL;
+        int call_id_v_len = 0;
         p = cookie+2;
         begin = p;
         while(*p)
@@ -360,6 +363,10 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
             }
             else
             {
+                if(begin-p == 9 && 0 == strncmp(p, "7:call-id", 9))
+                {
+                    call_id_key = p+2;
+                }
                 p = begin;
             }
             if(*p>='0' && *p<='9')// string type value
@@ -382,6 +389,12 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
             }
             else
             {
+                if(call_id_key)
+                {
+                    call_id_v = strchr(p,':');
+                    call_id_v++;
+                    call_id_v_len = begin-call_id_v;
+                }
                 p = begin;
             }
             if(*p == 'e')
@@ -393,9 +406,12 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
                     tmp = *p;
                     *p = '\0';
                 }
-                parseBencodeCmd(cmdstr);
+                parseBencodeCmd(cmdstr, call_id_v, call_id_v_len);
                 *p = tmp;
                 *end = p;
+                call_id_key = NULL;
+                call_id_v = NULL;
+                call_id_v_len = 0;
                 return SUCCESS;
             }
             else
@@ -456,18 +472,26 @@ int Epoll_data::parsingString(char* bencode_str_start, char** bencode_str_end)
     return SUCCESS;
 }
 
-int Epoll_data::parseBencodeCmd(char* cmdstr)
+int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
 {   
     char* start = cmdstr;
     char* cookie = strstr(start, " d");
     if(cookie)
-    {   
-        *cookie = '\0';
-        SessionKey* sk = new SessionKey(start);
-        *cookie = ' '; 
+    {
+        SessionKey* sk = NULL;
+        if(!key)
+        {
+            *cookie = '\0';
+            sk = new SessionKey(start);
+            *cookie = ' ';
+        }
+        else
+        {
+            sk = new SessionKey(key, keylen);
+        }
         CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
         if(!cs)
-        {   
+        {
             cs = new CmdSession();
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);

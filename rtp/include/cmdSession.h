@@ -25,7 +25,8 @@ typedef enum cmd_type
 class SessionKey
 {
 public:
-    SessionKey(char* cookie);
+    SessionKey(const char* cookie);
+    SessionKey(const char* key, int key_len);
     virtual ~SessionKey();
     bool operator <(const SessionKey& s) const ;
 

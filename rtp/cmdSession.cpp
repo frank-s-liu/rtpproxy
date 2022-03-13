@@ -36,9 +36,17 @@ static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
 }
 
 
-SessionKey::SessionKey(char* cookie)
+SessionKey::SessionKey(const char* cookie)
 {
     int len = strlen(cookie);
+    m_cookie = new char[len+1];
+    snprintf(m_cookie, len+1, "%s", cookie);
+    m_cookie_id = BKDRHash(m_cookie, len);
+    m_cookie_len = len;
+}
+
+SessionKey::SessionKey(const char* cookie, int len)
+{
     m_cookie = new char[len+1];
     snprintf(m_cookie, len+1, "%s", cookie);
     m_cookie_id = BKDRHash(m_cookie, len);
