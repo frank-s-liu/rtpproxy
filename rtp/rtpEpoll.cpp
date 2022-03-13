@@ -476,6 +476,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
 {   
     char* start = cmdstr;
     char* cookie = strstr(start, " d");
+    int ret = 0;
     if(cookie)
     {
         SessionKey* sk = NULL;
@@ -500,11 +501,14 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         {
             if(key)
             {
-                //cs->process_cookie(start, cookie-start);  // check if it is retransmited
+                ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
             }   
             delete sk;
         }
-        cs->process_cmd(cookie+2);
+        if(0 == ret)
+        {
+            cs->process_cmd(cookie+2);
+        }
     }
     else
     {   

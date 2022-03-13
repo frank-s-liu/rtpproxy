@@ -36,6 +36,19 @@ public:
     int           m_cookie_len;
 };
 
+class LastCookie
+{
+public:
+    LastCookie(const char* key, int key_len);
+    virtual ~LastCookie();
+
+public:
+    char*         m_cookie;
+    char*         m_resp;
+    unsigned long m_cookie_id;
+    int           m_cookie_len;
+};
+
 typedef std::map<std::string, std::string*> cdmParameters_map;
 typedef std::list<std::string*> MsgSend_l;
 
@@ -56,6 +69,7 @@ public:
     int sendcmd(std::string* cmdmsg);
     void rmSocketInfo();
     int flushmsgs();
+    int process_cookie(const char* cookie, int cookie_len);
 
 public:
     SessionKey*         m_session_key;
@@ -68,6 +82,7 @@ private:
 private:
     CmdSessionState*          m_css;
     Epoll_data*               m_socket_data;
+    LastCookie*               m_last_cookie;
     cdmParameters_map         m_cmdparams;
     MsgSend_l                 m_sendmsgs_l;
 };

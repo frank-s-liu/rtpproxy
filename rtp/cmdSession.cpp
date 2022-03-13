@@ -77,6 +77,29 @@ bool SessionKey::operator <(const SessionKey &k) const
     return false;
 }
 
+
+LastCookie::LastCookie(const char* cookie, int len)
+{
+    m_cookie = new char[len+1];
+    snprintf(m_cookie, len+1, "%s", cookie);
+    m_cookie_id = BKDRHash(m_cookie, len);
+    m_cookie_len = len;
+}
+
+LastCookie::~LastCookie()
+{
+    if(m_cookie)
+    {
+        delete[] m_cookie;
+        m_cookie = NULL;
+        m_cookie_len = 0;
+    }
+    if(m_resp)
+    {
+        delete[] m_resp;
+    }
+}
+
 CmdSession::CmdSession()
 {
     m_css = new CmdSessionInitState(this);
@@ -146,7 +169,7 @@ int CmdSession::sendcmd(const char* cmdmsg)
 {
     int ret = 0;
     int len = strlen(cmdmsg);
-    if(m_socket_data)
+    if(m_socket_data && cmdmsg)
     {
         if(m_sendmsgs_l.empty())
         {
@@ -194,7 +217,10 @@ int CmdSession::sendcmd(const char* cmdmsg)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] has no socket info", m_session_key->m_cookie);
+        if(!m_socket_data)
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] has no socket info", m_session_key->m_cookie);
+        }
         ret = -1;
     }
 
@@ -441,4 +467,39 @@ int CmdSession::getCmdValueByStrKey(const char* key)
     return ret;
 }
 
+int CmdSession::process_cookie(const char* cookie, int cookie_len)
+{
+    if(m_last_cookie)
+    {
+        if(m_last_cookie->m_cookie_len == cookie_len)
+        {
+            if(0 == strncmp(m_last_cookie->m_cookie, cookie, cookie_len))// retransmit
+            {
+                int ret = sendcmd(m_last_cookie->m_resp);
+                if(ret < 0 )
+                {
+                    rmSocketInfo();
+                }
+                return -1;
+            }
+            else
+            {
+                delete m_last_cookie;
+                goto newcookie;
+            }
+        }
+        else
+        {
+            delete m_last_cookie;
+            goto newcookie;
+        }
+    }
+    else
+    {
+        goto newcookie;
+    }
 
+newcookie:
+    m_last_cookie = new LastCookie(cookie, cookie_len);
+    return 0;
+}
