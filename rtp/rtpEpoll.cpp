@@ -481,9 +481,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         SessionKey* sk = NULL;
         if(!key)
         {
-            *cookie = '\0';
-            sk = new SessionKey(start);
-            *cookie = ' ';
+            sk = new SessionKey(start, cookie-start);
         }
         else
         {
@@ -496,12 +494,16 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);
             tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, cookie is [%s]", sk->m_cookie);
+            cs->setSocketInfo(this);
         }
         else
-        {   
+        {
+            if(key)
+            {
+                //cs->process_cookie(start, cookie-start);  // check if it is retransmited
+            }   
             delete sk;
         }
-        cs->setSocketInfo(this);
         cs->process_cmd(cookie+2);
     }
     else
