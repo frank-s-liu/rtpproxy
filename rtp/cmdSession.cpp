@@ -147,6 +147,11 @@ CmdSession::~CmdSession()
         }
         ite_l = m_sendmsgs_l.erase(ite_l);
     }
+    if(m_last_cookie)
+    {
+        delete m_last_cookie;
+        m_last_cookie = NULL;
+    }
 }
 
 int CmdSession::sendPongResp()
