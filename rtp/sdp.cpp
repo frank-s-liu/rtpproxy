@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 Network_address::Network_address()
 {
@@ -85,12 +86,12 @@ Attr_rtpmap::~Attr_rtpmap()
 
 int Attr_rtpmap::serialize(char* buf, int buflen)
 {
-    if(buf && encoding_str.s && clock_rate_str.s)
+    if(buf && encoding_str.s)
     {
-        int len = snprintf(buf, buflen, "a=rtpmap:%d %s/%s", payload_type, encoding_str.s, clock_rate_str.s);
+        int len = snprintf(buf, buflen, "a=rtpmap:%d %s\r\n", payload_type, encoding_str.s);
         if (len >= buflen)
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute serialize failed %d %s/%s in buf, buf len %d.", payload_type, encoding_str.s, clock_rate_str.s, buflen);
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute serialize failed %d %s in buf, buf len %d.", payload_type, encoding_str.s, buflen);
             return -1;
         }
         else
@@ -102,6 +103,30 @@ int Attr_rtpmap::serialize(char* buf, int buflen)
     {
         return -1;
     }
+}
+
+int Attr_rtpmap::parse(char* line)
+{
+    char* pos = strstr(line, "a=rtpmap:");
+    char* end = strstr(line, "\r\n");
+    char* ec_str = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        return -1;
+    }
+    pos += strlen("a=rtpmap:");
+    payload_type = strtol(pos, &ec_str, 10);
+    if(!ec_str || *ec_str != ' ' || ec_str>end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        return -1;
+    }
+    ec_str++;
+    encoding_str.len = end-ec_str;
+    encoding_str.s = new char[encoding_str.len+1];
+    snprintf(encoding_str.s, encoding_str.len+1, "%s", ec_str);
+    return 0;
 }
 
 Attr_fmtp::Attr_fmtp()
@@ -126,7 +151,7 @@ int Attr_fmtp::serialize(char* buf, int buflen)
 {
     if(buf && format_parms_str.s)
     {
-        int len = snprintf(buf, buflen, "a=fmtp:%d %s", payload_type, format_parms_str.s);
+        int len = snprintf(buf, buflen, "a=fmtp:%d %s\r\n", payload_type, format_parms_str.s);
         if (len >= buflen)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "fmtp attribute serialize failed %d %s in buf, buf len %d.", payload_type, format_parms_str.s, buflen);
@@ -141,6 +166,30 @@ int Attr_fmtp::serialize(char* buf, int buflen)
     {
         return -1;
     }
+ }
+
+int Attr_fmtp::parse(char* line)
+{
+    char* pos = strstr(line, "a=fmtp:");
+    char* end = strstr(line, "\r\n");
+    char* fp_str = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        return -1;
+    }
+    pos += strlen("a=fmtp:");
+    payload_type = strtol(pos, &fp_str, 10);
+    if(!fp_str || *fp_str != ' ' || fp_str>end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        return -1;
+    }
+    fp_str++;
+    format_parms_str.len = end-fp_str;
+    format_parms_str.s = new char[format_parms_str.len+1];
+    snprintf(format_parms_str.s, format_parms_str.len+1, "%s", fp_str);
+    return 0;
 }
 
 Sdp_attribute::Sdp_attribute()
@@ -169,18 +218,12 @@ Sdp_media::~Sdp_media()
         delete[] fmts;
         fmts = NULL;
     }
-    rtpmap_attr_map::iterator ite;
-    for (ite = rtpmap_attrs.begin(); ite != rtpmap_attrs.end(); )
+    Attr_map::iterator ite;
+    for (ite = attrs.begin(); ite != attrs.end(); )
     {
         delete ite->second;
-        rtpmap_attrs.erase(ite++);
+        attrs.erase(ite++);
     }
 
-    sdp_attr_map::iterator ite_sdp;
-    for (ite_sdp = sdp_attrs.begin(); ite_sdp != sdp_attrs.end(); )
-    {
-        delete ite_sdp->second;
-        sdp_attrs.erase(ite_sdp++);
-    }
 }
 

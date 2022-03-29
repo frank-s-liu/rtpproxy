@@ -2,8 +2,10 @@
 #define _RTP_SDP_H_
 
 #include "cstr.h"
-#include "map"
 
+
+#include <map>
+#include <string>
 
 
 enum NetType
@@ -129,6 +131,7 @@ public:
     Sdp_attribute();
     virtual ~Sdp_attribute();
     virtual int serialize(char* buf, int buflen) = 0;
+    virtual int parse(char* line) = 0;
 public:
     unsigned char attr_type;
 };
@@ -140,12 +143,12 @@ public:
     Attr_rtpmap();
     virtual ~Attr_rtpmap();
     virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
 public:
     cstr encoding_str;
     cstr clock_rate_str;
     unsigned short payload_type;
 };
-
 
 //Codec-specific parameters should be added in attributes "a=fmtp:".
 class Attr_fmtp : public Sdp_attribute
@@ -154,13 +157,13 @@ public:
     Attr_fmtp();
     virtual ~Attr_fmtp();
     virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
 public:
     cstr format_parms_str;
     unsigned short payload_type;
 };
 
-typedef std::map<int, Attr_rtpmap*> rtpmap_attr_map;
-typedef std::map<int, Sdp_attribute*> sdp_attr_map;
+typedef std::map<std::string, Sdp_attribute*> Attr_map;
 
 class Sdp_media 
 {
@@ -177,8 +180,7 @@ public:
      and  a=rtpmap:8 PCMA/8000
      */
     int*                 fmts;
-    rtpmap_attr_map      rtpmap_attrs;
-    sdp_attr_map         sdp_attrs;
+    Attr_map             attrs;
     unsigned short       port;
     unsigned short       port_count;
     unsigned char        media_type;
