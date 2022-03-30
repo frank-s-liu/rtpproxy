@@ -101,6 +101,7 @@ int Attr_rtpmap::serialize(char* buf, int buflen)
     }
     else
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute serialize failed %d %d in buf, buf len %d.", payload_type, encoding_str.len, buflen);
         return -1;
     }
 }
@@ -164,9 +165,10 @@ int Attr_fmtp::serialize(char* buf, int buflen)
     }
     else
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "fmtp attribute serialize failed %d %d in buf, buf len %d.", payload_type, format_parms_str.len, buflen);
         return -1;
     }
- }
+}
 
 int Attr_fmtp::parse(char* line)
 {
@@ -175,20 +177,110 @@ int Attr_fmtp::parse(char* line)
     char* fp_str = NULL;
     if(!end || !pos || pos > end)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "fmtp attribute parse failed, %s", line);
         return -1;
     }
     pos += strlen("a=fmtp:");
     payload_type = strtol(pos, &fp_str, 10);
     if(!fp_str || *fp_str != ' ' || fp_str>end)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "fmtp attribute parse failed, %s", line);
         return -1;
     }
     fp_str++;
     format_parms_str.len = end-fp_str;
     format_parms_str.s = new char[format_parms_str.len+1];
     snprintf(format_parms_str.s, format_parms_str.len+1, "%s", fp_str);
+    return 0;
+}
+
+Attr_crypto::Attr_crypto()
+{
+    tag = -1;
+    suite_str.s = NULL;
+    suite_str.len = 0;
+    key_params.s = NULL;
+    key_params.len = 0;
+}
+
+Attr_crypto::~Attr_crypto()
+{
+    if(suite_str.len)
+    {
+        delete[] suite_str.s;
+        suite_str.s = NULL;
+        suite_str.len = 0;
+    }
+    if(key_params.len)
+    {
+        delete[] key_params.s;
+        key_params.s = NULL;
+        key_params.len = 0;
+    }
+}
+
+int Attr_crypto::serialize(char* buf, int buflen)
+{
+    if(buf && suite_str.s && key_params.s)
+    {
+        int len = snprintf(buf, buflen, "a=crypto:%d %s %s\r\n", tag, suite_str.s, key_params.s);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed %d %s %s in buf, buf len %d.", tag, suite_str.s, key_params.s, buflen);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed %d %d %d in buf, buf len %d.", tag, suite_str.len, key_params.len, buflen);
+        return -1;
+    }
+}
+
+int Attr_crypto::parse(char* line)
+{
+    char* pos = strstr(line, "a=crypto:");
+    char* end = strstr(line, "\r\n");
+    char* suit_str = NULL;
+    char* kp_start = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse failed, %s", line);
+        return -1;
+    }
+    pos += strlen("a=crypto:");
+    tag = strtol(pos, &suit_str, 10);
+    if(!suit_str || *suit_str != ' ' || suit_str > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse tag failed, %s", line);
+        return -1;
+    }
+    while(suit_str && *suit_str == ' ')
+    {
+        suit_str++;
+    }
+    kp_start = strchr(suit_str, ' ');
+    if(!kp_start || kp_start > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse crypto-suite failed, %s", line);
+        return -1;
+    }
+    suite_str.len = kp_start - suit_str;
+    suite_str.s = new char[suite_str.len+1];
+    snprintf(suite_str.s, suite_str.len+1, "%s", suit_str);
+    
+    while(kp_start && *kp_start == ' ')
+    {
+        kp_start++;
+    }
+    key_params.len = end - kp_start;
+    key_params.s = new char[key_params.len+1];
+    snprintf(key_params.s, key_params.len+1, "%s", kp_start);
+    
     return 0;
 }
 

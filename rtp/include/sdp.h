@@ -150,7 +150,7 @@ public:
     unsigned short payload_type;
 };
 
-//Codec-specific parameters should be added in attributes "a=fmtp:".
+// Codec-specific parameters should be added in attributes "a=fmtp:".
 class Attr_fmtp : public Sdp_attribute
 {
 public:
@@ -162,6 +162,22 @@ public:
     cstr format_parms_str;
     unsigned short payload_type;
 };
+
+// a=crypto:<tag> <crypto-suite> <key-params> [<session-params>]
+// key-params = <key-method> ":" <key-info> , such as  "inline:" <key||salt> ["|" lifetime] ["|" MKI ":" length]
+class Attr_crypto : public Sdp_attribute
+{
+public:
+    Attr_crypto();
+    virtual ~Attr_crypto();
+    virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
+public:
+    cstr suite_str;
+    cstr key_params;
+    short tag;
+};
+
 
 typedef std::map<std::string, Sdp_attribute*> Attr_map;
 
