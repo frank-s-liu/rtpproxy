@@ -284,6 +284,94 @@ int Attr_crypto::parse(char* line)
     return 0;
 }
 
+Attr_sendrecv::Attr_sendrecv()
+{
+
+}
+
+Attr_sendrecv::~Attr_sendrecv()
+{
+
+}
+
+int Attr_sendrecv::serialize(char* buf, int buflen)
+{
+    if(buf)
+    {
+        int len = 0;
+        switch (attr_type)
+        {
+            case ATTR_INACTIVE:
+            {
+                len = snprintf(buf, buflen, "a=inactive\r\n");
+                break;
+            }
+            case ATTR_SENDRECV:
+            {
+                len = snprintf(buf, buflen, "a=sendrecv\r\n");
+                break;
+            }
+            case ATTR_SENDONLY:
+            {
+                len = snprintf(buf, buflen, "a=sendonly\r\n");
+                break;
+            }
+            case ATTR_RECVONLY:
+            {
+                len = snprintf(buf, buflen, "a=recvonly\r\n");
+                break;
+            }
+            default:
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute serialize failed because of error attr_type %d.", attr_type);
+                return -1;
+            }
+        }
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute serialize failed , buf len %d.", buflen);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute serialize failed becuase of buf is null");
+        return -1;
+    }
+}
+
+int Attr_sendrecv::parse(char* line)
+{
+    char* end = strstr(line, "\r\n");
+    char* pos = strstr(line, "a=sendrecv:");
+    if(pos && end && pos < end)
+    {
+        attr_type = ATTR_SENDRECV;
+    }
+    else if((pos=strstr(line, "a=sendonly:")) && end && pos < end)
+    {
+        attr_type = ATTR_SENDONLY;
+    }
+    else if((pos=strstr(line, "a=recvonly:")) && end && pos < end)
+    {
+        attr_type = ATTR_RECVONLY;
+    }
+    else if((pos=strstr(line, "a=inactive:")) && end && pos < end)
+    {
+        attr_type = ATTR_INACTIVE;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute parse failed %s", line);
+        return -1;
+    }
+    return 0;
+}
+
 Sdp_attribute::Sdp_attribute()
 {
     attr_type = ATTR_OTHER;

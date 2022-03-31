@@ -178,6 +178,15 @@ public:
     short tag;
 };
 
+class Attr_sendrecv : public Sdp_attribute
+{
+public:
+    Attr_sendrecv();
+    virtual ~Attr_sendrecv();
+    virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
+};
+
 
 typedef std::map<std::string, Sdp_attribute*> Attr_map;
 
