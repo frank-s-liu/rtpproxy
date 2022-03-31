@@ -109,16 +109,22 @@ public:
     //sockaddr_t       socket_addr;
 };
 
+/* example:
+ * o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5
+ */
 class Sdp_origin 
 {
 public:
     Sdp_origin();
     virtual ~Sdp_origin();
+    int parse(char* origin);
+    int serialize(char* buf, int buflen);
 public:
     cstr username;
     cstr session_id;
-    unsigned long long version_num;
     Network_address address;
+    unsigned long version_num;
+    unsigned char parsed;
 };
 
 class Sdp_connection 
@@ -126,6 +132,8 @@ class Sdp_connection
 public:
     Sdp_connection();
     virtual ~Sdp_connection();
+    int parse(char* network);
+    int serialize(char* buf, int buflen);
 public:    
     Network_address address;
 };
@@ -243,9 +251,8 @@ class Sdp_session
 public:
     Sdp_session();
     virtual ~Sdp_session();
-    int parse(char* sdp);
+    int parse(char* sdp, int len);
 public:
-    char    m_version[8];
     Sdp_origin       m_orign;
     Sdp_connection   m_con;
     cstr             m_timing;
@@ -253,6 +260,8 @@ public:
     Medias_l         m_media_l;
     Attrs_l          m_global_unkonwn_attrs_l;
     Attr_map         m_global_attrs_map;
+    char             m_version[8];
+    char             m_parsed;
 };
 
 #endif

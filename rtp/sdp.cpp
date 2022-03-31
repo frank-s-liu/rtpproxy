@@ -125,6 +125,99 @@ Sdp_origin::~Sdp_origin()
     }
 }
 
+
+// o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5
+int Sdp_origin::serialize(char* buf, int buflen)
+{
+    if(buf && parsed)
+    {
+        char netaddr[64]={0};
+        int len = 0;
+        int ret = address.serialize(netaddr, sizeof(netaddr));
+        if(0 != ret)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp origin serialize failed because of network address serialize failed, %s", netaddr);
+            return -1;
+        }
+        len = snprintf(buf, buflen, "o=%s %s %lu %s\r\n", username.s, session_id.s, version_num, netaddr);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp origin serialize failed because of buf len,  buf %s, buffer len%d.", buf, buflen);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "Sdp_origin serialize failed, parsed=%d, buf len=%d.", parsed, buflen);
+        return -1;
+    }
+}
+
+int Sdp_origin::parse(char* origin)
+{
+    char* pos = strstr(origin, "o=");
+    char* end = strstr(origin, "\r\n");
+    char* sid_str = NULL;
+    char* ver_str = NULL;
+    char* addr_str = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "origin parse failed, %s", origin);
+        return -1;
+    }
+    pos += strlen("o=");
+    while(pos && *pos==' ')
+    {
+        pos++;
+    }
+    sid_str = strchr(pos, ' ');
+    if(!sid_str)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "origin parse failed, no session id info %s", origin);
+        return -1;
+    }
+
+    username.len = sid_str-pos;
+    username.s = new char[username.len+1];
+    snprintf(username.s, username.len+1, "%s", pos);
+
+    while(sid_str && *sid_str == ' ')
+    {
+        sid_str++;
+    }
+    ver_str = strchr(sid_str, ' ');
+    if(!ver_str)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "origin parse failed, no sdp version info %s", origin);
+        return -1;
+    }
+    session_id.len = ver_str-sid_str;
+    session_id.s = new char[session_id.len+1];
+    snprintf(session_id.s, session_id.len+1, "%s", sid_str);
+
+    while(ver_str && *ver_str==' ')
+    {
+        ver_str++;
+    }
+    version_num = strtol(ver_str, &addr_str, 10);
+    if(!addr_str || *addr_str != ' ' || addr_str>end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp origin parse failed because of address info, %s", origin);
+        return -1;
+    }
+    if(0 != address.parse(addr_str))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp origin line parsing failed because of parsing network address failed, %s", origin);
+        return -1;
+    }
+    parsed = 1;
+    return 0;
+}
+
 Sdp_connection::Sdp_connection()
 {
 
@@ -567,6 +660,7 @@ Sdp_session::Sdp_session()
     m_timing.len = 0;
     m_session_name.s = NULL;
     m_session_name.len = 0;
+    m_parsed = 0;
 }
 
 Sdp_session::~Sdp_session()
@@ -606,8 +700,78 @@ Sdp_session::~Sdp_session()
     }
 }
 
-int Sdp_session::parse(char* sdp)
+int Sdp_session::parse(char* sdp, int len)
 {
+    char* nextline = NULL;
+    char* end = NULL;
+    Sdp_media* media = NULL;
+    if(!sdp || len<=0)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is null");
+        return -1;
+    }
+    end = sdp+(len-2); // point to the last "\r\n" 
+    while(sdp && *sdp == ' ')
+    {
+        sdp++;
+    }
+    if(!sdp[0] != 'v' || sdp[1] != '=' || sdp[2]!='0')
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is not start with v=0, %s", sdp);
+        return -1;
+    }
+    nextline = strstr(sdp, "\r\n");
+    while(nextline && nextline<end)
+    {
+        char* thisline = nextline+2;
+        while(thisline && *thisline == ' ')
+        {
+            thisline++;
+        }
+        nextline = strstr(thisline, "\r\n");
+        switch (thisline[0])
+        {
+            case 'o':
+            {
+                m_orign.parse(thisline);
+                break;
+            }
+            case 's':
+            {
+                m_session_name.len = nextline-thisline+2;
+                m_session_name.s = new char[m_session_name.len+1];
+                snprintf(m_session_name.s, m_session_name.len+1, "%s", thisline);
+                break;
+            }
+            case 'c':
+            {
+                m_con.parse(thisline);
+                break;
+            }
+            case 't':
+            {
+                m_timing.len = nextline-thisline+2;
+                m_timing.s = new char[m_timing.len+1];
+                snprintf(m_timing.s, m_timing.len+1, "%s", thisline);
+                break;
+            }
+            case 'm':
+            {
+                media = new Sdp_media();
+                //media->parse(thisline);
+                m_media_l.push_back(media);
+                break;
+            }
+            case 'a':
+            {
+                break;
+            }
+            default:
+            {
+
+            }
+        }
+    }
     return 0;   
 }
 
