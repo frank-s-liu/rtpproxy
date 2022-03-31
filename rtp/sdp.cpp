@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
+// example: 
+// IN IP4 xxx.xxx.xxx.xxx
+// IN IP6 2001:2345:6789:ABCD:EF01:2345:6789:ABCD
 Network_address::Network_address()
 {
     net_type = IN;
@@ -21,6 +24,58 @@ Network_address::~Network_address()
         address.len = 0;
         address.s = NULL;
     }
+}
+
+int Network_address::parse(char* network)
+{
+    char* end = strstr(network, "\r\n");
+    if(!end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing failed %s ", network);
+        return -1;
+    }
+    while(network && *network == ' ')
+    {
+        network++;
+    }
+    if(network[0] != 'I' || network[1] != 'N')
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing net type failed %s ", network);
+        return -1;
+    }
+    network += 2;
+    
+    while(network && *network == ' ')
+    {
+        network++;
+    }
+    if(network[0] != 'I' || network[1] != 'P')
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing net type failed %s ", network);
+        return -1;
+    }
+    if(network[2] == '4')
+    {
+        addr_type = IP4;
+    }
+    else if(network[2] == '6')
+    {
+        addr_type = IP6;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing address type failed %s ", network);
+        return -1;
+    }
+    network += 3;
+    while(network && *network == ' ')
+    {
+        network++;
+    }
+    address.len = end - network;
+    address.s = new char[address.len+1];
+    snprintf(address.s, address.len+1, "%s", network);
+    return 0;
 }
 
 Sdp_origin::Sdp_origin()
@@ -372,6 +427,27 @@ int Attr_sendrecv::parse(char* line)
     return 0;
 }
 
+Attr_rtcp::Attr_rtcp()
+{
+    port = 0;
+}
+
+Attr_rtcp::~Attr_rtcp()
+{
+
+}
+
+int Attr_rtcp::serialize(char* buf, int buflen)
+{
+    return 0;
+}
+
+int Attr_rtcp::parse(char* line)
+{
+    return 0;
+}
+
+
 Sdp_attribute::Sdp_attribute()
 {
     attr_type = ATTR_OTHER;
@@ -404,6 +480,57 @@ Sdp_media::~Sdp_media()
         delete ite->second;
         attrs.erase(ite++);
     }
-
 }
+
+Sdp_session::Sdp_session()
+{
+    snprintf(m_version, sizeof(m_version), "v=0\r\n");
+    m_timing.s = NULL;
+    m_timing.len = 0;
+    m_session_name.s = NULL;
+    m_session_name.len = 0;
+}
+
+Sdp_session::~Sdp_session()
+{
+    if(m_timing.len)
+    {
+        delete[] m_timing.s;
+        m_timing.s = NULL;
+        m_timing.len = 0;
+    }
+    if(m_session_name.len)
+    {
+        delete[] m_session_name.s;
+        m_session_name.s = NULL;
+        m_session_name.len = 0;
+    }
+
+    Attr_map::iterator ite;
+    for (ite = m_global_attrs_map.begin(); ite != m_global_attrs_map.end(); )
+    {
+        delete ite->second;
+        m_global_attrs_map.erase(ite++);
+    }
+
+    Medias_l::iterator ite_l = m_media_l.begin();
+    for(; ite_l != m_media_l.end(); )
+    {
+        if(*ite_l)
+        { 
+            delete *ite_l;
+        }
+        else
+        {   
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, sdp media instance is NULL");
+        }
+        ite_l = m_media_l.erase(ite_l);
+    }
+}
+
+int Sdp_session::parse(char* sdp)
+{
+    return 0;   
+}
+
 

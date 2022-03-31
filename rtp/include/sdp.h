@@ -5,6 +5,7 @@
 
 
 #include <map>
+#include <list>
 #include <string>
 
 
@@ -97,6 +98,7 @@ class Network_address
 public:
     Network_address();
     virtual ~Network_address();
+    int parse(char* network);
 public:
     unsigned char    net_type;      // IN has the meaning "internet"
     unsigned char    addr_type;     // IP4 and IP6 are defined
@@ -113,7 +115,7 @@ public:
     cstr username;
     cstr session_id;
     unsigned long long version_num;
-    struct Network_address address;
+    Network_address address;
 };
 
 class Sdp_connection 
@@ -122,7 +124,7 @@ public:
     Sdp_connection();
     virtual ~Sdp_connection();
 public:    
-    struct Network_address address;
+    Network_address address;
 };
 
 class Sdp_attribute 
@@ -187,8 +189,25 @@ public:
     virtual int parse(char* line);
 };
 
+/* RFC 3605
+ * a=rtcp:53020
+ * a=rtcp:53020 IN IP4 126.16.64.4
+ * it MUST NOT be used as a session level attribute 
+ */
+class Attr_rtcp : public Sdp_attribute
+{
+public:
+    Attr_rtcp();
+    virtual ~Attr_rtcp();
+    virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
+public:
+    unsigned short      port;
+    Network_address     address;
+};
 
 typedef std::map<std::string, Sdp_attribute*> Attr_map;
+typedef std::list<std::string> Attrs_l;
 
 class Sdp_media 
 {
@@ -206,11 +225,30 @@ public:
      */
     int*                 fmts;
     Attr_map             attrs;
+    Attrs_l              unknow_attrs;
     unsigned short       port;
     unsigned short       port_count;
     unsigned char        media_type;
     unsigned char        transport;
     unsigned char        fmts_num;
+};
+
+typedef std::list<Sdp_media*> Medias_l;
+class Sdp_session
+{
+public:
+    Sdp_session();
+    virtual ~Sdp_session();
+    int parse(char* sdp);
+public:
+    char    m_version[8];
+    Sdp_origin       m_orign;
+    Sdp_connection   m_con;
+    cstr             m_timing;
+    cstr             m_session_name;
+    Medias_l         m_media_l;
+    Attrs_l          m_global_unkonwn_attrs_l;
+    Attr_map         m_global_attrs_map;
 };
 
 #endif
