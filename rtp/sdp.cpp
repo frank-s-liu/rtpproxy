@@ -78,6 +78,28 @@ int Network_address::parse(char* network)
     return 0;
 }
 
+int Network_address::serialize(char* buf, int buflen)
+{
+    if(buf && address.len)
+    {
+        int len = snprintf(buf, buflen, "IN %s %s\r\n", AddrTypeStr[addr_type], address.s);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "Network_address serialize failed buf %s, buffer len%d.", buf, buflen);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "Network_address serialize failed, address len %d, buf len %d.", address.len, buflen);
+        return -1;
+    }
+}
+
 Sdp_origin::Sdp_origin()
 {
     username.s = NULL;
@@ -141,7 +163,7 @@ Attr_rtpmap::~Attr_rtpmap()
 
 int Attr_rtpmap::serialize(char* buf, int buflen)
 {
-    if(buf && encoding_str.s)
+    if(buf && parsed)
     {
         int len = snprintf(buf, buflen, "a=rtpmap:%d %s\r\n", payload_type, encoding_str.s);
         if (len >= buflen)
@@ -178,10 +200,14 @@ int Attr_rtpmap::parse(char* line)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
         return -1;
     }
-    ec_str++;
+    while(ec_str && *ec_str == ' ')
+    {
+        ec_str++;
+    }
     encoding_str.len = end-ec_str;
     encoding_str.s = new char[encoding_str.len+1];
     snprintf(encoding_str.s, encoding_str.len+1, "%s", ec_str);
+    parsed = 1;
     return 0;
 }
 
@@ -205,7 +231,7 @@ Attr_fmtp::~Attr_fmtp()
 
 int Attr_fmtp::serialize(char* buf, int buflen)
 {
-    if(buf && format_parms_str.s)
+    if(buf && parsed)
     {
         int len = snprintf(buf, buflen, "a=fmtp:%d %s\r\n", payload_type, format_parms_str.s);
         if (len >= buflen)
@@ -242,10 +268,14 @@ int Attr_fmtp::parse(char* line)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "fmtp attribute parse failed, %s", line);
         return -1;
     }
-    fp_str++;
+    while(fp_str && *fp_str == ' ')
+    {
+        fp_str++;
+    }
     format_parms_str.len = end-fp_str;
     format_parms_str.s = new char[format_parms_str.len+1];
     snprintf(format_parms_str.s, format_parms_str.len+1, "%s", fp_str);
+    parsed = 1;
     return 0;
 }
 
@@ -276,7 +306,7 @@ Attr_crypto::~Attr_crypto()
 
 int Attr_crypto::serialize(char* buf, int buflen)
 {
-    if(buf && suite_str.s && key_params.s)
+    if(buf && parsed)
     {
         int len = snprintf(buf, buflen, "a=crypto:%d %s %s\r\n", tag, suite_str.s, key_params.s);
         if (len >= buflen)
@@ -335,7 +365,7 @@ int Attr_crypto::parse(char* line)
     key_params.len = end - kp_start;
     key_params.s = new char[key_params.len+1];
     snprintf(key_params.s, key_params.len+1, "%s", kp_start);
-    
+    parsed = 1;
     return 0;
 }
 
@@ -351,7 +381,7 @@ Attr_sendrecv::~Attr_sendrecv()
 
 int Attr_sendrecv::serialize(char* buf, int buflen)
 {
-    if(buf)
+    if(buf && parsed)
     {
         int len = 0;
         switch (attr_type)
@@ -394,7 +424,7 @@ int Attr_sendrecv::serialize(char* buf, int buflen)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute serialize failed becuase of buf is null");
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute serialize failed, parsed %d ", parsed);
         return -1;
     }
 }
@@ -424,6 +454,7 @@ int Attr_sendrecv::parse(char* line)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute parse failed %s", line);
         return -1;
     }
+    parsed = 1;
     return 0;
 }
 
@@ -439,11 +470,57 @@ Attr_rtcp::~Attr_rtcp()
 
 int Attr_rtcp::serialize(char* buf, int buflen)
 {
-    return 0;
+    if(buf && parsed)
+    {
+        char netaddr[64]={0};
+        int len = 0;
+        int ret = address.serialize(netaddr, sizeof(netaddr));
+        if(0 != ret)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute serialize failed because of network address serialize failed, %s", netaddr);
+            return -1;
+        }
+        len = snprintf(buf, buflen, "a=rtcp:%d %s\r\n", port, netaddr);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute serialize failed because of buf len, buf le =[%d], buf=[%s]", buflen, buf);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute serialize failed, parsed=%d, buf len %d.", parsed, buflen);
+        return -1;
+    }
 }
 
 int Attr_rtcp::parse(char* line)
 {
+    char* pos = strstr(line, "a=rtcp:");
+    char* end = strstr(line, "\r\n");
+    char* addr_str = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute parse failed, %s", line);
+        return -1;
+    }
+    pos += strlen("a=rtcp:");
+    port = strtol(pos, &addr_str, 10);
+    if(!addr_str || *addr_str != ' ' || addr_str>end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute parse failed, %s", line);
+        return -1;
+    }
+    if(0 != address.parse(addr_str))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtcp attribute parse failed because of parsing network address failed, %s", line);
+        return -1;
+    }
+    parsed = 1;
     return 0;
 }
 
@@ -451,6 +528,7 @@ int Attr_rtcp::parse(char* line)
 Sdp_attribute::Sdp_attribute()
 {
     attr_type = ATTR_OTHER;
+    parsed = 0;
 }
 
 Sdp_attribute::~Sdp_attribute()

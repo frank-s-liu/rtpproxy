@@ -22,6 +22,8 @@ enum AddrType
     MAX_ADDR_TYPE
 };
 
+const char* AddrTypeStr[MAX_ADDR_TYPE] = {"IP4", "IP6"};
+
 enum TransProtoc0l
 {
     RTP_AVP=0,    // RFC 3550
@@ -99,6 +101,7 @@ public:
     Network_address();
     virtual ~Network_address();
     int parse(char* network);
+    int serialize(char* buf, int buflen);
 public:
     unsigned char    net_type;      // IN has the meaning "internet"
     unsigned char    addr_type;     // IP4 and IP6 are defined
@@ -135,7 +138,8 @@ public:
     virtual int serialize(char* buf, int buflen) = 0;
     virtual int parse(char* line) = 0;
 public:
-    unsigned char attr_type;
+    unsigned char attr_type:6;
+    unsigned char parsed:1;
 };
 
 // a=rtpmap:<payload type> <encoding name>/<clock rate>[/<encodingparameters>]
