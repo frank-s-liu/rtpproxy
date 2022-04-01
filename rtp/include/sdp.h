@@ -4,7 +4,6 @@
 #include "cstr.h"
 
 
-#include <map>
 #include <list>
 #include <string>
 
@@ -128,7 +127,7 @@ public:
     cstr session_id;
     Network_address address;
     unsigned long version_num;
-    unsigned char parsed;
+    unsigned char parsed:1;
 };
 
 class Sdp_connection 
@@ -223,8 +222,18 @@ public:
     Network_address     address;
 };
 
-typedef std::map<std::string, Sdp_attribute*> Attr_map;
-typedef std::list<std::string> Attrs_l;
+class Attr_unknown : public Sdp_attribute
+{
+public:
+    Attr_unknown();
+    virtual ~Attr_unknown();
+    virtual int serialize(char* buf, int buflen);
+    virtual int parse(char* line);
+public:
+    cstr    line;
+};
+
+typedef std::list<Sdp_attribute*> Attrs_l;
 
 class Sdp_media 
 {
@@ -242,8 +251,7 @@ public:
      omit a=rtpmap:0 PCMU/8000
      and  a=rtpmap:8 PCMA/8000
      */
-    Attr_map             attrs;
-    Attrs_l              unknow_attrs;
+    Attrs_l              attrs;
     cstr                 fmts;
     unsigned short       port;
     unsigned short       port_count;
@@ -265,10 +273,9 @@ public:
     cstr             m_timing;
     cstr             m_session_name;
     Medias_l         m_media_l;
-    Attrs_l          m_global_unkonwn_attrs_l;
-    Attr_map         m_global_attrs_map;
+    Attrs_l          m_global_attrs_l;
     char             m_version[8];
-    char             m_parsed;
+    unsigned char    m_parsed:1;
 };
 
 #endif

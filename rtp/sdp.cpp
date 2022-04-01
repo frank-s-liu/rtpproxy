@@ -659,6 +659,61 @@ int Attr_rtcp::parse(char* line)
     return 0;
 }
 
+Attr_unknown::Attr_unknown()
+{
+    line.s = NULL;
+    line.len = 0;
+}
+
+Attr_unknown::~Attr_unknown()
+{
+    if(line.len)
+    {
+        delete line.s;
+        line.s = NULL;
+        line.len = 0;
+    }
+}
+
+int Attr_unknown::serialize(char* buf, int buflen)
+{
+    if(buf && line.len)
+    {
+        int len = snprintf(buf, buflen, "%s\r\n", line.s);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "attribute serialize failed because of buf len, buf le =[%d], buf=[%s]", buflen, buf);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "attr serialize failed, buf len %d. line len %d", buflen, line.len);
+        return -1;
+    }
+}
+
+int Attr_unknown::parse(char* unl)
+{
+    char* end = strstr(unl, "\r\n");
+    while(unl && *unl==' ')
+    {
+        unl++;
+    }
+    if(!end || unl >= end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "attribute parse failed, line info: %s", unl);
+        return -1;
+    }
+    line.len = end -unl;
+    line.s = new char[line.len+1];
+    snprintf(line.s, line.len+1, "%s", unl);
+    return 0;
+}
 
 Sdp_attribute::Sdp_attribute()
 {
@@ -687,12 +742,6 @@ Sdp_media::~Sdp_media()
         delete[] fmts.s;
         fmts.s = NULL;
         fmts.len = 0;
-    }
-    Attr_map::iterator ite;
-    for (ite = attrs.begin(); ite != attrs.end(); )
-    {
-        delete ite->second;
-        attrs.erase(ite++);
     }
 }
 
@@ -848,13 +897,6 @@ Sdp_session::~Sdp_session()
         m_session_name.len = 0;
     }
 
-    Attr_map::iterator ite;
-    for (ite = m_global_attrs_map.begin(); ite != m_global_attrs_map.end(); )
-    {
-        delete ite->second;
-        m_global_attrs_map.erase(ite++);
-    }
-
     Medias_l::iterator ite_l = m_media_l.begin();
     for(; ite_l != m_media_l.end(); )
     {
@@ -868,6 +910,53 @@ Sdp_session::~Sdp_session()
         }
         ite_l = m_media_l.erase(ite_l);
     }
+}
+
+static Sdp_attribute* parseAttr(char* line)
+{
+    Sdp_attribute* attr = NULL;
+    if(strstr(line, "a=rtpmap"))
+    {
+        attr = new Attr_rtpmap();
+    }
+    else if(strstr(line, "a=rtcp"))
+    {
+        attr = new Attr_rtcp();
+    }
+    else if(strstr(line, "a=fmtp"))
+    {
+        attr = new Attr_fmtp();
+    }
+    else if(strstr(line, "a=crypto"))
+    {
+        attr = new Attr_crypto();
+    }
+    else if(strstr(line, "a=send"))
+    {
+        attr = new Attr_sendrecv();
+    }
+    else if(strstr(line, "a=recvonly"))
+    {
+        attr = new Attr_sendrecv();
+    }
+    else if(strstr(line, "a=inactive"))
+    {
+        attr = new Attr_sendrecv();
+    }
+    else
+    {
+        attr = new Attr_unknown();
+    }
+    if(attr)
+    {
+        int ret = attr->parse(line);
+        if(ret != 0)
+        {
+            delete attr;
+            attr = NULL;
+        }
+    }
+    return attr;
 }
 
 int Sdp_session::parse(char* sdp, int len)
@@ -928,12 +1017,28 @@ int Sdp_session::parse(char* sdp, int len)
             case 'm':
             {
                 media = new Sdp_media();
-                //media->parse(thisline);
+                media->parse(thisline);
                 m_media_l.push_back(media);
                 break;
             }
             case 'a':
             {
+                Sdp_attribute* attr = parseAttr(thisline);
+                if(attr)
+                {
+                    if(media)
+                    {
+                        media->attrs.push_back(attr);
+                    }
+                    else
+                    {
+                        m_global_attrs_l.push_back(attr);
+                    }
+                }
+                else
+                {
+                    goto err_ret;
+                }
                 break;
             }
             default:
@@ -942,7 +1047,10 @@ int Sdp_session::parse(char* sdp, int len)
             }
         }
     }
-    return 0;   
+    return 0;
+
+err_ret:
+    return -1;
 }
 
 
