@@ -1043,14 +1043,28 @@ int Sdp_session::parse(char* sdp, int len)
             }
             default:
             {
-
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknown sdp line, %s", thisline);
+                break;
             }
         }
     }
+    m_parsed = 1;
     return 0;
 
 err_ret:
     return -1;
 }
 
+int Sdp_session::serialize(char* buf, int buflen)
+{
+    if(buf && m_parsed)
+    {
+        return 0;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed, %d, %d", m_parsed, buflen);
+        return -1;
+    }
+}
 

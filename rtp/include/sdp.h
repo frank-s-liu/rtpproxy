@@ -267,6 +267,7 @@ public:
     Sdp_session();
     virtual ~Sdp_session();
     int parse(char* sdp, int len);
+    int serialize(char* buf, int buflen);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;
