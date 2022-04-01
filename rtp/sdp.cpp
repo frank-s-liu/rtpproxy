@@ -793,6 +793,36 @@ int Sdp_media::parse(char* media)
     return 0;
 }
 
+int Sdp_media::serialize(char* buf, int buflen)
+{
+    if(buf && parsed)
+    {
+        int len = 0;
+        if(port_count == 1)
+        {
+            len = snprintf(buf, buflen, "m=%s %d %s %s\r\n", MediaTypeStr[media_type], port, RTPTransProtocolStr[transport], fmts.s);
+        }
+        else
+        {
+            len = snprintf(buf, buflen, "m=%s %d/%d %s %s\r\n", MediaTypeStr[media_type], port, port_count, RTPTransProtocolStr[transport], fmts.s);
+        }
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media serialize failed because of buf len, buf le =[%d], buf=[%s]", buflen, buf);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp media serialize failed, parsed=%d, buf len %d.", parsed, buflen);
+        return -1;
+    }
+}
+
 Sdp_session::Sdp_session()
 {
     snprintf(m_version, sizeof(m_version), "v=0\r\n");
