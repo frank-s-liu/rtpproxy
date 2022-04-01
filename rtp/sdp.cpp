@@ -676,16 +676,17 @@ Sdp_media::Sdp_media()
     transport = MAX_TRANSPORT_PROTOCOL;
     port = 0;
     port_count = 1;
-    fmts = NULL;
-    fmts_num = 0;
+    fmts.s = NULL;
+    fmts.len = 0;
 }
 
 Sdp_media::~Sdp_media()
 {
-    if(fmts_num)
+    if(fmts.len)
     {
-        delete[] fmts;
-        fmts = NULL;
+        delete[] fmts.s;
+        fmts.s = NULL;
+        fmts.len = 0;
     }
     Attr_map::iterator ite;
     for (ite = attrs.begin(); ite != attrs.end(); )
@@ -693,6 +694,103 @@ Sdp_media::~Sdp_media()
         delete ite->second;
         attrs.erase(ite++);
     }
+}
+
+// m=audio 12345 RTP/SAVP 101 102
+int Sdp_media::parse(char* media)
+{
+    char* pos = strstr(media, "m=");
+    char* end = strstr(media, "\r\n");
+    char* protocaol_str = NULL;
+    if(!end || !pos || pos > end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing failed, %s", media);
+        return -1;
+    }
+    pos += strlen("m=");
+    while(pos && *pos==' ')
+    {
+        pos++;
+    }
+    if(pos[0] == 'a' && pos[1]=='u' && pos[2] == 'd' && pos[3]=='i' && pos[4]=='o')
+    {
+        media_type = AUDIO;
+        pos += 5;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parse failed, only support audio. media line %s", media);
+        return -1;
+    }
+    while(pos && *pos==' ')
+    {
+        pos++;
+    }
+    port = strtol(pos, &protocaol_str, 10);
+    if(!protocaol_str || protocaol_str>end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing port failed, %s", media);
+        return -1;
+    }
+    if(*protocaol_str == '/')
+    {
+        pos = protocaol_str + 1;
+        protocaol_str = NULL;
+        port_count = strtol(pos, &protocaol_str, 10);
+        if(!protocaol_str || *protocaol_str != ' ' || protocaol_str>end)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing port number failed, %s", media);
+            return -1;
+        }
+    }
+    while(protocaol_str && *protocaol_str == ' ')
+    {
+        protocaol_str++;
+    }
+    if(protocaol_str[0]=='R' && protocaol_str[1]=='T' && protocaol_str[2]=='P' && protocaol_str[3]=='/')
+    {
+        protocaol_str += 4;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing rtp protocaol failed, media line is[%s]", media);
+        return -1;
+    }
+    if(protocaol_str[0] == 'A' && protocaol_str[1]=='V' && protocaol_str[2]=='P')
+    {
+        transport = RTP_AVP;
+        protocaol_str += 3;
+    }
+    else if(protocaol_str[0] == 'S' && protocaol_str[1]=='A' && protocaol_str[2]=='V' && protocaol_str[3]=='P' && protocaol_str[4]==' ')
+    {
+        transport = RTP_SAVP;
+        protocaol_str += 4;
+    }
+    else if(protocaol_str[0] == 'S' && protocaol_str[1]=='A' && protocaol_str[2]=='V' && protocaol_str[3]=='P' && protocaol_str[4]=='F')
+    {
+        transport = RTP_SAVPF;
+        protocaol_str += 5;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing rtp protocol failed, unknown type, %s", media);
+        return -1;
+    }
+    pos = protocaol_str;
+    while(pos && *pos==' ')
+    {
+        pos ++;
+    }
+    if(pos >= end)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "media line parsing fmt failed, media line %s", media);
+        return-1;
+    }
+    fmts.len = end - pos;
+    fmts.s = new char[fmts.len+1];
+    snprintf(fmts.s, fmts.len+1, "%s", pos);
+    parsed = 1;
+    return 0;
 }
 
 Sdp_session::Sdp_session()

@@ -24,13 +24,15 @@ enum AddrType
 
 const char* AddrTypeStr[MAX_ADDR_TYPE] = {"IP4", "IP6"};
 
-enum TransProtoc0l
+enum TransProtocol
 {
     RTP_AVP=0,    // RFC 3550
     RTP_SAVP,     // RFC 3711
     RTP_SAVPF,    // RFC 5124
     MAX_TRANSPORT_PROTOCOL
 };
+
+const char* RTPTransProtocolStr[MAX_TRANSPORT_PROTOCOL] = {"RTP/AVP", "RTP/SAVP", "RTP/SAVPF"};
 
 enum MediaType
 {
@@ -41,6 +43,8 @@ enum MediaType
     MESSAGE,
     MAX_MEDIA_TYPE
 };
+
+const char* MediaTypeStr[MAX_MEDIA_TYPE] = {"audio", "video", "text", "application", "message"};
 
 enum PayloadType
 {
@@ -227,6 +231,8 @@ class Sdp_media
 public:
     Sdp_media();
     virtual ~Sdp_media();
+    int parse(char* media);
+    int serialize(char* buf, int buflen);
 public:
     /* RFC 3551 table 4, 5
      for static fmt, maybe SDP omit the attribute of rtpmap,
@@ -236,14 +242,14 @@ public:
      omit a=rtpmap:0 PCMU/8000
      and  a=rtpmap:8 PCMA/8000
      */
-    int*                 fmts;
     Attr_map             attrs;
     Attrs_l              unknow_attrs;
+    cstr                 fmts;
     unsigned short       port;
     unsigned short       port_count;
     unsigned char        media_type;
     unsigned char        transport;
-    unsigned char        fmts_num;
+    unsigned char        parsed:1;
 };
 
 typedef std::list<Sdp_media*> Medias_l;
