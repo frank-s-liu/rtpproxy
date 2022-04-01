@@ -228,6 +228,48 @@ Sdp_connection::~Sdp_connection()
 
 }
 
+// c=IN IP4 xxx.xxx.xxx.xxx
+int Sdp_connection::parse(char* network)
+{
+    if(0 != address.parse(network))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp connection line parsing failed because of parsing network address failed, %s", network);
+        return -1;
+    }
+    parsed = 1;
+    return 0;
+}
+
+int Sdp_connection::serialize(char* buf, int buflen)
+{
+    if(buf && parsed)
+    {
+        char netaddr[64]={0};
+        int len = 0;
+        int ret = address.serialize(netaddr, sizeof(netaddr));
+        if(0 != ret)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp connection serialize failed because of network address serialize failed, %s", netaddr);
+            return -1;
+        }
+        len = snprintf(buf, buflen, "c=%s\r\n", netaddr);
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp connection serialize failed because of buf len,  buf %s, buffer len%d.", buf, buflen);
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "Sdp connection serialize failed, parsed=%d, buf len=%d.", parsed, buflen);
+        return -1;
+    }
+}
+
 Attr_rtpmap::Attr_rtpmap()
 {
     payload_type = MAX_PAYLOAD_TYPE;

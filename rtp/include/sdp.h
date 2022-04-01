@@ -136,6 +136,7 @@ public:
     int serialize(char* buf, int buflen);
 public:    
     Network_address address;
+    unsigned char parsed:1;
 };
 
 class Sdp_attribute 
