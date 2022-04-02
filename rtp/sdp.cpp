@@ -1060,6 +1060,31 @@ int Sdp_session::serialize(char* buf, int buflen)
 {
     if(buf && m_parsed)
     {
+        int len = 0;
+        int ret = 0;
+        char origin_line[128];
+        char c_line[128];
+        origin_line[0] = '\0';
+        c_line[0] = '\0';
+        ret = m_orign.serialize(origin_line, sizeof(origin_line));
+        if(ret != 0)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed becauseof origin failed, %s", origin_line);
+            return -1;
+        }
+        ret = m_con.serialize(c_line, sizeof(c_line));
+        if(ret != 0)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed becauseof connection failed, %s", origin_line);
+            return -1;
+        }
+        len = snprintf(buf, buflen, "%s%s%s%s%s", m_version, origin_line, m_session_name.len>0?m_session_name.s:"s=-\r\n", c_line, m_timing.len>0?m_timing.s:"t=0 0\r\n");
+        if (len >= buflen)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed because of buf len, buf le =[%d], buf=[%s]", buflen, buf);
+            return -1;
+        }
+        
         return 0;
     }
     else
