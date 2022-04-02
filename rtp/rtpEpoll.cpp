@@ -379,12 +379,17 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "not support int type value");
                 return FORMAT_ERR;
             }
+            else if(*p == 'l')
+            {
+                ret = parsingList(p, &begin);
+            }
             else
             {
                 return FORMAT_ERR;
             }
             if(SUCCESS != ret)
             {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "parsing becode key-value:v failed, %s", p);
                 return ret;
             }
             else
@@ -468,6 +473,26 @@ int Epoll_data::parsingString(char* bencode_str_start, char** bencode_str_end)
         }
         p += (len+1);
         *bencode_str_end = p;
+    }
+    return SUCCESS;
+}
+
+int Epoll_data::parsingList(char* bencode_str_start, char** bencode_str_end)
+{
+    char* p = bencode_str_start+1;
+    char* l_end = p;
+    while(*l_end != 'e' && (*p > '0') && (*p<='9'))
+    {
+        int ret = parsingString(p, &l_end);
+        if(ret != 0)
+        {
+            return ret;
+        }
+        p = l_end;
+    }
+    if(*l_end != 'e')
+    {
+        return FORMAT_ERR;
     }
     return SUCCESS;
 }

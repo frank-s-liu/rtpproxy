@@ -65,6 +65,7 @@ public:
     int flushmsgs();
     int parseBencodeCmd(char* cmdstr, const char* key, int keylen);
     int parsingString(char* bencode_str_start, char** bencode_str_end);
+    int parsingList(char* bencode_str_start, char** bencode_str_end);
     int bencodeCheck(char* cmdstr, char** end);
 
 public:
