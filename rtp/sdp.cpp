@@ -967,7 +967,7 @@ int Sdp_session::parse(char* sdp, int len)
     if(!sdp || len<=0)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is null");
-        return -1;
+        goto err_ret;
     }
     end = sdp+(len-2); // point to the last "\r\n" 
     while(sdp && *sdp == ' ')
@@ -977,7 +977,7 @@ int Sdp_session::parse(char* sdp, int len)
     if(!sdp[0] != 'v' || sdp[1] != '=' || sdp[2]!='0')
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is not start with v=0, %s", sdp);
-        return -1;
+        goto err_ret;
     }
     nextline = strstr(sdp, "\r\n");
     while(nextline && nextline<end)
@@ -1037,6 +1037,7 @@ int Sdp_session::parse(char* sdp, int len)
                 }
                 else
                 {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "the sdp attrbute line parsed failed, %s", thisline);
                     goto err_ret;
                 }
                 break;
