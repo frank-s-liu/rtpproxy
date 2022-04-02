@@ -21,8 +21,6 @@ enum AddrType
     MAX_ADDR_TYPE
 };
 
-const char* AddrTypeStr[MAX_ADDR_TYPE] = {"IP4", "IP6"};
-
 enum TransProtocol
 {
     RTP_AVP=0,    // RFC 3550
@@ -30,8 +28,6 @@ enum TransProtocol
     RTP_SAVPF,    // RFC 5124
     MAX_TRANSPORT_PROTOCOL
 };
-
-const char* RTPTransProtocolStr[MAX_TRANSPORT_PROTOCOL] = {"RTP/AVP", "RTP/SAVP", "RTP/SAVPF"};
 
 enum MediaType
 {
@@ -42,8 +38,6 @@ enum MediaType
     MESSAGE,
     MAX_MEDIA_TYPE
 };
-
-const char* MediaTypeStr[MAX_MEDIA_TYPE] = {"audio", "video", "text", "application", "message"};
 
 enum PayloadType
 {

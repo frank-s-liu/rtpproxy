@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
+
+static const char* AddrTypeStr[MAX_ADDR_TYPE] = {"IP4", "IP6"};
+static const char* RTPTransProtocolStr[MAX_TRANSPORT_PROTOCOL] = {"RTP/AVP", "RTP/SAVP", "RTP/SAVPF"};
+static const char* MediaTypeStr[MAX_MEDIA_TYPE] = {"audio", "video", "text", "application", "message"};
+
 // example: 
 // IN IP4 xxx.xxx.xxx.xxx
 // IN IP6 2001:2345:6789:ABCD:EF01:2345:6789:ABCD
