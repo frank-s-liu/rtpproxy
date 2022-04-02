@@ -428,28 +428,54 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
         if(ret == 0 && keylen>0)
         {
             std::string key(begin, keylen);
+            std::string* value = NULL;
             p = begin+keylen;
-            ret = parsingBencodeString(p, &keylen, &begin);
-            if(ret == 0)
+            if(*p>='0' && *p<='9')
             {
-                std::string* value = new std::string(begin, keylen);
-                p = begin+keylen;
-                cdmParameters_map::iterator iter = m_cmdparams.find(key);
-                if(iter != m_cmdparams.end())
+                ret = parsingBencodeString(p, &keylen, &begin);
+                if(ret == 0)
                 {
-                    std::string* oldvalue = iter->second;
-                    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s modify key %s old value[%s] to new balue [%s]", 
-                                                                  m_session_key->m_cookie, key.c_str(), oldvalue->c_str(), value->c_str());
-                    delete oldvalue;
+                    value = new std::string(begin, keylen);
+                    p = begin+keylen;
                 }
-                m_cmdparams[key] = value;
-                tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameter %s: value:%s", m_session_key->m_cookie, key.c_str(), value->c_str());
+                else
+                {
+                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd value failed, cmd [%s], value[%s]", cmdstr, p);
+                    goto retcode;
+                }
             }
-            else
+            else if(*p == 'l')
             {
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd value failed, cmd [%s], value[%s]", cmdstr, p);
-                break;
+                char* start = (p++);
+                char* l_end = start;
+                while((*p > '0') && (*p<='9'))
+                {
+                    int ret = parsingBencodeString(p, &keylen, &l_end);
+                    if(ret != 0)
+                    {
+                        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd list failed, cmd [%s], value[%s]", cmdstr, p);
+                        goto retcode;
+                    }
+                    p = l_end+keylen;
+                }
+                if(*p != 'e')
+                {
+                    ret = -1;
+                    goto retcode;
+                }
+                value = new std::string(start, p-start);
+                p++;
             }
+            cdmParameters_map::iterator iter = m_cmdparams.find(key);
+            if(iter != m_cmdparams.end())
+            {
+                std::string* oldvalue = iter->second;
+                tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s modify key %s old value[%s] to new balue [%s]", 
+                                                              m_session_key->m_cookie, key.c_str(), oldvalue->c_str(), value->c_str());
+                delete oldvalue;
+            }
+            m_cmdparams[key] = value;
+            tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameter %s: value:%s", m_session_key->m_cookie, key.c_str(), value->c_str());
         }
         else if(ret == 0 && keylen == 0)
         {
@@ -458,10 +484,11 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
         else
         {
             tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "paring cmd key failed, cmd [%s] key[%s]", cmdstr, p);
-            break;
+            goto retcode;
         }
         parsingCmdLen = p-cmdstr;
     }
+retcode:
     return ret;
 }
 
