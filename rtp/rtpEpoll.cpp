@@ -497,6 +497,8 @@ int Epoll_data::parsingList(char* bencode_str_start, char** bencode_str_end)
     return SUCCESS;
 }
 
+static const int NONE_CALL_SESSION = 0;
+static const int CALL_SESSION = 1;
 int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
 {   
     char* start = cmdstr;
@@ -505,6 +507,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
     if(cookie)
     {
         SessionKey* sk = NULL;
+        int cmd_session_type = NONE_CALL_SESSION;
         if(!key)
         {
             sk = new SessionKey(start, cookie-start);
@@ -512,11 +515,19 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         else
         {
             sk = new SessionKey(key, keylen);
+            cmd_session_type = CALL_SESSION;
         }
         CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
         if(!cs)
         {
-            cs = new CmdSession();
+            if(cmd_session_type == NONE_CALL_SESSION)
+            {
+                cs = new CmdSession();
+            }
+            else
+            {
+                cs = new CallCmdSession();
+            }
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);
             tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, cookie is [%s]", sk->m_cookie);
@@ -527,8 +538,8 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             if(key)
             {
                 ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
+                delete sk;
             }   
-            delete sk;
         }
         if(0 == ret)
         {
