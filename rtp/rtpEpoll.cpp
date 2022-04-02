@@ -532,7 +532,10 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         }
         if(0 == ret)
         {
-            cs->process_cmd(cookie+2);
+            if(0 != cs->process_cmd(cookie+2))
+            {
+                delete cs;
+            }
         }
     }
     else

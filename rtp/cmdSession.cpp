@@ -4,7 +4,7 @@
 #include "hash.h"
 #include "log.h"
 #include "args.h"
-
+#include "sdp.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -492,11 +492,18 @@ retcode:
     return ret;
 }
 
-int CmdSession::getCmdValueByStrKey(const char* key)
+void CmdSession::getCmdValueByStrKey(const char* key_c, std::string** v)
 {
-    int ret = 0;
-//retprocess:
-    return ret;
+    std::string key(key_c);;
+    cdmParameters_map::iterator iter = m_cmdparams.find(key);
+    if(iter != m_cmdparams.end())
+    {
+        *v = iter->second;
+    }
+    else
+    {
+        *v = NULL;
+    }
 }
 
 int CmdSession::process_cookie(const char* cookie, int cookie_len)
@@ -534,4 +541,40 @@ int CmdSession::process_cookie(const char* cookie, int cookie_len)
 newcookie:
     m_last_cookie = new LastCookie(cookie, cookie_len);
     return 0;
+}
+
+CallCmdSession::CallCmdSession():CmdSession()
+{
+    external_peer_sdp = NULL;
+    external_local_sdp = NULL;
+    internal_peer_sdp = NULL;
+    internal_local_sdp = NULL;
+}
+
+CallCmdSession::CallCmdSession(char* cookie):CmdSession(cookie)
+{
+    external_peer_sdp = NULL;
+    external_local_sdp = NULL;
+    internal_peer_sdp = NULL;
+    internal_local_sdp = NULL;
+}
+
+CallCmdSession::~CallCmdSession()
+{
+    if(external_peer_sdp)
+    {
+        delete external_peer_sdp;
+    }
+    if(external_local_sdp)
+    {
+        delete external_local_sdp;
+    }
+    if(internal_peer_sdp)
+    {
+        delete internal_peer_sdp;
+    }
+    if(internal_local_sdp)
+    {
+        delete internal_local_sdp;
+    }
 }

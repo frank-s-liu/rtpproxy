@@ -61,7 +61,7 @@ public:
     int process_cmd(char* cmdstr);
     int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
-    int getCmdValueByStrKey(const char* key);
+    void getCmdValueByStrKey(const char* key_c, std::string** v);
     int checkPingKeepAlive(PingCheckArgs* pingArg);
     int doAction2PrepareSend();
     int sendPongResp();
@@ -85,6 +85,21 @@ private:
     LastCookie*               m_last_cookie;
     cdmParameters_map         m_cmdparams;
     MsgSend_l                 m_sendmsgs_l;
+};
+
+class Sdp_session;
+class CallCmdSession : public CmdSession
+{
+public:
+    CallCmdSession();
+    CallCmdSession(char* cookie);
+    virtual ~CallCmdSession();
+
+public:
+    Sdp_session* external_peer_sdp;
+    Sdp_session* external_local_sdp;
+    Sdp_session* internal_peer_sdp;
+    Sdp_session* internal_local_sdp;
 };
 
 #endif

@@ -52,18 +52,34 @@ int CmdSessionInitState::processCMD(int cmd)
     {
         case OFFER_CMD:
         {
+           std::string* v = NULL;
+           m_cs->getCmdValueByStrKey("sdp", &v);
+           if(v)
+           {
+               
+           }
+           else
+           {
+               ret = -1;
+               break;
+           }
            ret = 0;
            break;
         }
         case ANSWER_CMD:
         case DELETE_CMD:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s cmd %d must not be processed in CmdSessionInitState", m_cs->m_session_key->m_cookie, cmd);
+            ret = -1;
+            break;
+        }
         case PING_CMD:
         {
             m_count++;
             PingCheckArgs* args = new PingCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->ping_recv_count = m_count;
             //args->cmdtype = PING_CHECK_CMD;
-            if(0 != add_task(10000, processPingCheck, args))
+            if(0 != add_task(8000, processPingCheck, args))
             {
                 delete args;
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
