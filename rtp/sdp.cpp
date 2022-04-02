@@ -1089,16 +1089,16 @@ int Sdp_session::serialize(char* buf, int buflen)
         if(!m_global_attrs_l.empty())
         {
             char global_attrs[1024];
-            int len = 0;
+            int attr_len = 0;
             global_attrs[0] = '\0';
             Attrs_l::iterator it;
             for(it=m_global_attrs_l.begin(); it!=m_global_attrs_l.end(); it++)
             {
                 Sdp_attribute* attr = *it;
-                ret = attr->serialize(&global_attrs[len], sizeof(global_attrs)-len);
+                ret = attr->serialize(&global_attrs[attr_len], sizeof(global_attrs)-attr_len);
                 if(ret == 0)
                 {
-                    len = strlen(global_attrs);
+                    attr_len = strlen(global_attrs);
                 }
                 else
                 {
@@ -1106,8 +1106,47 @@ int Sdp_session::serialize(char* buf, int buflen)
                     return -1;
                 }
             }
+            attr_len = snprintf(&buf[len], buflen-len, "%s", global_attrs);
+            if(attr_len >= (buflen-len))
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed,not enough buf, buf len %d, %s", buflen, buf);
+                return -1;
+            }
+            len += attr_len;
         }
-        return 0;
+        if(!m_media_l.empty())
+        {
+            char media_buf[1024];
+            int media_len = 0;
+            media_buf[0] = '\0';
+            Medias_l::iterator it;
+            for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+            {
+                Sdp_media* media = *it;
+                ret = media->serialize(&media_buf[media_len], sizeof(media_buf)-media_len);
+                if(ret == 0)
+                {
+                    media_len = strlen(media_buf);
+                }
+                else
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize media failed, %s", media_buf);
+                    return -1;
+                }
+            }
+            media_len = snprintf(&buf[len], buflen-len, "%s", media_buf);
+            if(media_len >= (buflen-len))
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed,not enough buf, buf len %d, %s", buflen, buf);
+                return -1;
+            }
+            return 0;
+        }
+        else
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed, no media line");
+            return -1;
+        }
     }
     else
     {
