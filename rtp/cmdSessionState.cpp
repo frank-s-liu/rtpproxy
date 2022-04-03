@@ -25,7 +25,6 @@ static void processPingCheck(void* args)
     ControlProcess::getInstance()->add_pipe_event(pingArg);
 }
 
-
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
     m_cs = cs;
@@ -103,7 +102,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                *nextState = NULL;
                break;
            }
-           //*nextState = new CmdSessionOfferProcessingState();
+           *nextState = new CmdSessionOfferProcessingState(m_cs);
            ret = 0;
            break;
         }
@@ -136,3 +135,19 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
     }
     return ret;
 }
+
+CmdSessionOfferProcessingState::CmdSessionOfferProcessingState(CmdSession* cs):CmdSessionState(cs)
+{
+    m_state = CMDSESSION_OFFER_PROCESSING_STATE;
+}
+
+CmdSessionOfferProcessingState::~CmdSessionOfferProcessingState()
+{
+}
+
+int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextState)
+{
+    return 0;
+}
+
+

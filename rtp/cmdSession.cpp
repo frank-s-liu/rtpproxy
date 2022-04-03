@@ -352,17 +352,30 @@ int CmdSession::process_cmd(char* cmdstr)
 {
     int cmd = 0;
     int cmdlen = strlen(cmdstr);
+    int ret;
     tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd str is[%s]", cmdstr);
     parsingCmd(cmdstr, cmdlen);
     cmd = getCmd();
     CmdSessionState* css = NULL;
-    return m_css->processCMD(cmd, &css);
+    ret =m_css->processCMD(cmd, &css);
+    if(0 == ret)
+    {
+        delete m_css;
+        m_css = css;
+    }
+    return ret;
 }
 
 int CmdSession::process_cmd(int cmd)
 {
     CmdSessionState* css = NULL;
-    return m_css->processCMD(cmd, &css);
+    int ret = m_css->processCMD(cmd, &css);
+    if(0 == ret)
+    {
+        delete m_css;
+        m_css = css;
+    }
+    return ret;
 }
 
 int CmdSession::getCmd()
