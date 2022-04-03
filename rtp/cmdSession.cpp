@@ -543,6 +543,19 @@ newcookie:
     return 0;
 }
 
+int CmdSession::setSdp(int type, Sdp_session* sdp)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not set sdp info in none call cmd session, session key %s", m_session_key->m_cookie);
+    return -1;   
+}
+
+int CmdSession::getSdp(int type, Sdp_session**sdp)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not set sdp info in none call cmd session, session key %s", m_session_key->m_cookie);
+    *sdp = NULL;
+    return -1;
+}
+
 CallCmdSession::CallCmdSession():CmdSession()
 {
     external_peer_sdp = NULL;
@@ -577,4 +590,70 @@ CallCmdSession::~CallCmdSession()
     {
         delete internal_local_sdp;
     }
+}
+
+int CallCmdSession::setSdp(int type, Sdp_session* sdp)
+{
+    switch (type)
+    {
+        case EXTERNAL_PEER:
+        {
+            external_peer_sdp = sdp;
+            break;
+        }
+        case EXTERNAL_LOCAL:
+        {
+            external_local_sdp = sdp;
+            break;
+        }
+        case INTERNAL_PEER:
+        {
+            internal_peer_sdp = sdp;
+            break;
+        }
+        case INTERNAL_LOCAL:
+        {
+            internal_local_sdp = sdp;
+            break;
+        }
+        default:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "set sdp info with wrong direction, session key %s", m_session_key->m_cookie);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int CallCmdSession::getSdp(int type, Sdp_session**sdp)
+{
+    switch (type)
+    {
+        case EXTERNAL_PEER:
+        {
+            *sdp = external_peer_sdp;
+            break;
+        }
+        case EXTERNAL_LOCAL:
+        {
+            *sdp = external_local_sdp;
+            break;
+        }
+        case INTERNAL_PEER:
+        {
+            *sdp = internal_peer_sdp;
+            break;
+        }
+        case INTERNAL_LOCAL:
+        {
+            *sdp = internal_local_sdp;
+            break;
+        }
+        default:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "get sdp info with wrong direction, session key %s", m_session_key->m_cookie);
+            return -1;
+        }
+    }
+    return 0;
 }

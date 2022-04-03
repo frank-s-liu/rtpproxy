@@ -92,6 +92,15 @@ enum AttrTYpe
     ATTR_END_OF_CANDIDATES,
 };
 
+enum SDPDirection
+{
+    EXTERNAL_PEER = 0,
+    EXTERNAL_LOCAL,
+    INTERNAL_PEER,
+    INTERNAL_LOCAL,
+    MAX_DIRECTION
+};
+
 class Network_address 
 {
 public:

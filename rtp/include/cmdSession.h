@@ -52,12 +52,15 @@ public:
 typedef std::map<std::string, std::string*> cdmParameters_map;
 typedef std::list<std::string*> MsgSend_l;
 
+class Sdp_session;
 class CmdSession
 {
 public:
     CmdSession();
     CmdSession(char* cookie);
     virtual ~CmdSession();
+    virtual int setSdp(int type, Sdp_session* sdp);
+    virtual int getSdp(int type, Sdp_session**sdp);
     int process_cmd(char* cmdstr);
     int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
@@ -87,13 +90,14 @@ private:
     MsgSend_l                 m_sendmsgs_l;
 };
 
-class Sdp_session;
 class CallCmdSession : public CmdSession
 {
 public:
     CallCmdSession();
     CallCmdSession(char* cookie);
     virtual ~CallCmdSession();
+    virtual int setSdp(int type, Sdp_session*sdp);
+    virtual int getSdp(int type, Sdp_session**sdp);
 
 public:
     Sdp_session* external_peer_sdp;
