@@ -106,7 +106,7 @@ class Network_address
 public:
     Network_address();
     virtual ~Network_address();
-    int parse(char* network);
+    int parse(const char* network);
     int serialize(char* buf, int buflen);
 public:
     unsigned char    net_type;      // IN has the meaning "internet"
@@ -123,7 +123,7 @@ class Sdp_origin
 public:
     Sdp_origin();
     virtual ~Sdp_origin();
-    int parse(char* origin);
+    int parse(const char* origin);
     int serialize(char* buf, int buflen);
 public:
     cstr username;
@@ -138,7 +138,7 @@ class Sdp_connection
 public:
     Sdp_connection();
     virtual ~Sdp_connection();
-    int parse(char* network);
+    int parse(const char* network);
     int serialize(char* buf, int buflen);
 public:    
     Network_address address;
@@ -151,7 +151,7 @@ public:
     Sdp_attribute();
     virtual ~Sdp_attribute();
     virtual int serialize(char* buf, int buflen) = 0;
-    virtual int parse(char* line) = 0;
+    virtual int parse(const char* line) = 0;
 public:
     unsigned char attr_type:6;
     unsigned char parsed:1;
@@ -164,7 +164,7 @@ public:
     Attr_rtpmap();
     virtual ~Attr_rtpmap();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 public:
     cstr encoding_str;
     cstr clock_rate_str;
@@ -178,7 +178,7 @@ public:
     Attr_fmtp();
     virtual ~Attr_fmtp();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 public:
     cstr format_parms_str;
     unsigned short payload_type;
@@ -192,7 +192,7 @@ public:
     Attr_crypto();
     virtual ~Attr_crypto();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 public:
     cstr suite_str;
     cstr key_params;
@@ -205,7 +205,7 @@ public:
     Attr_sendrecv();
     virtual ~Attr_sendrecv();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 };
 
 /* RFC 3605
@@ -219,7 +219,7 @@ public:
     Attr_rtcp();
     virtual ~Attr_rtcp();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 public:
     unsigned short      port;
     Network_address     address;
@@ -231,7 +231,7 @@ public:
     Attr_unknown();
     virtual ~Attr_unknown();
     virtual int serialize(char* buf, int buflen);
-    virtual int parse(char* line);
+    virtual int parse(const char* line);
 public:
     cstr    line;
 };
@@ -243,7 +243,7 @@ class Sdp_media
 public:
     Sdp_media();
     virtual ~Sdp_media();
-    int parse(char* media);
+    int parse(const char* media);
     int serialize(char* buf, int buflen);
 public:
     /* RFC 3551 table 4, 5
@@ -269,7 +269,7 @@ class Sdp_session
 public:
     Sdp_session();
     virtual ~Sdp_session();
-    int parse(char* sdp, int len);
+    int parse(const char* sdp, int len);
     int serialize(char* buf, int buflen);
 public:
     Sdp_origin       m_orign;

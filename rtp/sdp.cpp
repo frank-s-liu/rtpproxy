@@ -31,9 +31,9 @@ Network_address::~Network_address()
     }
 }
 
-int Network_address::parse(char* network)
+int Network_address::parse(const char* network)
 {
-    char* end = strstr(network, "\r\n");
+    const char* end = strstr(network, "\r\n");
     if(!end)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing failed %s ", network);
@@ -162,12 +162,12 @@ int Sdp_origin::serialize(char* buf, int buflen)
     }
 }
 
-int Sdp_origin::parse(char* origin)
+int Sdp_origin::parse(const char* origin)
 {
-    char* pos = strstr(origin, "o=");
-    char* end = strstr(origin, "\r\n");
-    char* sid_str = NULL;
-    char* ver_str = NULL;
+    const char* pos = strstr(origin, "o=");
+    const char* end = strstr(origin, "\r\n");
+    const char* sid_str = NULL;
+    const char* ver_str = NULL;
     char* addr_str = NULL;
     if(!end || !pos || pos > end)
     {
@@ -234,7 +234,7 @@ Sdp_connection::~Sdp_connection()
 }
 
 // c=IN IP4 xxx.xxx.xxx.xxx
-int Sdp_connection::parse(char* network)
+int Sdp_connection::parse(const char* network)
 {
     if(0 != address.parse(network))
     {
@@ -323,10 +323,10 @@ int Attr_rtpmap::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_rtpmap::parse(char* line)
+int Attr_rtpmap::parse(const char* line)
 {
-    char* pos = strstr(line, "a=rtpmap:");
-    char* end = strstr(line, "\r\n");
+    const char* pos = strstr(line, "a=rtpmap:");
+    const char* end = strstr(line, "\r\n");
     char* ec_str = NULL;
     if(!end || !pos || pos > end)
     {
@@ -391,10 +391,10 @@ int Attr_fmtp::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_fmtp::parse(char* line)
+int Attr_fmtp::parse(const char* line)
 {
-    char* pos = strstr(line, "a=fmtp:");
-    char* end = strstr(line, "\r\n");
+    const char* pos = strstr(line, "a=fmtp:");
+    const char* end = strstr(line, "\r\n");
     char* fp_str = NULL;
     if(!end || !pos || pos > end)
     {
@@ -466,12 +466,12 @@ int Attr_crypto::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_crypto::parse(char* line)
+int Attr_crypto::parse(const char* line)
 {
-    char* pos = strstr(line, "a=crypto:");
-    char* end = strstr(line, "\r\n");
+    const char* pos = strstr(line, "a=crypto:");
+    const char* end = strstr(line, "\r\n");
     char* suit_str = NULL;
-    char* kp_start = NULL;
+    const char* kp_start = NULL;
     if(!end || !pos || pos > end)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse failed, %s", line);
@@ -569,10 +569,10 @@ int Attr_sendrecv::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_sendrecv::parse(char* line)
+int Attr_sendrecv::parse(const char* line)
 {
-    char* end = strstr(line, "\r\n");
-    char* pos = strstr(line, "a=sendrecv:");
+    const char* end = strstr(line, "\r\n");
+    const char* pos = strstr(line, "a=sendrecv:");
     if(pos && end && pos < end)
     {
         attr_type = ATTR_SENDRECV;
@@ -638,10 +638,10 @@ int Attr_rtcp::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_rtcp::parse(char* line)
+int Attr_rtcp::parse(const char* line)
 {
-    char* pos = strstr(line, "a=rtcp:");
-    char* end = strstr(line, "\r\n");
+    const char* pos = strstr(line, "a=rtcp:");
+    const char* end = strstr(line, "\r\n");
     char* addr_str = NULL;
     if(!end || !pos || pos > end)
     {
@@ -702,9 +702,9 @@ int Attr_unknown::serialize(char* buf, int buflen)
     }
 }
 
-int Attr_unknown::parse(char* unl)
+int Attr_unknown::parse(const char* unl)
 {
-    char* end = strstr(unl, "\r\n");
+    const char* end = strstr(unl, "\r\n");
     while(unl && *unl==' ')
     {
         unl++;
@@ -751,10 +751,10 @@ Sdp_media::~Sdp_media()
 }
 
 // m=audio 12345 RTP/SAVP 101 102
-int Sdp_media::parse(char* media)
+int Sdp_media::parse(const char* media)
 {
-    char* pos = strstr(media, "m=");
-    char* end = strstr(media, "\r\n");
+    const char* pos = strstr(media, "m=");
+    const char* end = strstr(media, "\r\n");
     char* protocaol_str = NULL;
     if(!end || !pos || pos > end)
     {
@@ -940,7 +940,7 @@ Sdp_session::~Sdp_session()
     }
 }
 
-static Sdp_attribute* parseAttr(char* line)
+static Sdp_attribute* parseAttr(const char* line)
 {
     Sdp_attribute* attr = NULL;
     if(strstr(line, "a=rtpmap"))
@@ -987,10 +987,10 @@ static Sdp_attribute* parseAttr(char* line)
     return attr;
 }
 
-int Sdp_session::parse(char* sdp, int len)
+int Sdp_session::parse(const char* sdp, int len)
 {
-    char* nextline = NULL;
-    char* end = NULL;
+    const char* nextline = NULL;
+    const char* end = NULL;
     Sdp_media* media = NULL;
     if(!sdp || len<=0)
     {
@@ -1010,7 +1010,7 @@ int Sdp_session::parse(char* sdp, int len)
     nextline = strstr(sdp, "\r\n");
     while(nextline && nextline<end)
     {
-        char* thisline = nextline+2;
+        const char* thisline = nextline+2;
         while(thisline && *thisline == ' ')
         {
             thisline++;
