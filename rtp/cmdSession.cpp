@@ -355,12 +355,14 @@ int CmdSession::process_cmd(char* cmdstr)
     tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd str is[%s]", cmdstr);
     parsingCmd(cmdstr, cmdlen);
     cmd = getCmd();
-    return m_css->processCMD(cmd);
+    CmdSessionState* css = NULL;
+    return m_css->processCMD(cmd, &css);
 }
 
 int CmdSession::process_cmd(int cmd)
 {
-    return m_css->processCMD(cmd);
+    CmdSessionState* css = NULL;
+    return m_css->processCMD(cmd, &css);
 }
 
 int CmdSession::getCmd()

@@ -9,6 +9,15 @@
 
 #include <stdlib.h>
 
+enum CmdState
+{
+    CMDSESSION_STATE = 0,
+    CMDSESSION_INIT_STATE,
+    CMDSESSION_OFFER_PROCESSING_STATE,
+    CMDSESSION_OFFER_PROCESSED_STATE,
+    CMDSESSION_MAX_STATE
+};
+
 // timer thread call back
 static void processPingCheck(void* args)
 {
@@ -20,6 +29,7 @@ static void processPingCheck(void* args)
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
     m_cs = cs;
+    m_state = CMDSESSION_STATE;
 }
 
 CmdSessionState::~CmdSessionState()
@@ -27,14 +37,20 @@ CmdSessionState::~CmdSessionState()
     m_cs = NULL;
 }
 
+int CmdSessionState::checkPingKeepAlive(PingCheckArgs* pingArg)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not process ping in cmd state %d in cmd session %s", m_state, m_cs->m_session_key->m_cookie);
+    return -1;
+}
+
 CmdSessionInitState::CmdSessionInitState(CmdSession* cs):CmdSessionState(cs)
 {
     m_count = 0;
+    m_state = CMDSESSION_INIT_STATE;
 }
 
 CmdSessionInitState::~CmdSessionInitState()
 {
-
 }
 
 int CmdSessionInitState::checkPingKeepAlive(PingCheckArgs* pingArg)
@@ -46,7 +62,7 @@ int CmdSessionInitState::checkPingKeepAlive(PingCheckArgs* pingArg)
     return 0;
 }
 
-int CmdSessionInitState::processCMD(int cmd)
+int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
     switch (cmd)
@@ -74,15 +90,20 @@ int CmdSessionInitState::processCMD(int cmd)
                else
                {
                    delete sdp;
-                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"not support direction of %s in cmd session %s", direction->c_str(), m_cs->m_session_key->m_cookie); 
+                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"not support direction of %s in cmd session %s", direction->c_str(), m_cs->m_session_key->m_cookie);
+                   ret = -1;
+                   *nextState = NULL;
+                   break;
                }
            }
            else
            {
                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"bencode no sdp or no direction in cmd session %s", m_cs->m_session_key->m_cookie);
                ret = -1;
+               *nextState = NULL;
                break;
            }
+           //*nextState = new CmdSessionOfferProcessingState();
            ret = 0;
            break;
         }
