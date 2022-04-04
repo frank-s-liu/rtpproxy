@@ -25,6 +25,12 @@ static void processPingCheck(void* args)
     ControlProcess::getInstance()->add_pipe_event(pingArg);
 }
 
+static void processStateCheck(void* args)
+{
+    StateCheckArgs* stateArgs = (StateCheckArgs*)args;
+    ControlProcess::getInstance()->add_pipe_event(stateArgs);
+}
+
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
     m_cs = cs;
@@ -39,6 +45,12 @@ CmdSessionState::~CmdSessionState()
 int CmdSessionState::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
     tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not process ping in cmd state %d in cmd session %s", m_state, m_cs->m_session_key->m_cookie);
+    return -1;
+}
+
+int CmdSessionState::checkState(StateCheckArgs* stateArg)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not check state in cmd state %d in cmd session %s", m_state, m_cs->m_session_key->m_cookie);
     return -1;
 }
 
@@ -103,6 +115,13 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                break;
            }
            *nextState = new CmdSessionOfferProcessingState(m_cs);
+            StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            args->state = CMDSESSION_OFFER_PROCESSING_STATE;
+            if(0 != add_task(1600, processStateCheck, args))
+            {
+                delete args;
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
            ret = 0;
            break;
         }
@@ -150,4 +169,11 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
     return 0;
 }
 
-
+int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
+{
+    if(stateArg->state >= m_state)
+    {
+        return -1;
+    }
+    return 0;
+}

@@ -3,7 +3,7 @@
 
 class CmdSession;
 class PingCheckArgs;
-
+class StateCheckArgs;
 
 class CmdSessionState
 {
@@ -12,6 +12,7 @@ public:
     virtual ~CmdSessionState();
     virtual int processCMD(int cmd, CmdSessionState** nextState) = 0;
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
+    virtual int checkState(StateCheckArgs* stateArg);
 
 protected:
     CmdSession*     m_cs;
@@ -25,9 +26,9 @@ public:
     virtual ~CmdSessionInitState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
+    virtual int checkState(StateCheckArgs* stateArg);
 public:
     unsigned long m_count; // ping counter from connected established
-
 };
 
 class CmdSessionOfferProcessingState : public CmdSessionState
@@ -36,6 +37,7 @@ public:
     CmdSessionOfferProcessingState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessingState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
+    virtual int checkState(StateCheckArgs* stateArg);
 };
 
 class CmdSessionOfferProcessedState : public CmdSessionState
@@ -44,6 +46,7 @@ public:
     CmdSessionOfferProcessedState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessedState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
+    virtual int checkState(StateCheckArgs* stateArg);
 };
 
 #endif

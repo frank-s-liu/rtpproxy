@@ -77,15 +77,15 @@ public:
     int process_cookie(const char* cookie, int cookie_len);
 
 public:
-    SessionKey*         m_session_key;
-     
+    SessionKey*               m_session_key;
+protected:
+    CmdSessionState*          m_css;
 
 private:
     int parsingCmd(char* cmd, int len);
     int getCmd();
 
 private:
-    CmdSessionState*          m_css;
     Epoll_data*               m_socket_data;
     LastCookie*               m_last_cookie;
     cdmParameters_map         m_cmdparams;

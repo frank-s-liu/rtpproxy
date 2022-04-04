@@ -681,7 +681,7 @@ int CallCmdSession::getSdp(int type, Sdp_session**sdp)
 
 int CallCmdSession::checkState(StateCheckArgs* stateArgs)
 {
-    return -1;
+    return m_css->checkState(stateArgs);
 }
 
 int CallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
