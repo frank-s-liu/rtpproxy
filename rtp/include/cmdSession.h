@@ -9,6 +9,7 @@
 
 class CmdSessionState;
 class PingCheckArgs;
+class StateCheckArgs;
 
 typedef enum cmd_type
 {
@@ -61,11 +62,12 @@ public:
     virtual ~CmdSession();
     virtual int setSdp(int type, Sdp_session* sdp);
     virtual int getSdp(int type, Sdp_session**sdp);
-    int process_cmd(char* cmdstr);
-    int process_cmd(int cmd);
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
+    virtual int checkState(StateCheckArgs* stateArgs);
+    virtual int process_cmd(char* cmdstr);
+    virtual int process_cmd(int cmd);
     void setSocketInfo(Epoll_data* data);
     void getCmdValueByStrKey(const char* key_c, std::string** v);
-    int checkPingKeepAlive(PingCheckArgs* pingArg);
     int doAction2PrepareSend();
     int sendPongResp();
     int sendcmd(const char* cmdmsg);
@@ -98,7 +100,8 @@ public:
     virtual ~CallCmdSession();
     virtual int setSdp(int type, Sdp_session*sdp);
     virtual int getSdp(int type, Sdp_session**sdp);
-
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
+    virtual int checkState(StateCheckArgs* stateArgs);
 public:
     Sdp_session* external_peer_sdp;
     Sdp_session* external_local_sdp;

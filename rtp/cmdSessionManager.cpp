@@ -56,6 +56,10 @@ int CmdSessionManager::putinCmdSession(CmdSession* cs)
  
 CmdSession* CmdSessionManager::getCmdSession(char* key)
 {
+    if(!key)
+    {
+        return NULL;
+    }
     SessionKey* sk = new SessionKey(key);
     CmdSession* cs = getCmdSession(sk);
     delete sk;

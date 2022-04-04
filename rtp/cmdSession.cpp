@@ -309,6 +309,12 @@ int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
     return ret;
 }
 
+int CmdSession::checkState(StateCheckArgs* stateArgs)
+{
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not check state for none call session %s ", m_session_key->m_cookie);
+    return -1;
+}
+
 int CmdSession::doAction2PrepareSend()
 {
     int ret = 0;
@@ -672,3 +678,16 @@ int CallCmdSession::getSdp(int type, Sdp_session**sdp)
     }
     return 0;
 }
+
+int CallCmdSession::checkState(StateCheckArgs* stateArgs)
+{
+    return -1;
+}
+
+int CallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
+{
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not check pingpong for call session %s ", m_session_key->m_cookie);
+    return -1;
+}
+
+

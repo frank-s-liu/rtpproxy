@@ -39,6 +39,41 @@ int PingCheckArgs::processCmd()
     }        
 }
 
+StateCheckArgs::StateCheckArgs(char* key, int len)
+{
+    cs_key = new char[len+1];
+    snprintf(cs_key, len+1, "%s", key);
+}
+
+StateCheckArgs::~StateCheckArgs()
+{
+    if(cs_key)
+    {
+        delete[] cs_key;
+        cs_key = NULL;
+    }
+}
+
+int StateCheckArgs::processCmd()
+{
+    int ret = 0;
+    CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(cs_key);
+    if(cs)
+    {  
+         ret = cs->checkState(this);
+         if(0 != ret)
+         {
+             CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
+             delete cs;
+             return -1;
+         }
+         return 0;
+    }
+    else 
+    {
+        return -1;
+    }
+}
 
 SendCMDArgs::SendCMDArgs(char* cs_key, int len)
 {  

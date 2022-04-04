@@ -24,6 +24,17 @@ public:
     char*              cs_cookie;
 };
 
+class StateCheckArgs : public Args
+{
+public:
+    StateCheckArgs(char* cs_key, int len);
+    virtual ~StateCheckArgs();
+    virtual int processCmd();
+public:
+    char*         cs_key; // call id
+    unsigned char state;
+};
+
 class SendCMDArgs : public Args
 {
 public:
