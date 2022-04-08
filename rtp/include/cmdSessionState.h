@@ -26,7 +26,7 @@ public:
     virtual ~CmdSessionInitState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
-    virtual int checkState(StateCheckArgs* stateArg);
+    //virtual int checkState(StateCheckArgs* stateArg);
 public:
     unsigned long m_count; // ping counter from connected established
 };

@@ -2,6 +2,7 @@
 #define __CMD_CONTROL_SESSION_H__
 
 #include "rtpepoll.h"
+#include "sessionKey.h"
 
 #include <map>
 #include <string>
@@ -22,20 +23,6 @@ typedef enum cmd_type
     PING_CHECK_CMD,
     MAX_CONTROL_CMD
 }CONTROL_CMD;
-
-class SessionKey
-{
-public:
-    SessionKey(const char* cookie);
-    SessionKey(const char* key, int key_len);
-    virtual ~SessionKey();
-    bool operator <(const SessionKey& s) const ;
-
-public:
-    char*         m_cookie;
-    unsigned long m_cookie_id;
-    int           m_cookie_len;
-};
 
 class LastCookie
 {
