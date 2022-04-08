@@ -28,6 +28,7 @@ int RtpSession::processSdp(Sdp_session* sdp, int direction)
     {
         case EXTERNAL_PEER:
         {
+            
             break;
         }
         case INTERNAL_PEER:
