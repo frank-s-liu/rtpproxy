@@ -1,7 +1,13 @@
 #include "args.h"
 #include "cmdSession.h"
 #include "cmdSessionManager.h"
+#include "log.h"
 
+int Args::setArg(void* arg)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "set arg failed");
+    return -1;
+}
 
 PingCheckArgs::PingCheckArgs(char* cs_key, int len)
 {  
@@ -129,8 +135,15 @@ SDPArgs::~SDPArgs()
     }
 }
 
+int SDPArgs::setArg(void* arg)
+{
+    process = (RtpProcess*)arg;
+    return 0;
+}
+
 int SDPArgs::processCmd()
 {
+    //RtpSession* rtpsession = process->getRtpSession(call_id);
     return 0;
 }
 

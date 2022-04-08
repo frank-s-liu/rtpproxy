@@ -215,3 +215,68 @@ int RtpProcess::add_pipe_event(Args* args)
     }
     return ret;
 }
+
+RtpSession* RtpProcess::getRtpSession(const char* key)
+{
+    if(!key)
+    {
+        return NULL;
+    }
+    SessionKey* sk = new SessionKey(key);
+    RtpSession* rs = getRtpSession(sk);
+    delete sk;
+    return rs;
+}
+
+RtpSession* RtpProcess::getRtpSession(SessionKey* sk)
+{       
+    Rtp_sessions_map::iterator iter = m_rtp_sessions_m.find(sk);
+    if(iter != m_rtp_sessions_m.end())
+    {
+        return iter->second;
+    }
+    return NULL;
+}
+
+RtpSession* RtpProcess::popRtpSession(const char* key)
+{
+    if(!key)
+    {
+        return NULL;
+    }
+    SessionKey* sk = new SessionKey(key);
+    RtpSession* rs = popRtpSession(sk);
+    delete sk;
+    return rs;
+}
+
+RtpSession* RtpProcess::popRtpSession(SessionKey* sk)
+{
+    RtpSession* rs = NULL;
+    Rtp_sessions_map::iterator iter = m_rtp_sessions_m.find(sk);
+    if(iter != m_rtp_sessions_m.end())
+    {
+        rs = iter->second;
+        m_rtp_sessions_m.erase(iter);
+    }
+    return rs;
+}
+
+int RtpProcess::putRtpSession(RtpSession* rs)
+{
+    SessionKey* key = rs->m_session_key;
+    Rtp_sessions_map::iterator iter = m_rtp_sessions_m.find(key);
+    if(iter != m_rtp_sessions_m.end())
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "when put rtp session, same session key found, %s", key->m_cookie);
+        return 1;
+    }
+    else 
+    {
+        m_rtp_sessions_m[key] = rs;
+    }   
+    return 0;
+}
+
+
+

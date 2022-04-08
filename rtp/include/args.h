@@ -11,6 +11,7 @@ class Args
 public:
     virtual ~Args(){};
     virtual int processCmd() = 0;
+    virtual int setArg(void* arg);
 };
 
 class PingCheckArgs : public Args
@@ -47,16 +48,19 @@ public:
     char*              cs_cookie;
 };
 
+class RtpProcess;
 class SDPArgs : public Args
 {
 public:
     SDPArgs(const char* call_id, int len);
     virtual ~SDPArgs();
     virtual int processCmd();
+    virtual int setArg(void* arg);
 public:
     char*           call_id;
     Sdp_session*    sdp;   
     char            direction;
+    RtpProcess*     process;
 };
 
 class PipeEventArgs

@@ -19,7 +19,12 @@ public:
     RtpProcess();
     virtual~RtpProcess();
     virtual void* run();
-    int add_pipe_event(Args* args);
+    int           add_pipe_event(Args* args);
+    int           putRtpSession(RtpSession* cs);
+    RtpSession*   getRtpSession(const char* key);
+    RtpSession*   getRtpSession(SessionKey* sk);
+    RtpSession*   popRtpSession(const char* key);
+    RtpSession*   popRtpSession(SessionKey* key);
 private:
     Rtp_sessions_map    m_rtp_sessions_m;
     rtpArgsQ*           m_rtp_q;
