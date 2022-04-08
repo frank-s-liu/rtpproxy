@@ -2,6 +2,8 @@
 #include "cmdSession.h"
 #include "cmdSessionManager.h"
 #include "log.h"
+#include "rtpsession.h"
+#include "rtpSendRecvProcs.h"
 
 int Args::setArg(void* arg)
 {
@@ -124,6 +126,7 @@ SDPArgs::SDPArgs(const char* key, int len)
     snprintf(call_id, len+1, "%s", key);
     direction = -1;
     sdp = NULL;
+    process = NULL;
 }
 
 SDPArgs::~SDPArgs()
@@ -133,6 +136,7 @@ SDPArgs::~SDPArgs()
         delete[] call_id;
         call_id = NULL;
     }
+    process = NULL;
 }
 
 int SDPArgs::setArg(void* arg)
@@ -143,7 +147,18 @@ int SDPArgs::setArg(void* arg)
 
 int SDPArgs::processCmd()
 {
-    //RtpSession* rtpsession = process->getRtpSession(call_id);
+    SessionKey* sk = new SessionKey(call_id);
+    RtpSession* rtpsession = process->getRtpSession(sk);
+    if(!rtpsession)
+    {
+        rtpsession = new RtpSession(sk);
+        process->putRtpSession(rtpsession);
+    }
+    else
+    {
+        delete sk;
+    }
+    rtpsession->processSdp(sdp, direction);
     return 0;
 }
 
