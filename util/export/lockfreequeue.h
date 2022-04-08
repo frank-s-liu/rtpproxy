@@ -42,13 +42,13 @@ typedef struct memqueue_t
          */
         volatile unsigned char lock;
     }msgs[1];
-}memq ueue_s;
+}memqueue_s;
 
 __attribute((always_inline)) static inline memqueue_s* initQ(uint32_t capacity)
 {       
     memqueue_s* q = NULL;
     uint32_t cap = 0;
-    if(capacity > 16)
+    if(capacity > 17)
     {
         return NULL;
     }
