@@ -3,6 +3,8 @@
 
 
 #include "socket.h"
+#include "rtpEnum.h"
+
 
 #include <stdlib.h>
 
@@ -10,7 +12,7 @@
 class UdpSocket : public Socket
 {
 public:
-    UdpSocket(const char* local_ip);
+    UdpSocket(const char* local_ip, RTPDirection direction);
     UdpSocket(const char* local_ip, int port);
     virtual ~UdpSocket();
     virtual int send_to(const void* buf, size_t buflen, int flag=0, struct sockaddr *src_addr=NULL, socklen_t addrlen=0);
@@ -25,7 +27,7 @@ public:
     virtual int delSocketFromEpollLoop(int ep_fd);
 
 private:
-    int bindPort(const char* local_ip);
+    int bindPort(const char* local_ip,  RTPDirection);
     int bindPort(const char* local_ip, int port);
 
 private:

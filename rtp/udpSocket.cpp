@@ -15,11 +15,16 @@
 #include <assert.h>
 #include <netinet/tcp.h>
 
-UdpSocket::UdpSocket(const char* local_ip):Socket(UDP, IPV4)
+extern unsigned short getExternalPort();
+extern void releaseExternalPort(unsigned short port);
+extern unsigned short  getInternalPort();
+extern void releaseInternalPort(unsigned short port);
+
+UdpSocket::UdpSocket(const char* local_ip, RTPDirection direction):Socket(UDP, IPV4)
 {
     m_port = -1;
     m_status = 0;
-    bindPort(local_ip);
+    bindPort(local_ip, direction);
 }
 
 UdpSocket::UdpSocket(const char* local_ip, int port):Socket(UDP, IPV4)
@@ -41,7 +46,7 @@ int UdpSocket::connect_to(const char* host, int port)
 }
 
 
-int UdpSocket::bindPort(const char* local_ip)
+int UdpSocket::bindPort(const char* local_ip, RTPDirection direction)
 {
     unsigned short port = 0;
     struct sockaddr_in addr;

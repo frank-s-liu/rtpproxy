@@ -223,3 +223,27 @@ RTP_CONFIG* getRtpConf()
 {
     return &s_rtp_config;
 }
+
+unsigned short getExternalPort()
+{
+    unsigned short port = 0;
+    popPort(external_ports_q, &port);
+    return port;
+}
+
+void releaseExternalPort(unsigned short port)
+{
+    pushPort(external_ports_q, port);
+}
+
+unsigned short  getInternalPort()
+{
+    unsigned short port = 0;
+    popPort(internal_ports_q, &port);
+    return port;
+} 
+
+void releaseInternalPort(unsigned short port)
+{
+    pushPort(internal_ports_q, port);
+}
