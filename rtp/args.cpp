@@ -112,6 +112,28 @@ int SendCMDArgs::processCmd()
     return ret;        
 }
 
+SDPArgs::SDPArgs(const char* key, int len)
+{
+    call_id = new char[len+1];
+    snprintf(call_id, len+1, "%s", key);
+    direction = -1;
+    sdp = NULL;
+}
+
+SDPArgs::~SDPArgs()
+{
+    if(call_id)
+    {
+        delete[] call_id;
+        call_id = NULL;
+    }
+}
+
+int SDPArgs::processCmd()
+{
+    return 0;
+}
+
 PipeEventArgs::~PipeEventArgs()
 {
     if(args_data)  

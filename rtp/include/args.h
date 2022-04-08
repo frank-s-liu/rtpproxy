@@ -1,6 +1,7 @@
 #ifndef _RTPPROXY_ARGS_H__
 #define _RTPPROXY_ARGS_H__
 
+#include "sdp.h"
 
 #include <stdio.h>
 
@@ -44,6 +45,18 @@ public:
 
 public:
     char*              cs_cookie;
+};
+
+class SDPArgs : public Args
+{
+public:
+    SDPArgs(const char* call_id, int len);
+    virtual ~SDPArgs();
+    virtual int processCmd();
+public:
+    char*           call_id;
+    Sdp_session*    sdp;   
+    char            direction;
 };
 
 class PipeEventArgs

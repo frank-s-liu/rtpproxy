@@ -1,4 +1,8 @@
-#include "rtp_process.h"
+#include "rtpSendRecvProcs.h"
+#include "rtpepoll.h"
+#include "log.h"
+#include "sdp.h"
+#include "args.h"
 #include "rtpepoll.h"
 
 #include <sys/epoll.h>
@@ -6,6 +10,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
+
+
+class Sdp_session;
 
 RtpProcess::RtpProcess():Thread("rtpprocs")
 {
@@ -17,9 +25,14 @@ RtpProcess::RtpProcess():Thread("rtpprocs")
         tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "RTP process thread create pipe failed");
         assert(0);
     }
-    m_offer_q = initQ(8);
-    m_answer_q = initQ(8);
-    m_delete_q = initQ(8);
+    int flags = fcntl(m_fd_pipe[0], F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(m_fd_pipe[0], F_SETFL, flags);
+    flags = fcntl(m_fd_pipe[1], F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(m_fd_pipe[1], F_SETFL, flags);
+
+    m_rtp_q = initQ(10);
 }
 
 RtpProcess::~RtpProcess()
@@ -39,20 +52,15 @@ RtpProcess::~RtpProcess()
         close(m_fd_pipe[1]);
         m_fd_pipe[1] = -1;
     }
-    if(m_offer_q)
+    if(m_rtp_q)
     {
-        free(m_offer_q);
-        m_offer_q = NULL;
-    }
-    if(m_answer_q)
-    {
-        free(m_answer_q);
-        m_answer_q = NULL;
-    }
-    if(m_delete_q)
-    {
-        free(m_delete_q);
-        m_delete_q = NULL;
+        PipeEventArgs* args = NULL;
+        while(0 == pop(m_rtp_q,(void**)&args))
+        {   
+            delete args;
+        }
+        freeQ(m_rtp_q);
+        m_rtp_q = NULL;
     }
 }
 
@@ -63,8 +71,8 @@ void* RtpProcess::run()
     int ret = 0;
     int fd_cnt = 0;
     memset(&event, 0, sizeof(event)); 
-    Epoll_Data data;
-    data.epoll_fd_type = RTP_EPOLL_PIPE;
+    Epoll_data data;
+    data.m_epoll_fd_type = RTP_EPOLL_PIPE_FD;
     event.data.ptr = &data;
     event.events = EPOLLIN;
     ret = epoll_ctl(m_ep_fd, EPOLL_CTL_ADD, m_fd_pipe[0], &event);
@@ -84,50 +92,52 @@ void* RtpProcess::run()
         {
             for(int i = 0; i < fd_cnt; i++)
             {
-                Epoll_Data* data = (Epoll_Data*)events[i].data.ptr;
+                Epoll_data* data = (Epoll_data*)events[i].data.ptr;
                 if(events[i].events & EPOLLIN)
                 {
-                    int type = data->epoll_fd_type;
-                    if(type == RTP_PIPE_FD)
+                    int type = data->m_epoll_fd_type;
+                    if(type == RTP_EPOLL_PIPE_FD)
                     {
                         char buf[1] = {0};
                         int len = read(m_fd_pipe[0], buf, sizeof(buf));
                         if(len > 0)
                         {
-                            void* data = NULL;
+                            PipeEventArgs* pipeArg = NULL;
                             if(buf[0] == 'a')
                             {
-                                pop(m_offer_q, &data);
-                                if(data)
+                                if(0 == pop(m_rtp_q, (void**)&pipeArg))
                                 {
-                                    
+                                    Args* arg = pipeArg->args_data;
+                                    arg->processCmd();
+                                    delete pipeArg;   
                                 }
                                 else
                                 {
                                     tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue,  no spd poped");
                                 }
                             }
-                            else if(buf[0] == 'b')
-                            {
-
-                            }
-                            else if(buf[0] == 'c')
-                            {
-
-                            }
                             else
                             {
                                 tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "wrong pipe read value %c", buf[0]);
+                                break;
                             }
                         }
                         else if(len == 0)
                         {
-                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, read len is 0");
-                            continue;
+                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, read len is 0, empty pipe");
+                            break;
                         }
                         else
                         {
-                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown pipe issue, error no. %d", errno);
+                            if(EAGAIN == errno)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown pipe issue, error no. %d", errno);
+                                break;
+                            }
                         }
                     }
                     else if(RTP_RECV_SOCKET_FD)
@@ -148,7 +158,6 @@ void* RtpProcess::run()
                         (events[i].events & EPOLLRDHUP))
                 {
                     tracelog("SIP", WARNING_LOG, __FILE__, __LINE__, "socker error, event %d", events[i].events);
-                    deletesocker;
                     break;
                 }
                 else
@@ -175,15 +184,17 @@ void* RtpProcess::run()
     return NULL;
 }
 
-int RtpProcess::offerProcess(std::string* sdp)
+int RtpProcess::add_pipe_event(Args* args)
 {
     int ret = 0;
     if(!m_isStop)
     {
-        if(push(m_offer_q, sdp))
+        PipeEventArgs* pipe_event   = new PipeEventArgs();
+        pipe_event->args_data       = args;
+        if(push(m_rtp_q, pipe_event))
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "offer queue is full");
-            ret = 1;
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "queue is full, can not push offer req");
+            ret = -1;
         }
         else
         {
@@ -193,15 +204,15 @@ int RtpProcess::offerProcess(std::string* sdp)
             {
                 void* tmpsdp = NULL;
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "offerProcess failed, pipe write issue, errno %d", errno);
-                pop(m_offer_q, &tmpsdp);
-                ret = 1;
+                pop(m_rtp_q, &tmpsdp);
+                ret = -1;
             }
         }
     }
     else
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rep process thread has exit");
-        ret = 1;
+        ret = -1;
     }
     return ret;
 }
