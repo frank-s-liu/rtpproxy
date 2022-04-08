@@ -40,7 +40,13 @@ typedef struct memqueue_t
     struct 
     {
         void *m;
-        volatile uint64_t lock;
+        /*
+         *0x00   -->can push, can not pop
+         *ox01   -->pushing, can not pop
+         *0x10   -->can pop, can not push
+         *0x11   -->poping, can not push
+         */
+        volatile unsigned char lock;
     }msgs[1];
 }memqueue_s;
 
@@ -109,12 +115,12 @@ __attribute((always_inline)) static inline int push(memqueue_s* q, void* memory)
     pos = head & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x0UL, 0x1UL);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x0, 0x01); // wait can be push
     }while(!ok);
     asm volatile ("":::"memory");
     q->msgs[pos].m = memory;
     asm volatile ("":::"memory");
-    q->msgs[pos].lock = 0x100000000UL;
+    q->msgs[pos].lock = 0x10;
     return 0;
 }
 
@@ -138,12 +144,12 @@ __attribute((always_inline)) static inline int pop(memqueue_s* q, void** data)
     pos = tail & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x100000000UL, 0x1UL);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x10, 0x11);
     }while(!ok);
     asm volatile ("":::"memory");
     *data = q->msgs[pos].m;
     asm volatile ("":::"memory");
-    q->msgs[pos].lock = 0x0UL;
+    q->msgs[pos].lock = 0x0;
     q->tail.tail++;
     return 0;
 }
@@ -168,12 +174,12 @@ __attribute((always_inline)) static inline int get(memqueue_s* q, void** data)
     pos = tail & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x100000000UL, 0x1UL);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x10, 0x11);
     }while(!ok);
     asm volatile ("":::"memory");
     *data = q->msgs[pos].m;
     asm volatile ("":::"memory");
-    q->msgs[pos].lock = 0x100000000UL;
+    q->msgs[pos].lock = 0x0;
     //q->tail.tail++;
     return 0;
 }

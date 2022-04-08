@@ -28,32 +28,49 @@ typedef struct memqueue_t
         char pad2[CACHE_LINE_SIZE - sizeof(uint32_t)];
     } tail;
     uint32_t mask;
-    char pad[CACHE_LINE_SIZE - sizeof(uint32_t)];
+    uint32_t memory_size;
+    char pad[CACHE_LINE_SIZE - sizeof(uint32_t) - sizeof(uint32_t)];
 
     struct 
     {
         void *m;
-        volatile uint64_t lock;
+        /*
+         *0x00   -->can push, can not pop
+         *ox01   -->pushing, can not pop
+         *0x10   -->can pop, can not push
+         *0x11   -->poping, can not push
+         */
+        volatile unsigned char lock;
     }msgs[1];
-}memqueue_s;
+}memq ueue_s;
 
 __attribute((always_inline)) static inline memqueue_s* initQ(uint32_t capacity)
 {       
     memqueue_s* q = NULL;
     uint32_t cap = 0;
-    if(capacity > 31)
-    {   
+    if(capacity > 16)
+    {
         return NULL;
-    }   
-    cap = (1<<capacity);                                                                       
-    q = (memqueue_s*)malloc(sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
-    memset(q, 0, sizeof(memqueue_s) + cap * sizeof(q->msgs[0]));
+    }
+    cap = (1<<capacity);
+    int pagesize = getpagesize();
+    unsigned int size = sizeof(memqueue_s) + cap * sizeof(q->msgs[0]);
+    size = (size + pagesize -1)/pagesize * pagesize;
+    q = (memqueue_s*)mmap(NULL, size, PROT_READ | PROT_WRITE,
+                                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+    if(MAP_FAILED == q)
+    {
+        assert(0);
+        return NULL;
+    }
+    memset(q, 0, size);
     q->mask = cap-1;
-    
+    q->memory_size = size;
     return q;
 }   
  
-static int push(memqueue_s* q, void* memory)
+__attribute((always_inline)) static int push(memqueue_s* q, void* memory)
 {
     uint32_t head, tail, pos, next, size;
     int ok = 0;
@@ -93,16 +110,16 @@ static int push(memqueue_s* q, void* memory)
     pos = head & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0, 1);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x0, 0x01);
     }while(!ok);
     asm volatile ("":::"memory");
     q->msgs[pos].m = memory;
     asm volatile ("":::"memory");
-    q->msgs[pos].lock = 0x100000000;
+    q->msgs[pos].lock = 0x10;
     return 0;
 }
 
-static int pop(memqueue_s* q, void** data)
+__attribute((always_inline)) static int pop(memqueue_s* q, void** data)
 {
     uint32_t head, tail, size, pos, next; 
     int ok = 0;
@@ -130,7 +147,7 @@ static int pop(memqueue_s* q, void** data)
     pos = tail & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x100000000, 1);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x10, 0x11);
     }while(!ok);
     asm volatile ("":::"memory");
     *data = q->msgs[pos].m;
@@ -139,6 +156,13 @@ static int pop(memqueue_s* q, void** data)
     return 0;
 }
 
+__attribute((always_inline)) static inline void freeQ(memqueue_s* q)
+{       
+    if(q)
+    {   
+        munmap(q, q->memory_size);
+    }   
+}
 
 #ifdef __cplusplus
 }
