@@ -3,11 +3,16 @@
 
 #include "thread.h"
 #include "lockfreequeue_mutipush_one_pop.h"
+#include "sessionKey.h"
+#include "rtpsession.h"
 
+#include "map"
 
-typedef memqueue_s rtpQ;
 
 class Args;
+typedef std::map<SessionKey*, RtpSession*, cmp_SessionKey> Rtp_sessions_map;
+typedef memqueue_s rtpArgsQ;
+
 class RtpProcess : public Thread
 {
 public:
@@ -16,9 +21,10 @@ public:
     virtual void* run();
     int add_pipe_event(Args* args);
 private:
-    int m_ep_fd;
-    int m_fd_pipe[2];
-    rtpQ* m_rtp_q;
+    Rtp_sessions_map    m_rtp_sessions_m;
+    rtpArgsQ*           m_rtp_q;
+    int                 m_ep_fd;
+    int                 m_fd_pipe[2];
 };
 
 

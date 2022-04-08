@@ -4,16 +4,6 @@
 #include "cmdSession.h"
 #include <map>
 
-//typedef std::map<long, sipUser*> cmd_Sessions_map;
-
-struct cmp_SessionKey
-{
-    bool operator()(const SessionKey* l, const SessionKey* r)
-    {
-        return (*l < *r);
-    }
-};
-
 typedef std::map<SessionKey*, CmdSession*, cmp_SessionKey> cdm_sessions_map;
 
 class CmdSessionManager

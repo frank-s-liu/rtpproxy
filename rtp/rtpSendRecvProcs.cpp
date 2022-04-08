@@ -31,7 +31,6 @@ RtpProcess::RtpProcess():Thread("rtpprocs")
     flags = fcntl(m_fd_pipe[1], F_GETFL, 0);
     flags |= O_NONBLOCK;
     fcntl(m_fd_pipe[1], F_SETFL, flags);
-
     m_rtp_q = initQ(10);
 }
 

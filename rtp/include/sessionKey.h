@@ -15,4 +15,12 @@ public:
     int           m_cookie_len;
 };
 
+struct cmp_SessionKey
+{
+    bool operator()(const SessionKey* l, const SessionKey* r)
+    {
+        return (*l < *r);
+    }
+};
+
 #endif
