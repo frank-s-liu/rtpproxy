@@ -44,7 +44,7 @@ typedef struct portQ_t
     }msgs[1];
 }portQ_s;
 
-__attribute((always_inline)) static inline portQ_s* initPortsQ(uint32_t capacity)
+__attribute((always_inline)) inline portQ_s* initPortsQ(uint32_t capacity)
 {
     portQ_s* q = NULL;
     uint32_t cap = 0;
@@ -70,7 +70,7 @@ __attribute((always_inline)) static inline portQ_s* initPortsQ(uint32_t capacity
     return q;
 }   
  
-__attribute((always_inline)) static int pushPort(portQ_s* q, unsigned short port)
+__attribute((always_inline)) inline int pushPort(portQ_s* q, unsigned short port)
 {
     uint32_t head, tail, pos, next, size;
     int ok = 0;
@@ -119,7 +119,7 @@ __attribute((always_inline)) static int pushPort(portQ_s* q, unsigned short port
     return 0;
 }
 
-__attribute((always_inline)) static int popPort(portQ_s* q, unsigned short* port)
+__attribute((always_inline)) inline int popPort(portQ_s* q, unsigned short* port)
 {
     uint32_t head, tail, size, pos, next; 
     int ok = 0;
@@ -155,7 +155,7 @@ __attribute((always_inline)) static int popPort(portQ_s* q, unsigned short* port
     return 0;
 }
 
-__attribute((always_inline)) static inline void freePortsQ(portQ_s* q)
+__attribute((always_inline)) inline void freePortsQ(portQ_s* q)
 {       
     if(q)
     {   

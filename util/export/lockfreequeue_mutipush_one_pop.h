@@ -50,8 +50,8 @@ typedef struct memqueue_t
     }msgs[1];
 }memqueue_s;
 
-__attribute((always_inline)) static inline memqueue_s* initQ(uint32_t capacity)
-{       
+__attribute((always_inline)) inline memqueue_s* initQ(uint32_t capacity)
+{
     memqueue_s* q = NULL;
     uint32_t cap = 0;
     if(capacity > 16)
@@ -75,7 +75,7 @@ __attribute((always_inline)) static inline memqueue_s* initQ(uint32_t capacity)
     return q;
 }
  
-__attribute((always_inline)) static inline int push(memqueue_s* q, void* memory)
+__attribute((always_inline)) inline int push(memqueue_s* q, void* memory)
 {
     uint32_t head, tail, pos, next, size;
     int ok = 0;
@@ -124,7 +124,7 @@ __attribute((always_inline)) static inline int push(memqueue_s* q, void* memory)
     return 0;
 }
 
-__attribute((always_inline)) static inline int pop(memqueue_s* q, void** data)
+__attribute((always_inline)) inline int pop(memqueue_s* q, void** data)
 {
     uint32_t head, tail, pos; 
     int ok = 0;
@@ -154,7 +154,7 @@ __attribute((always_inline)) static inline int pop(memqueue_s* q, void** data)
     return 0;
 }
 
-__attribute((always_inline)) static inline int get(memqueue_s* q, void** data)
+__attribute((always_inline)) inline int get(memqueue_s* q, void** data)
 {
     uint32_t head, tail, pos; 
     int ok = 0;
@@ -184,7 +184,7 @@ __attribute((always_inline)) static inline int get(memqueue_s* q, void** data)
     return 0;
 }
 
-__attribute((always_inline)) static inline int size(memqueue_s* q)
+__attribute((always_inline)) inline int size(memqueue_s* q)
 {
     uint32_t head, tail, size;
     while(1)
@@ -204,7 +204,7 @@ __attribute((always_inline)) static inline int size(memqueue_s* q)
 }
 
 
-__attribute((always_inline)) static inline void freeQ(memqueue_s* q)
+__attribute((always_inline)) inline void freeQ(memqueue_s* q)
 {
     if(q)
     {

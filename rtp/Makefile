@@ -1,6 +1,6 @@
 ODIR := ./rtp_objs/
 
-Cxx_SRCS := rtpControlProcess.cpp  cmdSessionManager.cpp cmdSession.cpp cmdSessionState.cpp  rtpEpoll.cpp args.cpp sdp.cpp rtpSendRecvProcs.cpp \
+Cxx_SRCS := rtp.cpp rtpControlProcess.cpp  cmdSessionManager.cpp cmdSession.cpp cmdSessionState.cpp  rtpEpoll.cpp args.cpp sdp.cpp rtpSendRecvProcs.cpp \
             rtpSession.cpp socket.cpp udpSocket.cpp
 Cxx_ODIR := $(ODIR)cxxobjs/
 Cxx_OBJS := $(addprefix $(Cxx_ODIR),$(Cxx_SRCS:.cpp=.o))  

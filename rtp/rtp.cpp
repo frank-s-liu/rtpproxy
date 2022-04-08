@@ -3,10 +3,14 @@
 #include "rtpControlProcess.h"
 #include "rtpepoll.h"
 #include "rtp.h"
+#include "port_q.h"
+
 
 #include <assert.h>
 
 static RTP_CONFIG s_rtp_config;
+static portQ_s* external_ports_q = NULL;
+static portQ_s* internal_ports_q = NULL;
 
 void parseRtpConfiguration(const char* path_name)
 {
@@ -189,7 +193,16 @@ void parseRtpConfiguration(const char* path_name)
 int initRTP(const char* config_file)
 {
     bool result = 0;
+    unsigned short start = 12000;
     parseRtpConfiguration(config_file);
+
+    external_ports_q = initPortsQ(16);
+    internal_ports_q = initPortsQ(16);
+    for(start=12000; start<62000; start++)
+    {
+        pushPort(external_ports_q, start);
+        pushPort(internal_ports_q, start);
+    }
     //ControlProcess
     ControlProcess::getInstance()->start();
 
