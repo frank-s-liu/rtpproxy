@@ -21,14 +21,18 @@ RtpSession::~RtpSession()
     }
 }
 
-int RtpSession::processSdp(Sdp_session* sdp, int direction)
+int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
 {
     int ret = 0;
     switch (direction)
     {
         case EXTERNAL_PEER:
         {
-            
+            if(!m_external)
+            {
+                m_external = new RtpStream();
+                m_external->set_local_rtp_network("a", IPV4, direction);
+            }
             break;
         }
         case INTERNAL_PEER:

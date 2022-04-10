@@ -59,8 +59,8 @@ public:
 public:
     char*           call_id;
     Sdp_session*    sdp;   
-    char            direction;
     RtpProcess*     process;
+    RTPDirection    direction;
 };
 
 class PipeEventArgs

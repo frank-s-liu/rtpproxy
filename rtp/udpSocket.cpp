@@ -27,7 +27,7 @@ UdpSocket::UdpSocket(const char* local_ip, RTPDirection direction):Socket(UDP, I
     bindPort(local_ip, direction);
 }
 
-UdpSocket::UdpSocket(const char* local_ip, int port):Socket(UDP, IPV4)
+UdpSocket::UdpSocket(const char* local_ip, unsigned short port):Socket(UDP, IPV4)
 {
     m_port = -1;
     m_status = 0;
@@ -45,13 +45,17 @@ int UdpSocket::connect_to(const char* host, int port)
     return 0;
 }
 
-
 int UdpSocket::bindPort(const char* local_ip, RTPDirection direction)
 {
     unsigned short port = 0;
     struct sockaddr_in addr;
     int ret = 1;
     int loop = 0;
+    if(m_socket != INVALID_SOCKET)
+    {
+        close(m_socket);
+        m_socket = INVALID_SOCKET;
+    }
     while(ret)
     {
         if(direction == EXTERNAL_PEER)
@@ -81,7 +85,7 @@ int UdpSocket::bindPort(const char* local_ip, RTPDirection direction)
         {
             tracelog("TRANSPORT", WARNING_LOG, __FILE__, __LINE__, "bind rtp port %d to socket, error %d", port, errno);
         }
-        if(loop > 1000)
+        if(loop > 128)
         {
             tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not bind one rtp port to socket, error %d", errno);
             //usleep(5000);
@@ -95,10 +99,15 @@ int UdpSocket::bindPort(const char* local_ip, RTPDirection direction)
     return ret;
 }
 
-int UdpSocket::bindPort(const char* local_ip, int port)
+int UdpSocket::bindPort(const char* local_ip, unsigned short port)
 {
     struct sockaddr_in addr;
     int ret = 1;
+    if(m_socket != INVALID_SOCKET)
+    {
+        close(m_socket);
+        m_socket = INVALID_SOCKET;
+    }
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(local_ip);
     addr.sin_port = htons(port);
@@ -138,6 +147,7 @@ void UdpSocket::setnoblock()
 
 void UdpSocket::setkeepalive( int interval)
 {
+    tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "udp can not set keep alive %d ", m_port);
 }
 
 int UdpSocket::add_read_event2EpollLoop(int ep_fd, void* event_data)
@@ -206,4 +216,9 @@ int UdpSocket::delSocketFromEpollLoop(int ep_fd)
 int UdpSocket::getlocalPort()
 {
     return m_port;
+}
+
+int UdpSocket::getStatus()
+{
+    return m_status;
 }

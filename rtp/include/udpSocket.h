@@ -13,7 +13,7 @@ class UdpSocket : public Socket
 {
 public:
     UdpSocket(const char* local_ip, RTPDirection direction);
-    UdpSocket(const char* local_ip, int port);
+    UdpSocket(const char* local_ip, unsigned short port);
     virtual ~UdpSocket();
     virtual int send_to(const void* buf, size_t buflen, int flag=0, struct sockaddr *src_addr=NULL, socklen_t addrlen=0);
     virtual int recv_from(void* buf, size_t buflen, int flag=0, struct sockaddr *src_addr=NULL, socklen_t *addrlen=NULL);
@@ -25,15 +25,14 @@ public:
     virtual void setkeepalive(int interval);
     virtual int getlocalPort();
     virtual int delSocketFromEpollLoop(int ep_fd);
-
+    virtual int getStatus();
 private:
     int bindPort(const char* local_ip,  RTPDirection);
-    int bindPort(const char* local_ip, int port);
+    int bindPort(const char* local_ip, unsigned short port);
 
 private:
     unsigned short m_port;
     unsigned char  m_status;
-    
 };
 
 #endif

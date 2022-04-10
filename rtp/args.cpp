@@ -124,7 +124,7 @@ SDPArgs::SDPArgs(const char* key, int len)
 {
     call_id = new char[len+1];
     snprintf(call_id, len+1, "%s", key);
-    direction = -1;
+    direction = MAX_DIRECTION;
     sdp = NULL;
     process = NULL;
 }
@@ -159,6 +159,7 @@ int SDPArgs::processCmd()
         delete sk;
     }
     rtpsession->processSdp(sdp, direction);
+    process->addRtpSession2epoll(rtpsession, direction);
     return 0;
 }
 

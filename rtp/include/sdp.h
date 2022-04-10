@@ -100,6 +100,9 @@ public:
     virtual ~Network_address();
     int parse(const char* network);
     int serialize(char* buf, int buflen);
+    Network_address& operator =(const Network_address& rna);
+private:
+    Network_address(const Network_address& rna);  // don't allow copy construct function
 public:
     unsigned char    net_type;      // IN has the meaning "internet"
     unsigned char    addr_type;     // IP4 and IP6 are defined

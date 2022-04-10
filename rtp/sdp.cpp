@@ -31,6 +31,23 @@ Network_address::~Network_address()
     }
 }
 
+Network_address& Network_address::operator =(const Network_address& rna)
+{
+    this->net_type = rna.net_type;
+    this->addr_type = rna.addr_type;
+    this->address.len = rna.address.len;
+    if(this->address.len > 0)
+    {
+        this->address.s = new char[this->address.len+1];
+        snprintf(this->address.s, this->address.len+1, "%s", rna.address.s);
+    }
+    else
+    {
+        this->address.s = NULL;
+    }
+    return *this;
+}
+
 int Network_address::parse(const char* network)
 {
     const char* end = strstr(network, "\r\n");
