@@ -54,7 +54,14 @@ int UdpSocket::bindPort(const char* local_ip, RTPDirection direction)
     int loop = 0;
     while(ret)
     {
-        port = 0;//getUdpPort();
+        if(direction == EXTERNAL_PEER)
+        {
+            port = getExternalPort();
+        }
+        else if(direction == INTERNAL_PEER)
+        {
+            port = getInternalPort();
+        }
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = inet_addr(local_ip);
         addr.sin_port = htons(port);

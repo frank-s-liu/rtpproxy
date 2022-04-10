@@ -44,7 +44,17 @@ void daemonize()
     // Get maximum number of file descriptors. 
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0)
     {
-        exit(1);
+        assert(0);
+    }
+    else
+    {
+        if(rl.rlim_cur<131072)
+        {
+            /*        please configure /etc/security/limit.conf
+             *        *   soft    nofile          655350
+             */
+            assert(0);
+        }
     }
     // Become a session leader to lose controlling TTY. 
     if ((pid = fork()) < 0)

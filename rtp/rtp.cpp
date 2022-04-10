@@ -202,6 +202,7 @@ int initRTP(const char* config_file)
     {
         pushPort(external_ports_q, start);
         pushPort(internal_ports_q, start);
+        start++;
     }
     //ControlProcess
     ControlProcess::getInstance()->start();
