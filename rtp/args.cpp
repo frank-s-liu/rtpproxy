@@ -151,15 +151,13 @@ int SDPArgs::processCmd()
     RtpSession* rtpsession = process->getRtpSession(sk);
     if(!rtpsession)
     {
-        rtpsession = new RtpSession(sk);
-        process->putRtpSession(rtpsession);
+        rtpsession = new RtpSession(sk, process);
     }
     else
     {
         delete sk;
     }
     rtpsession->processSdp(sdp, direction);
-    process->addRtpSession2epoll(rtpsession, direction);
     return 0;
 }
 

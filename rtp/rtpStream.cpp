@@ -1,8 +1,9 @@
 #include "rtpsession.h"
 
-RtpStream::RtpStream()
+RtpStream::RtpStream(RtpSession* rtp_session)
 {
     m_socket = NULL;
+    m_rtpSession = rtp_session;
 }
 
 RtpStream::~RtpStream()
@@ -12,6 +13,7 @@ RtpStream::~RtpStream()
         delete m_socket;
         m_socket = NULL;
     }
+    m_rtpSession = NULL;
 }
 
 int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirection direction)
@@ -27,6 +29,7 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
         {
             return -1;
         }
+        m_direction = direction;
         return 0;
     }
     return -1;
