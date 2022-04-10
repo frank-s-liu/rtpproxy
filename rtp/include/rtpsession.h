@@ -34,10 +34,10 @@ public:
 
 public:
     SessionKey*               m_session_key;
+    RtpProcess*               m_rtp_sendrecv_process;
 private:
     RtpStream*                m_external;
     RtpStream*                m_internal;
-    RtpProcess*               m_rtp_sendrecv_process;
 };
 
 #endif

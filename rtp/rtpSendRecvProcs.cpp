@@ -278,5 +278,8 @@ int RtpProcess::putRtpSession(RtpSession* rs)
     return 0;
 }
 
-
+int RtpProcess::getEpoll_fd()
+{
+    return m_ep_fd;
+}
 

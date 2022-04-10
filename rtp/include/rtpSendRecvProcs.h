@@ -25,7 +25,7 @@ public:
     RtpSession*   getRtpSession(SessionKey* sk);
     RtpSession*   popRtpSession(const char* key);
     RtpSession*   popRtpSession(SessionKey* key);
-    int           addRtpSession2epoll(RtpSession* rs, int direction);
+    int           getEpoll_fd();
 private:
     Rtp_sessions_map    m_rtp_sessions_m;
     rtpArgsQ*           m_rtp_q;
