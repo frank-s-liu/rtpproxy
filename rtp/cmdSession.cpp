@@ -384,6 +384,12 @@ int CmdSession::process_cmd(int cmd)
     return ret;
 }
 
+int CmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not process SdpResp in CmdSession, call id %s", m_session_key->m_cookie);
+    return -1;
+}
+
 int CmdSession::getCmd()
 {
     std::string cmdkey("command");
@@ -689,5 +695,43 @@ int CallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
     tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not check pingpong for call session %s ", m_session_key->m_cookie);
     return -1;
 }
+
+int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
+{
+    char resp[2048];
+    int len = 0;
+    int ret = 0;
+    int max_sdp_len_reserver = 5; // example 1234:v=0, "1234:" is the max_sdp_len_reserver
+    int len_reserve = m_session_key->m_cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
+    int real_reserver = 0;
+    int delta = 0;
+    ret = sdp->serialize(&resp[len_reserve], &len);
+    if(0 != ret)
+    {
+        return -1;
+    }
+    if(len>=1000)
+    {
+        max_sdp_len_reserver = 5;
+    }
+    else if(len >= 100)
+    {
+        max_sdp_len_reserver = 4;
+    }
+    else if(len >= 10)
+    {
+        max_sdp_len_reserver = 3;
+    }
+    else
+    {
+        max_sdp_len_reserver = 2;
+    }
+    real_reserver = m_session_key->m_cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
+    delta = len_reserve - real_reserver;
+    len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", m_session_key->m_cookie, len);
+    resp[delta+len]=':';
+    return sendcmd(resp);
+}
+
 
 

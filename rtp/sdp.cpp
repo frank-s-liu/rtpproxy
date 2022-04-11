@@ -1149,7 +1149,7 @@ err_ret:
     return -1;
 }
 
-int Sdp_session::serialize(char* buf, int buflen)
+int Sdp_session::serialize(char* buf, int* buflen)
 {
     if(buf && m_parsed)
     {
@@ -1172,8 +1172,8 @@ int Sdp_session::serialize(char* buf, int buflen)
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed becauseof connection failed, %s", origin_line);
                 return -1;
             }
-            len = snprintf(buf, buflen, "%s%s%s%s%s", m_version, origin_line, m_session_name.len>0?m_session_name.s:"s=-\r\n", c_line, m_timing.len>0?m_timing.s:"t=0 0\r\n");
-            if(len >= buflen)
+            len = snprintf(buf, *buflen, "%s%s%s%s%s", m_version, origin_line, m_session_name.len>0?m_session_name.s:"s=-\r\n", c_line, m_timing.len>0?m_timing.s:"t=0 0\r\n");
+            if(len >= *buflen)
             {
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed because of buf len, buf le =[%d], buf=[%s]", buflen, buf);
                 return -1;
@@ -1185,7 +1185,7 @@ int Sdp_session::serialize(char* buf, int buflen)
             for(it=m_global_attrs_l.begin(); it!=m_global_attrs_l.end(); it++)
             {
                 Sdp_attribute* attr = *it;
-                ret = attr->serialize(&buf[len], buflen-len);
+                ret = attr->serialize(&buf[len], *buflen-len);
                 if(ret == 0)
                 {
                     len = strlen(buf);
@@ -1203,7 +1203,7 @@ int Sdp_session::serialize(char* buf, int buflen)
             for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
             {
                 Sdp_media* media = *it;
-                ret = media->serialize(&buf[len], buflen-len);
+                ret = media->serialize(&buf[len], *buflen-len);
                 if(ret == 0)
                 {
                     len = strlen(buf);
@@ -1214,6 +1214,7 @@ int Sdp_session::serialize(char* buf, int buflen)
                     return -1;
                 }
             }
+            *buflen = len;
             return 0;
         }
         else
@@ -1224,7 +1225,7 @@ int Sdp_session::serialize(char* buf, int buflen)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed, %d, %d", m_parsed, buflen);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session serialize failed, %d, %d", m_parsed, *buflen);
         return -1;
     }
 }

@@ -3,6 +3,7 @@
 
 #include "rtpepoll.h"
 #include "sessionKey.h"
+#include "rtpEnum.h"
 
 #include <map>
 #include <string>
@@ -53,6 +54,7 @@ public:
     virtual int checkState(StateCheckArgs* stateArgs);
     virtual int process_cmd(char* cmdstr);
     virtual int process_cmd(int cmd);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
     void setSocketInfo(Epoll_data* data);
     void getCmdValueByStrKey(const char* key_c, std::string** v);
     int doAction2PrepareSend();
@@ -89,6 +91,7 @@ public:
     virtual int getSdp(int type, Sdp_session**sdp);
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
     virtual int checkState(StateCheckArgs* stateArgs);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
 public:
     Sdp_session* external_peer_sdp;
     Sdp_session* external_local_sdp;

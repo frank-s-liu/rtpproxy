@@ -201,6 +201,7 @@ int SDPRespArgs::processCmd()
     }
     else
     {
+        cs->processSdpResp(sdp, direction);
     }
 ret:
     delete sk;

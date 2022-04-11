@@ -147,7 +147,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                 delete args;
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
-            m_cs->sendPongResp();
+            ret = m_cs->sendPongResp();
             break;
         }
         default:

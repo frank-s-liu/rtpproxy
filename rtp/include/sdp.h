@@ -268,7 +268,7 @@ public:
     Sdp_session();
     virtual ~Sdp_session();
     int parse(const char* sdp, int len);
-    int serialize(char* buf, int buflen);
+    int serialize(char* buf, int* buflen);
     int replaceOrigin(const char* ip, int iplen);
     int replaceCon(const char* ip, int iplen);
     int replaceMedia(unsigned short port, unsigned char transport);
