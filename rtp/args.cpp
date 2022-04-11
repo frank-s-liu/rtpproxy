@@ -122,8 +122,9 @@ int SendCMDArgs::processCmd()
 
 SDPArgs::SDPArgs(const char* key, int len)
 {
-    call_id = new char[len+1];
-    snprintf(call_id, len+1, "%s", key);
+    call_id.len = len;
+    call_id.s = new char[len+1];
+    snprintf(call_id.s, len+1, "%s", key);
     direction = MAX_DIRECTION;
     sdp = NULL;
     process = NULL;
@@ -131,12 +132,14 @@ SDPArgs::SDPArgs(const char* key, int len)
 
 SDPArgs::~SDPArgs()
 {
-    if(call_id)
+    if(call_id.len)
     {
-        delete[] call_id;
-        call_id = NULL;
+        delete[] call_id.s;
+        call_id.s = NULL;
+        call_id.len = 0;
     }
     process = NULL;
+    sdp = NULL;
 }
 
 int SDPArgs::setArg(void* arg)
@@ -147,7 +150,7 @@ int SDPArgs::setArg(void* arg)
 
 int SDPArgs::processCmd()
 {
-    SessionKey* sk = new SessionKey(call_id);
+    SessionKey* sk = new SessionKey(call_id.s);
     RtpSession* rtpsession = process->getRtpSession(sk);
     if(!rtpsession)
     {
@@ -159,6 +162,49 @@ int SDPArgs::processCmd()
     }
     rtpsession->processSdp(sdp, direction);
     return 0;
+}
+
+SDPRespArgs::SDPRespArgs(const char* key, int len)
+{
+    call_id.len = len;
+    call_id.s = new char[len+1];
+    snprintf(call_id.s, len+1, "%s", key);
+    direction = MAX_DIRECTION;
+    sdp = NULL;
+}
+
+SDPRespArgs::~SDPRespArgs()
+{
+    if(call_id.len)
+    {
+        delete[] call_id.s;
+        call_id.s = NULL;
+        call_id.len = 0;
+    }
+    if(sdp)
+    {
+        delete sdp;
+        sdp = NULL;
+    }
+}
+
+int SDPRespArgs::processCmd()
+{
+    int ret = 0;
+    SessionKey* sk = new SessionKey(call_id.s);
+    CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
+    if(!cs)
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "don't find cmd session whose call id is %s can process SDPRespArgs", call_id.s);
+        ret = -1;
+        goto ret;
+    }
+    else
+    {
+    }
+ret:
+    delete sk;
+    return ret;
 }
 
 PipeEventArgs::~PipeEventArgs()

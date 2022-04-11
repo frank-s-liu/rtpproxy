@@ -50,7 +50,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             sdp->replaceOrigin("10.100.125.147", 16);
             sdp->replaceCon("10.100.125.147", 16);
             local_rtp_port = m_internal->getLocalPort();
-            sdp->replaceMedia(local_rtp_port, RTP_AVP);
+            ret = sdp->replaceMedia(local_rtp_port, RTP_AVP);
             break;
         }
         case INTERNAL_PEER:

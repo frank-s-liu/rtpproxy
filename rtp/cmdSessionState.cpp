@@ -5,6 +5,7 @@
 #include "args.h"
 #include "task.h"
 #include "sdp.h"
+#include "rtpLB.h"
 
 
 #include <stdlib.h>
@@ -76,6 +77,7 @@ int CmdSessionInitState::checkPingKeepAlive(PingCheckArgs* pingArg)
 int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
+    Sdp_session* sdp = NULL;
     switch (cmd)
     {
         case OFFER_CMD:
@@ -86,33 +88,35 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            m_cs->getCmdValueByStrKey("direction", &direction);
            if(v && direction)
            {
-               Sdp_session* sdp = new Sdp_session();
+               sdp = new Sdp_session();
                sdp->parse(v->c_str(), v->length());
                std::string dir1("8:external8:internal");
                std::string dir2("8:internal:8:external");
                if(*direction == dir1)
                {
-                   m_cs->setSdp(EXTERNAL_PEER, sdp);
+                   SDPArgs* sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+                   sdpArg->sdp = sdp;
+                   sdpArg->direction = EXTERNAL_PEER;
+                   if(0 != processSdpArgs(sdpArg))
+                   {
+                       tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process sdp args error in cmd session, call id %s", m_cs->m_session_key->m_cookie);
+                       goto err_ret;
+                   }
                }
                else if(*direction == dir2)
                {
-                   m_cs->setSdp(INTERNAL_PEER, sdp);
+                   //m_cs->setSdp(INTERNAL_PEER, sdp);
                }
                else
                {
-                   delete sdp;
-                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"not support direction of %s in cmd session %s", direction->c_str(), m_cs->m_session_key->m_cookie);
-                   ret = -1;
-                   *nextState = NULL;
-                   break;
+                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "err direction %s for cmd session: %s", direction->c_str(), m_cs->m_session_key->m_cookie);
+                   goto err_ret;
                }
            }
            else
            {
-               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"bencode no sdp or no direction in cmd session %s", m_cs->m_session_key->m_cookie);
-               ret = -1;
-               *nextState = NULL;
-               break;
+               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no sdp or no direction in cmd session %s", m_cs->m_session_key->m_cookie);
+               goto err_ret;
            }
            *nextState = new CmdSessionOfferProcessingState(m_cs);
             StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
@@ -152,6 +156,15 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
             break;
         }
     }
+    return ret;
+
+err_ret:
+    if(sdp)
+    {
+        delete sdp;
+    }
+    ret = -1;
+    *nextState = NULL;
     return ret;
 }
 

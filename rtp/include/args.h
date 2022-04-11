@@ -57,9 +57,21 @@ public:
     virtual int processCmd();
     virtual int setArg(void* arg);
 public:
-    char*           call_id;
+    cstr            call_id;
     Sdp_session*    sdp;   
     RtpProcess*     process;
+    RTPDirection    direction;
+};
+
+class SDPRespArgs : public Args
+{
+public:
+    SDPRespArgs(const char* call_id, int len);
+    virtual ~SDPRespArgs();
+    virtual int processCmd();
+public:
+    cstr            call_id;
+    Sdp_session*    sdp;
     RTPDirection    direction;
 };
 
