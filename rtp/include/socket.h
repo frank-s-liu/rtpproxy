@@ -46,7 +46,7 @@ public:
     virtual void setnoblock() = 0;
     virtual void setkeepalive(int interval) = 0;
     virtual int connect_to(const char* ip, int port);
-    virtual int getlocalPort() = 0;
+    virtual unsigned short getlocalPort() = 0;
     
 private:
     Socket& operator = (const Socket& other);

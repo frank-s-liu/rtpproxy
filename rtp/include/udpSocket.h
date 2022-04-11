@@ -23,7 +23,7 @@ public:
     virtual void setnoblock();
     virtual int connect_to(const char* ip, int port);
     virtual void setkeepalive(int interval);
-    virtual int getlocalPort();
+    virtual unsigned short getlocalPort();
     virtual int delSocketFromEpollLoop(int ep_fd);
     virtual int getStatus();
 private:

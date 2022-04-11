@@ -213,7 +213,7 @@ int UdpSocket::delSocketFromEpollLoop(int ep_fd)
     
 }
 
-int UdpSocket::getlocalPort()
+unsigned short UdpSocket::getlocalPort()
 {
     return m_port;
 }

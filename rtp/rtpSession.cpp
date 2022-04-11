@@ -35,6 +35,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
     {
         case EXTERNAL_PEER:
         {
+            unsigned short local_rtp_port = 0;
             if(!m_external)
             {
                 m_external = new RtpStream(this);
@@ -46,7 +47,10 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_internal = new RtpStream(this);;
             }
             m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
-            
+            sdp->replaceOrigin("10.100.125.147", 16);
+            sdp->replaceCon("10.100.125.147", 16);
+            local_rtp_port = m_internal->getLocalPort();
+            sdp->replaceMedia(local_rtp_port, RTP_AVP);
             break;
         }
         case INTERNAL_PEER:

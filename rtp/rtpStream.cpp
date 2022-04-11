@@ -5,6 +5,7 @@ RtpStream::RtpStream(RtpSession* rtp_session)
 {
     m_socket = NULL;
     m_rtpSession = rtp_session;
+    m_bridged = 0;
 }
 
 RtpStream::~RtpStream()
@@ -15,6 +16,11 @@ RtpStream::~RtpStream()
         m_socket = NULL;
     }
     m_rtpSession = NULL;
+}
+
+unsigned short RtpStream::getLocalPort()
+{
+    return m_socket->getlocalPort();
 }
 
 int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirection direction)
