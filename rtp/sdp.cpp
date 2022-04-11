@@ -129,6 +129,7 @@ Sdp_origin::Sdp_origin()
     session_id.s = NULL;
     session_id.len = 0;
     version_num = 0;
+    parsed = 0;
 }
 
 Sdp_origin::~Sdp_origin()
@@ -147,6 +148,18 @@ Sdp_origin::~Sdp_origin()
     }
 }
 
+int Sdp_origin::replaceAddress(const char* ip, int len)
+{
+    if(parsed)
+    {
+        delete address.address.s;
+        address.address.len = len;
+        address.address.s = new char[len+1];
+        snprintf(address.address.s, len+1, "%s", ip);
+        return 0;
+    }
+    return -1;
+}
 
 // o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5
 int Sdp_origin::serialize(char* buf, int buflen)
@@ -242,12 +255,26 @@ int Sdp_origin::parse(const char* origin)
 
 Sdp_connection::Sdp_connection()
 {
-
+    parsed = 0;
 }
 
 Sdp_connection::~Sdp_connection()
 {
 
+}
+
+
+int Sdp_connection::replaceAddress(const char* ip, int len)
+{
+    if(parsed)
+    {
+        delete address.address.s;
+        address.address.len = len;
+        address.address.s = new char[len+1];
+        snprintf(address.address.s, len+1, "%s", ip);
+        return 0;
+    }
+    return -1;
 }
 
 // c=IN IP4 xxx.xxx.xxx.xxx
@@ -755,6 +782,27 @@ Sdp_media::Sdp_media()
     port_count = 1;
     fmts.s = NULL;
     fmts.len = 0;
+    parsed = 0;
+}
+
+int Sdp_media::replacePort(unsigned short newport)
+{
+    if(parsed)
+    {
+        port = newport;
+        return 0;
+    }
+    return -1;
+}
+
+int Sdp_media::replaceTransport(unsigned char type)
+{
+    if(parsed)
+    {
+        transport = type;
+        return 0;
+    }
+    return -1;
 }
 
 Sdp_media::~Sdp_media()
@@ -1181,3 +1229,29 @@ int Sdp_session::serialize(char* buf, int buflen)
     }
 }
 
+int Sdp_session::replaceOrigin(const char* ip, int iplen)
+{
+    return m_orign.replaceAddress(ip, iplen);
+}
+
+int Sdp_session::replaceCon(const char* ip, int iplen)
+{
+    return m_con.replaceAddress(ip, iplen);
+}
+
+int Sdp_session::replaceMedia(unsigned short port, unsigned char transport)
+{
+    int ret = 0;
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        Sdp_media* media = *it;
+        ret = media->replacePort(port);
+        ret = media->replaceTransport(transport);
+        if(ret != 0)
+        {
+            break;
+        }
+    }
+    return ret;
+}

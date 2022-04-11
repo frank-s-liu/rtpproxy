@@ -39,8 +39,14 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             {
                 m_external = new RtpStream(this);
             }
-            m_external->set_local_rtp_network("10.100.126.229", IPV4, direction);
+            m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
             m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+            if(!m_internal)
+            {
+                m_internal = new RtpStream(this);;
+            }
+            m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
+            
             break;
         }
         case INTERNAL_PEER:

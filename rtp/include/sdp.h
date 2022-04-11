@@ -92,7 +92,6 @@ enum AttrTYpe
     ATTR_END_OF_CANDIDATES,
 };
 
-
 class Network_address 
 {
 public:
@@ -120,6 +119,7 @@ public:
     virtual ~Sdp_origin();
     int parse(const char* origin);
     int serialize(char* buf, int buflen);
+    int replaceAddress(const char* ip, int len);
 public:
     cstr username;
     cstr session_id;
@@ -135,6 +135,7 @@ public:
     virtual ~Sdp_connection();
     int parse(const char* network);
     int serialize(char* buf, int buflen);
+    int replaceAddress(const char* ip, int len);
 public:    
     Network_address address;
     unsigned char parsed:1;
@@ -240,6 +241,8 @@ public:
     virtual ~Sdp_media();
     int parse(const char* media);
     int serialize(char* buf, int buflen);
+    int replacePort(unsigned short port);
+    int replaceTransport(unsigned char type);
 public:
     /* RFC 3551 table 4, 5
      for static fmt, maybe SDP omit the attribute of rtpmap,
@@ -266,6 +269,9 @@ public:
     virtual ~Sdp_session();
     int parse(const char* sdp, int len);
     int serialize(char* buf, int buflen);
+    int replaceOrigin(const char* ip, int iplen);
+    int replaceCon(const char* ip, int iplen);
+    int replaceMedia(unsigned short port, unsigned char transport);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;
