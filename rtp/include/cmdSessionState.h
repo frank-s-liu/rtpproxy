@@ -1,5 +1,6 @@
 #ifndef __CMD_SESSION_STATE_H__
 #define __CMD_SESSION_STATE_H__
+#include "sdp.h"
 
 class CmdSession;
 class PingCheckArgs;
@@ -13,6 +14,7 @@ public:
     virtual int processCMD(int cmd, CmdSessionState** nextState) = 0;
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
     virtual int checkState(StateCheckArgs* stateArg);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
 
 protected:
     CmdSession*     m_cs;
@@ -38,6 +40,7 @@ public:
     virtual ~CmdSessionOfferProcessingState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
     virtual int checkState(StateCheckArgs* stateArg);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
 };
 
 class CmdSessionOfferProcessedState : public CmdSessionState
