@@ -2,6 +2,8 @@
 #include "log.h"
 #include "sdp.h"
 #include "rtpSendRecvProcs.h"
+#include "args.h"
+#include "rtpControlProcess.h"
 
 
 RtpSession::RtpSession()
@@ -51,6 +53,10 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             sdp->replaceCon("10.100.125.147", 16);
             local_rtp_port = m_internal->getLocalPort();
             ret = sdp->replaceMedia(local_rtp_port, RTP_AVP);
+            SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
+            arg->sdp = sdp;
+            arg->direction = INTERNAL_PEER;
+            ControlProcess::getInstance()->add_pipe_event(arg);
             break;
         }
         case INTERNAL_PEER:

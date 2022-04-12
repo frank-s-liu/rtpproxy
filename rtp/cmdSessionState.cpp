@@ -200,6 +200,8 @@ int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
     return 0;
 }
 
+
+// in msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
 int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction)
 {
     char resp[2048];
