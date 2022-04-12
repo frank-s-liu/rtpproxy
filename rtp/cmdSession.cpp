@@ -730,7 +730,8 @@ int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
     delta = len_reserve - real_reserver;
     len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", m_session_key->m_cookie, len);
     resp[delta+len]=':';
-    return sendcmd(resp);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s]", &resp[delta]);
+    return sendcmd(&resp[delta]);
 }
 
 
