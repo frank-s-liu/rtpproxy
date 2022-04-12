@@ -86,6 +86,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
     Sdp_session* sdp = NULL;
+    SDPArgs* sdpArg = NULL;
     switch (cmd)
     {
         case OFFER_CMD:
@@ -96,28 +97,30 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            m_cs->getCmdValueByStrKey("direction", &direction);
            if(v && direction)
            {
+               RTPDirection dir = MAX_DIRECTION;
                sdp = new Sdp_session();
                sdp->parse(v->c_str(), v->length());
                std::string dir1("8:external8:internal");
                std::string dir2("8:internal:8:external");
                if(*direction == dir1)
                {
-                   SDPArgs* sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-                   sdpArg->sdp = sdp;
-                   sdpArg->direction = EXTERNAL_PEER;
-                   if(0 != processSdpArgs(sdpArg))
-                   {
-                       tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process sdp args error in cmd session, call id %s", m_cs->m_session_key->m_cookie);
-                       goto err_ret;
-                   }
+                   dir = EXTERNAL_PEER;
                }
                else if(*direction == dir2)
                {
-                   //m_cs->setSdp(INTERNAL_PEER, sdp);
+                   dir = INTERNAL_PEER;
                }
                else
                {
                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "err direction %s for cmd session: %s", direction->c_str(), m_cs->m_session_key->m_cookie);
+                   goto err_ret;
+               }
+               sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+               sdpArg->sdp = sdp;
+               sdpArg->direction = dir;
+               if(0 != processSdpArgs(sdpArg))
+               {
+                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process sdp args error in cmd session, call id %s", m_cs->m_session_key->m_cookie);
                    goto err_ret;
                }
            }
@@ -140,9 +143,8 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
         case ANSWER_CMD:
         case DELETE_CMD:
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s cmd %d must not be processed in CmdSessionInitState", m_cs->m_session_key->m_cookie, cmd);
-            ret = -1;
-            break;
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd %d in CmdSessionInitState", m_cs->m_session_key->m_cookie, cmd);
+            goto err_ret;
         }
         case PING_CMD:
         {
@@ -160,8 +162,8 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
         }
         default:
         {
-            ret = 1;
-            break;
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s process unknown cmd %d in CmdSessionInitState", m_cs->m_session_key->m_cookie, cmd);
+            goto err_ret;
         }
     }
     return ret;
@@ -170,6 +172,10 @@ err_ret:
     if(sdp)
     {
         delete sdp;
+    }
+    if(sdpArg)
+    {
+        delete sdpArg;
     }
     ret = -1;
     *nextState = NULL;
