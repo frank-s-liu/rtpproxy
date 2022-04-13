@@ -112,7 +112,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
                sdpArg->sdp = sdp;
                sdpArg->direction = dir;
-               if(0 != processSdpArgs(sdpArg))
+               if(0 != processSdpArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
                {
                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
                                                                    CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);

@@ -13,10 +13,9 @@ int init_rtp_sendRecv_process(int thread_num)
     return 0;
 }
 
-int processSdpArgs(SDPArgs* args)
+int processSdpArgs(SDPArgs* args, unsigned long hash_key)
 {
-    unsigned long hashCode = BKDRHash(args->call_id.s, args->call_id.len);
-    int index = hashCode % rtpProcess_num_s;
+    int index = hash_key % rtpProcess_num_s;
     return rtpProcess_s[index].add_pipe_event(args);
 }
 

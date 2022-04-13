@@ -1,6 +1,8 @@
 #ifndef __RTP_EPOLL_DATA_H__
 #define __RTP_EPOLL_DATA_H__
 
+#include "cstr.h"
+
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <list>
@@ -56,6 +58,7 @@ typedef std::list<SessionKey*> Sessions_l;
 class Epoll_data
 {
 public:
+    Epoll_data();
     virtual ~Epoll_data();
     int rm_fd_from_epoll();
     int sendMsg(const char* buf, int len);
@@ -74,6 +77,7 @@ public:
     int                      m_session_count;
     int                      m_epoll_fd;
     unsigned char            m_epoll_fd_type;
+    cstr                     m_nocall_key; // used for pingpong
 };
 
 

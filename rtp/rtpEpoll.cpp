@@ -204,6 +204,17 @@ int UdpSocketInfo::sendMsg(const char* buf, int len)
     return 0;
 }
 
+Epoll_data::Epoll_data()
+{
+    m_socket = NULL;
+    m_sessions_l = NULL;
+    m_session_count = 0;
+    m_epoll_fd = -1;
+    m_epoll_fd_type = 0;
+    m_nocall_key.s = NULL;
+    m_nocall_key.len = 0;
+}
+
 Epoll_data::~Epoll_data()
 {
     if(m_socket)
@@ -227,6 +238,12 @@ Epoll_data::~Epoll_data()
             }
             ite = m_sessions_l->erase(ite);
         }
+    }
+    if(m_nocall_key.len)
+    {
+        delete m_nocall_key.s;
+        m_nocall_key.s = NULL;
+        m_nocall_key.len = 0;
     }
     tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data");
 }
@@ -510,7 +527,13 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         int cmd_session_type = NONE_CALL_SESSION;
         if(!key)
         {
-            sk = new SessionKey(start, cookie-start);
+            if(m_nocall_key.len == 0)
+            {
+                m_nocall_key.len = cookie-start;
+                m_nocall_key.s = new char[m_nocall_key.len+1];
+                snprintf(m_nocall_key.s, m_nocall_key.len+1, "%s", start);
+            }
+            sk = new SessionKey(m_nocall_key.s, m_nocall_key.len);
         }
         else
         {
