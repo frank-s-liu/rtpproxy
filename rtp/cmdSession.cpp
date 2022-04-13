@@ -493,7 +493,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
                 delete oldvalue;
             }
             m_cmdparams[key] = value;
-            tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameter %s: value:%s", m_session_key->m_cookie, key.c_str(), value->c_str());
+            tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameters key: [%s]: value:[%s]", m_session_key->m_cookie, key.c_str(), value->c_str());
         }
         else if(ret == 0 && keylen == 0)
         {
@@ -734,17 +734,16 @@ void NoneCallCmdSession::resetCookie(const char* cookie, int len)
 
 int NoneCallCmdSession::sendPongResp()
 {
-    int len = m_cookie.len;
     int ret = 0;
-    char* pongresp = new char[len];
-    snprintf(pongresp, len, "%s d6:result4:ponge", m_cookie.s);
+    char pongresp[256];
+    snprintf(pongresp, sizeof(pongresp), "%s d6:result4:ponge", m_cookie.s);
     ret = sendcmd(pongresp);
     if(ret < 0 )
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
         rmSocketInfo();
     }
-    delete pongresp;
+    //tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__, "cmd session [%s], response pong [%s]", m_session_key->m_cookie, pongresp);
     return ret;
 }
 
