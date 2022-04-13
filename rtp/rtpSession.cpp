@@ -52,6 +52,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
         case EXTERNAL_PEER:
         {
             unsigned short local_rtp_port = 0;
+            char local_internal_address[64];
+            local_internal_address[0] = '\0';
             if((!m_internal && m_external) ||(m_internal && !m_external))
             {
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "m_internal and m_external must be both NULL all both not NULL im cmd session %s", 
@@ -59,20 +61,22 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 ret = -1;
                 break;
             }
-            if(!m_external)
+            if(!m_external) // both NULL
             {
                 m_external = new RtpStream(this);
-            }
-            m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
-            m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
-            if(!m_internal)
-            {
                 m_internal = new RtpStream(this);;
+                m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
+                m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
             }
-            m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
-            sdp->replaceOrigin("10.100.125.147", strlen("10.100.125.147"));
-            sdp->replaceCon("10.100.125.147", strlen("10.100.125.147"));
+            else
+            {
+                m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+            }
+            m_internal->getLocalAddress(local_internal_address, sizeof(local_internal_address));
             local_rtp_port = m_internal->getLocalPort();
+            sdp->replaceOrigin(local_internal_address, strlen(local_internal_address));
+            sdp->replaceCon(local_internal_address, strlen(local_internal_address));
             ret = sdp->replaceMedia(local_rtp_port, RTP_AVP);
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
@@ -83,6 +87,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
         case INTERNAL_PEER:
         {
             unsigned short local_rtp_port = 0;
+            char local_external_address[64];
+            local_external_address[0] = '\0';
             if((!m_internal && m_external) ||(m_internal && !m_external))
             {
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "m_internal and m_external must be both NULL all both not NULL im cmd session %s", 
@@ -101,11 +107,11 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             else
             {
                 m_internal->set_remote_peer_rtp_network(&sdp->m_con.address);
-
             }
-            sdp->replaceOrigin("10.100.126.230", strlen("10.100.126.230"));
-            sdp->replaceCon("10.100.126.230", strlen("10.100.126.230"));
+            m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
             local_rtp_port = m_external->getLocalPort();
+            sdp->replaceOrigin(local_external_address, strlen(local_external_address));
+            sdp->replaceCon(local_external_address, strlen(local_external_address));
             ret = sdp->replaceMedia(local_rtp_port, RTP_SAVP);
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;

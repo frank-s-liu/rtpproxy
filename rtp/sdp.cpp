@@ -150,7 +150,7 @@ Sdp_origin::~Sdp_origin()
 
 int Sdp_origin::replaceAddress(const char* ip, int len)
 {
-    if(parsed)
+    if(parsed && len > 0)
     {
         delete address.address.s;
         address.address.len = len;
@@ -266,7 +266,7 @@ Sdp_connection::~Sdp_connection()
 
 int Sdp_connection::replaceAddress(const char* ip, int len)
 {
-    if(parsed)
+    if(parsed && len > 0)
     {
         delete address.address.s;
         address.address.len = len;
