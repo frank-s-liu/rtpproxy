@@ -13,17 +13,7 @@ class CmdSessionState;
 class PingCheckArgs;
 class StateCheckArgs;
 
-typedef enum cmd_type
-{
-    OFFER_CMD=0,
-    ANSWER_CMD,
-    DELETE_CMD,
-    PING_CMD,
 
-//  internal cmd
-    PING_CHECK_CMD,
-    MAX_CONTROL_CMD
-}CONTROL_CMD;
 
 class LastCookie
 {
