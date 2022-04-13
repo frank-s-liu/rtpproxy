@@ -238,7 +238,7 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     delta = len_reserve - real_reserver;
     len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", m_cs->m_session_key->m_cookie, len);
     resp[delta+len]=':';
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s]", &resp[delta]);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[delta], direction);
     return m_cs->sendcmd(&resp[delta]);
 }
 

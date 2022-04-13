@@ -20,7 +20,7 @@ public:
     unsigned short getLocalPort();
 private:
     Network_address     m_addr_peer; // peer address
-    UdpSocket*          m_socket;  // local address
+    UdpSrvSocket*          m_socket;  // local address
     RtpSession*         m_rtpSession;
     RTPDirection        m_direction;
     unsigned char       m_bridged;

@@ -32,7 +32,7 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
         {
             delete m_socket;
         }
-        m_socket = new UdpSocket(local_ip, direction);
+        m_socket = new UdpSrvSocket(local_ip, direction);
         if(0 == m_socket->getStatus())
         {
             return -1;
