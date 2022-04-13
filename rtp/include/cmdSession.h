@@ -45,10 +45,11 @@ public:
     virtual int process_cmd(char* cmdstr);
     virtual int process_cmd(int cmd);
     virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
+    virtual void resetCookie(const char* cookie, int len);
+    virtual int sendPongResp();
     void setSocketInfo(Epoll_data* data);
     void getCmdValueByStrKey(const char* key_c, std::string** v);
     int doAction2PrepareSend();
-    int sendPongResp();
     int sendcmd(const char* cmdmsg);
     int sendcmd(std::string* cmdmsg);
     void rmSocketInfo();
@@ -71,6 +72,19 @@ private:
     MsgSend_l                 m_sendmsgs_l;
 };
 
+class NoneCallCmdSession : public CmdSession
+{
+public:
+    NoneCallCmdSession();
+    virtual ~NoneCallCmdSession();
+    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
+    virtual void resetCookie(const char* cookie, int len);
+    virtual int sendPongResp();
+
+private:
+    cstr      m_cookie;   // cookie in ping cmd str, but we don't using this as the session key
+};
+
 class CallCmdSession : public CmdSession
 {
 public:
@@ -79,7 +93,6 @@ public:
     virtual ~CallCmdSession();
     virtual int setSdp(int type, Sdp_session*sdp);
     virtual int getSdp(int type, Sdp_session**sdp);
-    virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
     virtual int checkState(StateCheckArgs* stateArgs);
     virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
 public:

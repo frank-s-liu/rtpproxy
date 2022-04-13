@@ -545,7 +545,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         {
             if(cmd_session_type == NONE_CALL_SESSION)
             {
-                cs = new CmdSession();
+                cs = new NoneCallCmdSession();
             }
             else
             {
@@ -566,6 +566,10 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         }
         if(0 == ret)
         {
+            if(cmd_session_type == NONE_CALL_SESSION)
+            {
+                cs->resetCookie(start, cookie-start);
+            }
             if(0 != cs->process_cmd(cookie+2))
             {
                 delete cs;

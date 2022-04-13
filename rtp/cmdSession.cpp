@@ -156,18 +156,8 @@ CmdSession::~CmdSession()
 
 int CmdSession::sendPongResp()
 {
-    int len = m_session_key->m_cookie_len + 32;
-    int ret = 0;
-    char* pongresp = new char[len];
-    snprintf(pongresp, len, "%s d6:result4:ponge", m_session_key->m_cookie);
-    ret = sendcmd(pongresp);
-    if(ret < 0 )
-    {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
-        rmSocketInfo();
-    }
-    delete pongresp;
-    return ret;
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not send Pong response  %s", m_session_key->m_cookie);
+    return -1;
 }
 
 int CmdSession::sendcmd(const char* cmdmsg)
@@ -301,13 +291,8 @@ int CmdSession::flushmsgs()
 
 int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 {
-    int ret = m_css->checkPingKeepAlive(pingArg);
-    if(ret != 0)
-    {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "checkPingKeepAlive failed %s ", m_session_key->m_cookie);
-        rmSocketInfo();
-    }
-    return ret;
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not check pingpong for call session %s ", m_session_key->m_cookie);
+    return -1;
 }
 
 int CmdSession::checkState(StateCheckArgs* stateArgs)
@@ -348,7 +333,7 @@ void CmdSession::rmSocketInfo()
         m_socket_data->m_session_count --;
         if(0 == m_socket_data->m_session_count)
         {
-            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session %s ", m_session_key->m_cookie);
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session %s ", m_session_key->m_cookie?m_session_key->m_cookie:"still no session key");
             delete m_socket_data;
         }
         m_socket_data = NULL;
@@ -383,6 +368,11 @@ int CmdSession::process_cmd(int cmd)
         m_css = css;
     }
     return ret;
+}
+
+void CmdSession::resetCookie(const char* cookie, int len)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not reset cookie in CmdSession, call id %s", m_session_key->m_cookie);
 }
 
 int CmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
@@ -692,12 +682,6 @@ int CallCmdSession::checkState(StateCheckArgs* stateArgs)
     return m_css->checkState(stateArgs);
 }
 
-int CallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
-{
-    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "must not check pingpong for call session %s ", m_session_key->m_cookie);
-    return -1;
-}
-
 int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
 {
     CmdSessionState* nextState = NULL;
@@ -710,5 +694,58 @@ int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
     return ret;
 }
 
+NoneCallCmdSession::NoneCallCmdSession():CmdSession()
+{
+    m_cookie.s = NULL;
+    m_cookie.len = 0;
+}
+
+NoneCallCmdSession::~NoneCallCmdSession()
+{
+    if(m_cookie.len > 0)
+    {
+        delete m_cookie.s;
+        m_cookie.s  = NULL;
+        m_cookie.len = 0;
+    }
+}
+
+int NoneCallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
+{
+    int ret = m_css->checkPingKeepAlive(pingArg);
+    if(ret != 0)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "checkPingKeepAlive failed %s ", m_session_key->m_cookie);
+        rmSocketInfo();
+    }
+    return ret;
+}
+
+void NoneCallCmdSession::resetCookie(const char* cookie, int len)
+{
+    if(m_cookie.len > 0)
+    {
+        delete m_cookie.s;
+    }
+    m_cookie.len = len;
+    m_cookie.s = new char[len+1];
+    snprintf(m_cookie.s, len+1, "%s", cookie);
+}
+
+int NoneCallCmdSession::sendPongResp()
+{
+    int len = m_cookie.len;
+    int ret = 0;
+    char* pongresp = new char[len];
+    snprintf(pongresp, len, "%s d6:result4:ponge", m_cookie.s);
+    ret = sendcmd(pongresp);
+    if(ret < 0 )
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
+        rmSocketInfo();
+    }
+    delete pongresp;
+    return ret;
+}
 
 
