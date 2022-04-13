@@ -50,7 +50,7 @@ int CmdSessionState::checkState(StateCheckArgs* stateArg)
     return -1;
 }
 
-int CmdSessionState::processSdpResp(Sdp_session* sdp, RTPDirection direction)
+int CmdSessionState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
 {
     tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not processSdpResp in cmd state %s in cmd session %s", StateName[m_state], m_cs->m_session_key->m_cookie);
     return -1;
@@ -204,7 +204,7 @@ int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
 }
 
 // in msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
-int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction)
+int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
 {
     char resp[2048];
     int len = 0;
@@ -239,7 +239,12 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", m_cs->m_session_key->m_cookie, len);
     resp[delta+len]=':';
     tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[delta], direction);
-    return m_cs->sendcmd(&resp[delta]);
+    ret = m_cs->sendcmd(&resp[delta]);
+    if(0 == ret)
+    {
+        *nextState = new CmdSessionOfferProcessedState(m_cs);
+    }
+    return ret;
 }
 
 

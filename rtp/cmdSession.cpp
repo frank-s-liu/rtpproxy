@@ -376,7 +376,7 @@ int CmdSession::process_cmd(int cmd)
 {
     CmdSessionState* css = NULL;
     int ret = m_css->processCMD(cmd, &css);
-    if(0 == ret)
+    if(0 == ret && css)
     {
         delete m_css;
         m_css = css;
@@ -698,7 +698,14 @@ int CallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
 
 int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
 {
-    return m_css->processSdpResp(sdp, direction);
+    CmdSessionState* nextState = NULL;
+    int ret = m_css->processSdpResp(sdp, direction, &nextState);
+    if(ret == 0 && nextState)
+    {
+        delete m_css;
+        m_css = nextState;
+    }
+    return ret;
 }
 
 

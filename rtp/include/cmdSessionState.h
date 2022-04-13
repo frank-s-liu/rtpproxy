@@ -14,7 +14,7 @@ public:
     virtual int processCMD(int cmd, CmdSessionState** nextState) = 0;
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
     virtual int checkState(StateCheckArgs* stateArg);
-    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState);
 
 protected:
     CmdSession*     m_cs;
@@ -40,7 +40,7 @@ public:
     virtual ~CmdSessionOfferProcessingState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
     virtual int checkState(StateCheckArgs* stateArg);
-    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState);
 };
 
 class CmdSessionOfferProcessedState : public CmdSessionState
