@@ -28,7 +28,7 @@ public:
     virtual ~CmdSessionInitState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
-    //virtual int checkState(StateCheckArgs* stateArg);
+    virtual int checkState(StateCheckArgs* stateArg);
 public:
     unsigned long m_count; // ping counter from connected established
 };
@@ -39,7 +39,7 @@ public:
     CmdSessionOfferProcessingState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessingState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
-    virtual int checkState(StateCheckArgs* stateArg);
+    //virtual int checkState(StateCheckArgs* stateArg);
     virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState);
 };
 
@@ -49,7 +49,7 @@ public:
     CmdSessionOfferProcessedState(CmdSession* cs);
     virtual ~CmdSessionOfferProcessedState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
-    virtual int checkState(StateCheckArgs* stateArg);
+    //virtual int checkState(StateCheckArgs* stateArg);
 };
 
 #endif

@@ -46,8 +46,12 @@ int CmdSessionState::checkPingKeepAlive(PingCheckArgs* pingArg)
 
 int CmdSessionState::checkState(StateCheckArgs* stateArg)
 {
-    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not check state in cmd state %s in cmd session %s", StateName[m_state], m_cs->m_session_key->m_cookie);
-    return -1;
+    if(stateArg->state >= m_state)
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"cmd session %s check state failed in cmd session state of %s", m_cs->m_session_key->m_cookie, StateName[m_state]);
+        return -1;
+    }
+    return 0;
 }
 
 int CmdSessionState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
@@ -73,6 +77,12 @@ int CmdSessionInitState::checkPingKeepAlive(PingCheckArgs* pingArg)
         return -1;
     }
     return 0;
+}
+
+int CmdSessionInitState::checkState(StateCheckArgs* stateArg)
+{
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"must not process check state in cmd state %s in cmd session %s", StateName[m_state], m_cs->m_session_key->m_cookie);
+    return -1;
 }
 
 int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
@@ -193,6 +203,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
     return -1;
 }
 
+#if 0
 int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
 {
     if(stateArg->state >= m_state)
@@ -202,6 +213,7 @@ int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
     }
     return 0;
 }
+#endif
 
 // in msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
 int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
@@ -244,10 +256,40 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     {
         *nextState = new CmdSessionOfferProcessedState(m_cs);
     }
+    StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+    args->state = CMDSESSION_OFFER_PROCESSED_STATE;
+    if(0 != add_task(32000, processStateCheck, args))
+    {
+        delete args;
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+    }
     return ret;
 }
 
+CmdSessionOfferProcessedState::CmdSessionOfferProcessedState(CmdSession* cs):CmdSessionState(cs)
+{
+    m_state = CMDSESSION_OFFER_PROCESSED_STATE;
+}
 
+CmdSessionOfferProcessedState::~CmdSessionOfferProcessedState()
+{
+}
 
+int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextState)
+{
+    return 0;
+}
+
+#if 0
+int CmdSessionOfferProcessedState::checkState(StateCheckArgs* stateArg)
+{
+    if(stateArg->state >= m_state)
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"cmd session %s check state failed in cmd session state of %s", m_cs->m_session_key->m_cookie, StateName[m_state]);
+        return -1;
+    }
+    return 0;
+}
+#endif
 
 
