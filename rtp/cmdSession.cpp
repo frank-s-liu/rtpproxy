@@ -364,7 +364,7 @@ int CmdSession::process_cmd(char* cmdstr)
     cmd = getCmd();
     CmdSessionState* css = NULL;
     ret =m_css->processCMD(cmd, &css);
-    if(0 == ret)
+    if(0 == ret && css)
     {
         delete m_css;
         m_css = css;
