@@ -63,3 +63,9 @@ int RtpStream::recv(unsigned char* buf, int len)
 {
     return 0;
 }
+
+int RtpStream::getLocalAddress(char* buf, int buflen)
+{
+    return m_socket->getLocalIp(buf, buflen);
+}
+

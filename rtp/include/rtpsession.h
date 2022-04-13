@@ -18,9 +18,10 @@ public:
     int send(const unsigned char* buf, int len);
     int recv(unsigned char* buf, int len);
     unsigned short getLocalPort();
+    int getLocalAddress(char* buf, int buflen);
 private:
     Network_address     m_addr_peer; // peer address
-    UdpSrvSocket*          m_socket;  // local address
+    UdpSrvSocket*       m_socket;  // local address
     RtpSession*         m_rtpSession;
     RTPDirection        m_direction;
     unsigned char       m_bridged;

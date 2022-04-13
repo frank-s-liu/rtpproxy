@@ -148,65 +148,80 @@ void UdpSrvSocket::setkeepalive( int interval)
 
 int UdpSrvSocket::add_read_event2EpollLoop(int ep_fd, void* event_data)
 {
-    int ret = 0;
+    int ret = -1;
     struct epoll_event event;
  
-    memset(&event, 0, sizeof(event));
-    event.data.ptr = event_data;
-    event.events = EPOLLIN | EPOLLRDHUP;
- 
-    ret = epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_socket, &event);
-    if(ret < 0) 
+    if(m_status == 1)
     {
-        tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not add tcp socket to epool loop, reason %d ", errno);
+        memset(&event, 0, sizeof(event));
+        event.data.ptr = event_data;
+        event.events = EPOLLIN | EPOLLRDHUP;
+  
+        ret = epoll_ctl(ep_fd, EPOLL_CTL_ADD, m_socket, &event);
+        if(ret < 0) 
+        {
+            tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not add tcp socket to epool loop, reason %d ", errno);
+        }
+    }
+    else
+    {
+        tracelog("TRANSPORT", WARNING_LOG, __FILE__, __LINE__, "can not add tcp socket to epool loop, status is wrong %d", m_status);
     }
     return ret;
 }
 
 int UdpSrvSocket::modify_write_event2Epoll(int ep_fd, void* event_data)
 {
-    int ret = 0;
+    int ret = -1;
     struct epoll_event event;
  
-    memset(&event, 0, sizeof(event));
-    event.data.ptr = event_data;
-    event.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
- 
-    ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_socket, &event);
-    if(ret < 0) 
+    if(m_status == 1)
     {
-        tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop, reason %d ", errno);
+        memset(&event, 0, sizeof(event));
+        event.data.ptr = event_data;
+        event.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
+  
+        ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_socket, &event);
+        if(ret < 0) 
+        {
+            tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop, reason %d ", errno);
+        }
     }
     return ret;
 }
 
 int UdpSrvSocket::modify_read_event2Epoll(int ep_fd, void* event_data)
 {
-    int ret = 0;
+    int ret = -1;
     struct epoll_event event;
  
-    memset(&event, 0, sizeof(event));
-    event.data.ptr = event_data;
-    event.events = EPOLLIN | EPOLLRDHUP;
- 
-    ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_socket, &event);
-    if(ret < 0) 
+    if(m_status == 1)
     {
-        tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop, reason %d ", errno);
+        memset(&event, 0, sizeof(event));
+        event.data.ptr = event_data;
+        event.events = EPOLLIN | EPOLLRDHUP;
+  
+        ret = epoll_ctl(ep_fd, EPOLL_CTL_MOD, m_socket, &event);
+        if(ret < 0) 
+        {
+            tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify tcp socket to epool loop, reason %d ", errno);
+        }
     }
     return ret;
 } 
 
 int UdpSrvSocket::delSocketFromEpollLoop(int ep_fd)
 {
-    int ret = 0;
-    ret = epoll_ctl(ep_fd, EPOLL_CTL_DEL, m_socket, NULL);
-    if(ret < 0) 
+    int ret = -1;
+    if(m_status == 1)
     {
-        tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify udp socket to epool loop, reason %d ", errno);
+        ret = epoll_ctl(ep_fd, EPOLL_CTL_DEL, m_socket, NULL);
+        if(ret < 0) 
+        {
+            tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "can not modify udp socket to epool loop, reason %d ", errno);
+        }
     }
     return ret;
-    
 }
 
 unsigned short UdpSrvSocket::getlocalPort()
