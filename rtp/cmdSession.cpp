@@ -163,10 +163,10 @@ int CmdSession::sendPongResp()
     ret = sendcmd(pongresp);
     if(ret < 0 )
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
         rmSocketInfo();
     }
     delete pongresp;
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
     return ret;
 }
 
@@ -304,6 +304,7 @@ int CmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
     int ret = m_css->checkPingKeepAlive(pingArg);
     if(ret != 0)
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "checkPingKeepAlive failed %s ", m_session_key->m_cookie);
         rmSocketInfo();
     }
     return ret;
@@ -544,6 +545,7 @@ int CmdSession::process_cookie(const char* cookie, int cookie_len)
                 int ret = sendcmd(m_last_cookie->m_resp);
                 if(ret < 0 )
                 {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "retransmit response failed  %s ", m_session_key->m_cookie);
                     rmSocketInfo();
                 }
                 return -1;
