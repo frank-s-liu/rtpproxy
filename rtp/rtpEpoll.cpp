@@ -562,12 +562,12 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             if(cmd_session_type == CALL_SESSION)
             {
                 ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
-                delete sk;
             }
             else
             {
                 cs->resetCookie(start, cookie-start);
             }
+            delete sk;
         }
         if(0 == ret)
         {
