@@ -264,7 +264,19 @@ DeleteCmdArg::~DeleteCmdArg()
 
 int DeleteCmdArg::processCmd()
 {
-    return 0;
+    int ret = 0;
+    SessionKey* sk = new SessionKey(call_id.s, call_id.len);
+    CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
+    if(cs)
+    {
+        delete cs;
+    }    
+    else 
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "don't find cmd session to delete whose call id is [%s]", call_id.s);
+    }
+    delete sk;
+    return ret;        
 }
 
 PipeEventArgs::~PipeEventArgs()
