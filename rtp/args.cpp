@@ -100,6 +100,7 @@ SendCMDArgs:: ~SendCMDArgs()
    }   
 }
 
+// not used now
 int SendCMDArgs::processCmd()
 {
     int ret = 0;
@@ -206,6 +207,7 @@ int SDPRespArgs::processCmd()
         if(0 != cs->processSdpResp(sdp, direction))
         {
             tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error", call_id.s);
+            CmdSessionManager::getInstance()->popCmdSession(sk);
             delete cs;
         }
     }
@@ -273,6 +275,7 @@ int DeleteCmdArg::processCmd()
     CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
     if(cs)
     {
+        CmdSessionManager::getInstance()->popCmdSession(sk);
         delete cs;
     }    
     else 

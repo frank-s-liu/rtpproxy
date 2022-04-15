@@ -17,13 +17,55 @@ static const char* StateName[CMDSESSION_MAX_STATE] = {"CMDSESSION_STATE",       
 static const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
 
 // timer thread call back
-static void fireArgs2controlProcess(void* args)
+static void fireArgs2controlProcess_s(void* args)
 {
     Args* arg = (Args*)args;
     if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
     {
         delete arg;
     }
+}
+
+static int processSdpResp_s(Sdp_session* sdp, const char* cookie, int cookie_len, char* resp, int resp_size, int* resp_offset)
+{
+    int len = 0;
+    int ret = 0;
+    int max_sdp_len_reserver = 5; // example 1234:v=0, "1234:" is the max_sdp_len_reserver
+    int len_reserve = cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
+    int real_reserver = 0;
+    int delta = 0;
+    if(len_reserve >= resp_size)
+    {
+        return -1;
+    }
+    len = resp_size-len_reserve;
+    ret = sdp->serialize(&resp[len_reserve], &len);
+    if(0 != ret)
+    {
+        return -1;
+    }
+    if(len>=1000)
+    {
+        max_sdp_len_reserver = 5;
+    }
+    else if(len >= 100)
+    {
+        max_sdp_len_reserver = 4;
+    }
+    else if(len >= 10)
+    {
+        max_sdp_len_reserver = 3;
+    }
+    else
+    {
+        max_sdp_len_reserver = 2;
+    }
+    real_reserver = cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
+    delta = len_reserve - real_reserver;
+    len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", cookie, len);
+    resp[delta+len]=':';
+    *resp_offset = delta;
+    return ret;
 }
 
 CmdSessionState::CmdSessionState(CmdSession* cs)
@@ -137,7 +179,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            *nextState = new CmdSessionOfferProcessingState(m_cs);
            StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
            args->state = CMDSESSION_OFFER_PROCESSING_STATE;
-           if(0 != add_task(1600, fireArgs2controlProcess, args))
+           if(0 != add_task(1600, fireArgs2controlProcess_s, args))
            {
                delete args;
                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
@@ -157,7 +199,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
             PingCheckArgs* args = new PingCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->ping_recv_count = m_count;
             //args->cmdtype = PING_CHECK_CMD;
-            if(0 != add_task(8000, fireArgs2controlProcess, args))
+            if(0 != add_task(8000, fireArgs2controlProcess_s, args))
             {
                 delete args;
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s when processing cmd of PING_CMD", 
@@ -224,7 +266,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != add_task(4000, fireArgs2controlProcess, delCmdArg))
+            if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
@@ -263,53 +305,31 @@ int CmdSessionOfferProcessingState::checkState(StateCheckArgs* stateArg)
 }
 #endif
 
-// in msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
+// in the msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
 int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
 {
     char resp[2048];
-    int len = 0;
+    int offset = 0;
     int ret = 0;
-    int max_sdp_len_reserver = 5; // example 1234:v=0, "1234:" is the max_sdp_len_reserver
-    int len_reserve = m_cs->m_session_key->m_cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
-    int real_reserver = 0;
-    int delta = 0;
-    ret = sdp->serialize(&resp[len_reserve], &len);
-    if(0 != ret)
-    {
-        return -1;
-    }
-    if(len>=1000)
-    {
-        max_sdp_len_reserver = 5;
-    }
-    else if(len >= 100)
-    {
-        max_sdp_len_reserver = 4;
-    }
-    else if(len >= 10)
-    {
-        max_sdp_len_reserver = 3;
-    }
-    else
-    {
-        max_sdp_len_reserver = 2;
-    }
-    real_reserver = m_cs->m_session_key->m_cookie_len + strlen(" d3:sdp")+max_sdp_len_reserver;
-    delta = len_reserve - real_reserver;
-    len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", m_cs->m_session_key->m_cookie, len);
-    resp[delta+len]=':';
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[delta], direction);
-    ret = m_cs->sendcmd(&resp[delta]);
+    resp[0] = '\0';
+    processSdpResp_s(sdp, m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len, resp, sizeof(resp), &offset);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[offset], direction);
+    ret = m_cs->sendcmd(&resp[offset]);
     if(0 == ret)
     {
         *nextState = new CmdSessionOfferProcessedState(m_cs);
     }
+    else
+    {
+        *nextState = NULL;
+        return ret;
+    }
     StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
     args->state = CMDSESSION_OFFER_PROCESSED_STATE;
-    if(0 != add_task(32000, fireArgs2controlProcess, args))
+    if(0 != add_task(32000, fireArgs2controlProcess_s, args))
     {
         delete args;
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
     }
     return ret;
 }
@@ -383,7 +403,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
             *nextState = new CmdSessionAnswerProcessingState(m_cs);
             StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->state = CMDSESSION_ANSWER_PROCESSING_STATE;
-            if(0 != add_task(1600, fireArgs2controlProcess, args))
+            if(0 != add_task(1600, fireArgs2controlProcess_s, args))
             {
                 delete args;
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
@@ -404,7 +424,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != add_task(4000, fireArgs2controlProcess, delCmdArg))
+            if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
@@ -492,7 +512,7 @@ int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextS
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != add_task(4000, fireArgs2controlProcess, delCmdArg))
+            if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
@@ -519,6 +539,47 @@ err_ret:
     return ret;
 }
 
+// in the msg replied to SIP proxy, it doesn't need to add direction info, So don't use direction parameter
+int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState)
+{
+    char resp[2048];
+    int offset = 0;
+    int ret = 0;
+    resp[0] = '\0';
+    processSdpResp_s(sdp, m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len, resp, sizeof(resp), &offset);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[offset], direction);
+    ret = m_cs->sendcmd(&resp[offset]);
+    if(0 == ret)
+    {
+        *nextState = new CmdSessionAnswerProcessedState(m_cs);
+    }
+    else
+    {
+        *nextState = NULL;
+        return ret;
+    }
+    StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+    args->state = CMDSESSION_ANSWER_PROCESSED_STATE;
+    if(0 != add_task(32000, fireArgs2controlProcess_s, args))
+    {
+        delete args;
+        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+    }
+    return ret;
+}
+
+CmdSessionAnswerProcessedState::CmdSessionAnswerProcessedState(CmdSession* cs):CmdSessionState(cs)
+{
+    m_state = CMDSESSION_ANSWER_PROCESSED_STATE;
+}
+
+CmdSessionAnswerProcessedState::~CmdSessionAnswerProcessedState()
+{}
+
+int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextState)
+{
+    return 0;
+}
 
 CmdSessionDeleteState::CmdSessionDeleteState(CmdSession* cs):CmdSessionState(cs)
 {
