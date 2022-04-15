@@ -320,13 +320,14 @@ void* ControlProcess::run()
                             {
                                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknown issue, this must not happen");
                             }
-                        }       
+                            break;// if args is delete rtp sessions, need break here
+                        }
                         else if(len == 0)
-                        {       
+                        {
                             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "unknown issue, read len is 0");
-                        }           
-                        else    
-                        {       
+                        }
+                        else
+                        {
                             tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "pipe read error, no. is %d", errno);
                         }
                     }
