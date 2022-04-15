@@ -380,9 +380,9 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no sdp or no direction in cmd session %s, to process cmd of OFFER_CMD", m_cs->m_session_key->m_cookie);
                 goto err_ret;
             }
-            *nextState = new CmdSessionOfferProcessingState(m_cs);
+            *nextState = new CmdSessionAnswerProcessingState(m_cs);
             StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            args->state = CMDSESSION_OFFER_PROCESSING_STATE;
+            args->state = CMDSESSION_ANSWER_PROCESSING_STATE;
             if(0 != add_task(1600, fireArgs2controlProcess, args))
             {
                 delete args;
