@@ -58,6 +58,15 @@ public:
     CmdSessionAnswerProcessingState(CmdSession* cs);
     virtual ~CmdSessionAnswerProcessingState();
     virtual int processCMD(int cmd, CmdSessionState** nextState);
+    virtual int processSdpResp(Sdp_session* sdp, RTPDirection direction, CmdSessionState** nextState);
+};
+
+class CmdSessionAnswerProcessedState : public CmdSessionState
+{
+public:
+    CmdSessionAnswerProcessedState(CmdSession* cs);
+    virtual ~CmdSessionAnswerProcessedState();
+    virtual int processCMD(int cmd, CmdSessionState** nextState);
 };
 
 class CmdSessionAnswerPorcessedState : public CmdSessionState
