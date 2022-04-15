@@ -203,7 +203,11 @@ int SDPRespArgs::processCmd()
     }
     else
     {
-        cs->processSdpResp(sdp, direction);
+        if(0 != cs->processSdpResp(sdp, direction))
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error", call_id.s);
+            delete cs;
+        }
     }
 ret:
     delete sk;
