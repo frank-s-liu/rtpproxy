@@ -11,7 +11,9 @@
 #include <stdlib.h>
 
 
-static const char* StateName[CMDSESSION_MAX_STATE] = {"CMDSESSION_STATE", "CMDSESSION_INIT_STATE", "CMDSESSION_OFFER_PROCESSING_STATE", "CMDSESSION_OFFER_PROCESSED_STATE"};
+static const char* StateName[CMDSESSION_MAX_STATE] = {"CMDSESSION_STATE",                 "CMDSESSION_INIT_STATE",               "CMDSESSION_OFFER_PROCESSING_STATE", 
+                                                      "CMDSESSION_OFFER_PROCESSED_STATE", "CMDSESSION_ANSWER_PROCESSING_STATE",  "CMDSESSION_ANSWER_PROCESSED_STATE",
+                                                      "CMDSESSION_DELETE_STATE"};
 static const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
 
 // timer thread call back
@@ -214,8 +216,8 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
-                                                                CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because of can not send delete rtp cmd to rtp thread in cmd session %s ", 
+                                                                m_cs->m_session_key->m_cookie);
                 delete rtparg;
                 rtparg = NULL;
                 goto err_ret;
@@ -226,7 +228,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -394,8 +396,8 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
-                                                                CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because of can not send delete rtp cmd to rtp sendrecv thread in cmd session %s ", 
+                                                                m_cs->m_session_key->m_cookie);
                 delete rtparg;
                 rtparg = NULL;
                 goto err_ret;
@@ -406,7 +408,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -454,6 +456,69 @@ int CmdSessionOfferProcessedState::checkState(StateCheckArgs* stateArg)
     return 0;
 }
 #endif
+
+CmdSessionAnswerProcessingState::CmdSessionAnswerProcessingState(CmdSession* cs):CmdSessionState(cs)
+{
+    m_state = CMDSESSION_ANSWER_PROCESSING_STATE;
+}
+
+CmdSessionAnswerProcessingState::~CmdSessionAnswerProcessingState()
+{}
+
+int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextState)
+{
+    int ret = 0;
+    Args* rtparg = NULL;
+    switch(cmd)
+    {
+        case OFFER_CMD:
+        case ANSWER_CMD:
+        case PING_CMD:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"currently can not process cmd %s in CmdSessionAnswerProcessingState, call id %s, cmd was discard", 
+                                                            CMD_STR[cmd], m_cs->m_session_key->m_cookie);
+            goto err_ret;
+        }
+        case DELETE_CMD:
+        {
+            rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            {
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because can not send delete-rtp cmd to rtp thread in cmd session %s ", 
+                                                                m_cs->m_session_key->m_cookie);
+                delete rtparg;
+                rtparg = NULL;
+                goto err_ret;
+            }
+            *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            if(0 != add_task(4000, fireArgs2controlProcess, delCmdArg))
+            {
+                delete delCmdArg;
+                delCmdArg = NULL;
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
+            break;
+        }
+        default:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"currently can not process cmd %s in state of CmdSessionAnswerProcessingState, call id %s, cmd was discard", 
+                                                            CMD_STR[cmd], m_cs->m_session_key->m_cookie);
+            goto err_ret;
+        }
+    }
+    return ret;
+
+err_ret:
+    nextState = NULL;
+    ret = -1;
+    if(rtparg)
+    {
+        delete rtparg;
+    }
+    return ret;
+}
+
 
 CmdSessionDeleteState::CmdSessionDeleteState(CmdSession* cs):CmdSessionState(cs)
 {

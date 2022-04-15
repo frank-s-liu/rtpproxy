@@ -52,6 +52,22 @@ public:
     //virtual int checkState(StateCheckArgs* stateArg);
 };
 
+class CmdSessionAnswerProcessingState : public CmdSessionState
+{
+public:
+    CmdSessionAnswerProcessingState(CmdSession* cs);
+    virtual ~CmdSessionAnswerProcessingState();
+    virtual int processCMD(int cmd, CmdSessionState** nextState);
+};
+
+class CmdSessionAnswerPorcessedState : public CmdSessionState
+{
+public:
+    CmdSessionAnswerPorcessedState(CmdSession* cs);
+    virtual ~CmdSessionAnswerPorcessedState();
+    virtual int processCMD(int cmd, CmdSessionState** nextState);
+};
+
 class CmdSessionDeleteState : public CmdSessionState
 {
 public:
