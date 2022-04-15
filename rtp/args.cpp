@@ -152,7 +152,7 @@ int SDPArgs::setArg(void* arg)
 
 int SDPArgs::processCmd()
 {
-    SessionKey* sk = new SessionKey(call_id.s);
+    SessionKey* sk = new SessionKey(call_id.s, call_id.len);
     RtpSession* rtpsession = process->getRtpSession(sk);
     if(!rtpsession)
     {
@@ -193,7 +193,7 @@ SDPRespArgs::~SDPRespArgs()
 int SDPRespArgs::processCmd()
 {
     int ret = 0;
-    SessionKey* sk = new SessionKey(call_id.s);
+    SessionKey* sk = new SessionKey(call_id.s, call_id.len);
     CmdSession* cs = CmdSessionManager::getInstance()->getCmdSession(sk);
     if(!cs)
     {
@@ -208,6 +208,41 @@ int SDPRespArgs::processCmd()
 ret:
     delete sk;
     return ret;
+}
+
+DeletRtp::DeletRtp(const char* key, int len)
+{
+    call_id.len = len;
+    call_id.s = new char[len+1];
+    snprintf(call_id.s, len+1, "%s", key);
+    process = NULL;
+}
+
+DeletRtp::~DeletRtp()
+{
+    if(call_id.len)
+    {
+        delete[] call_id.s;
+        call_id.s = NULL;
+        call_id.len = 0;
+    }
+    process = NULL;
+}
+
+int DeletRtp::processCmd()
+{
+    SessionKey* sk = new SessionKey(call_id.s, call_id.len);
+    RtpSession* rtpsession = process->getRtpSession(sk);
+    if(!rtpsession)
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "don't find rtp session to delete whose call id is [%s]", call_id.s);
+    }
+    else
+    {
+        delete rtpsession;
+    }
+    delete sk;
+    return 0;
 }
 
 PipeEventArgs::~PipeEventArgs()

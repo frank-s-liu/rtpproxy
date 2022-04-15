@@ -75,6 +75,17 @@ public:
     RTPDirection    direction;
 };
 
+class DeletRtp : public Args
+{
+public:
+    DeletRtp(const char* call_id, int len);
+    virtual ~DeletRtp();
+    virtual int processCmd();
+public:
+    cstr            call_id;
+    RtpProcess*     process;
+};
+
 class PipeEventArgs
 {
 public:
