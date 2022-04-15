@@ -111,6 +111,7 @@ CmdSession::CmdSession(char* cookie)
     m_css = new CmdSessionInitState(this);
     m_session_key = new SessionKey(cookie);
     m_socket_data = NULL;
+    m_last_cookie = NULL;
 }
 
 CmdSession::~CmdSession()
