@@ -52,4 +52,12 @@ public:
     //virtual int checkState(StateCheckArgs* stateArg);
 };
 
+class CmdSessionDeleteState : public CmdSessionState
+{
+public:
+    CmdSessionDeleteState(CmdSession* cs);
+    virtual ~CmdSessionDeleteState();
+    virtual int processCMD(int cmd, CmdSessionState** nextState);
+};
+
 #endif

@@ -245,6 +245,28 @@ int DeletRtp::processCmd()
     return 0;
 }
 
+DeleteCmdArg::DeleteCmdArg(const char* key, int len)
+{
+    call_id.len = len;
+    call_id.s = new char[len+1];
+    snprintf(call_id.s, len+1, "%s", key);
+}
+
+DeleteCmdArg::~DeleteCmdArg()
+{
+    if(call_id.len)
+    {
+        delete[] call_id.s;
+        call_id.s = NULL;
+        call_id.len = 0;
+    }
+}
+
+int DeleteCmdArg::processCmd()
+{
+    return 0;
+}
+
 PipeEventArgs::~PipeEventArgs()
 {
     if(args_data)  

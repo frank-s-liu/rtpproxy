@@ -86,6 +86,16 @@ public:
     RtpProcess*     process;
 };
 
+class DeleteCmdArg : public Args
+{
+public:
+    DeleteCmdArg(const char* call_id, int len);
+    virtual ~DeleteCmdArg();
+    virtual int processCmd();
+public:
+    cstr            call_id;
+};
+
 class PipeEventArgs
 {
 public:
