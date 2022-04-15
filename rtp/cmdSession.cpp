@@ -704,7 +704,7 @@ NoneCallCmdSession::~NoneCallCmdSession()
 {
     if(m_cookie.len > 0)
     {
-        delete m_cookie.s;
+        delete[] m_cookie.s;
         m_cookie.s  = NULL;
         m_cookie.len = 0;
     }
@@ -725,7 +725,7 @@ void NoneCallCmdSession::resetCookie(const char* cookie, int len)
 {
     if(m_cookie.len > 0)
     {
-        delete m_cookie.s;
+        delete[] m_cookie.s;
     }
     m_cookie.len = len;
     m_cookie.s = new char[len+1];

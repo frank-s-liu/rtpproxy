@@ -241,7 +241,7 @@ Epoll_data::~Epoll_data()
     }
     if(m_nocall_key.len)
     {
-        delete m_nocall_key.s;
+        delete[] m_nocall_key.s;
         m_nocall_key.s = NULL;
         m_nocall_key.len = 0;
     }
