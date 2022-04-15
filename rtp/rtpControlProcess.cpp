@@ -110,6 +110,7 @@ ControlProcess* ControlProcess::getInstance()
     return s_instance;
 }
 
+// if return -1, the caller need to delete args itself
 int ControlProcess::add_pipe_event(Args* args)
 {
     int ret = 0;
@@ -121,6 +122,7 @@ int ControlProcess::add_pipe_event(Args* args)
         if(push(m_pipe_events, pipe_event))
         {
             tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "pipe_events queue is full");
+            pipe_event->args_data = NULL;
             delete pipe_event;
             ret = -1;
             goto retprocess;
@@ -132,15 +134,12 @@ int ControlProcess::add_pipe_event(Args* args)
             if(len <=0 )
             {
                 tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "write pipe failed, errno is %d", errno);
-                ret = -1;
-                goto retprocess;
             }
         }
     }
     else
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd ControlProcess thread has exit, don't add event");
-        delete args;
         ret = -1;
         goto retprocess;
     }

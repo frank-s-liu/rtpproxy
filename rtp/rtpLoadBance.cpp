@@ -19,4 +19,10 @@ int processSdpArgs(SDPArgs* args, unsigned long hash_key)
     return rtpProcess_s[index].add_pipe_event(args);
 }
 
+int processArgs(Args* args, unsigned long hash_key)
+{
+    int index = hash_key % rtpProcess_num_s;
+    return rtpProcess_s[index].add_pipe_event(args);
+}
+
 

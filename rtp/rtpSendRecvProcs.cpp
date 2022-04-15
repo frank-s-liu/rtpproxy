@@ -183,6 +183,8 @@ void* RtpProcess::run()
     return NULL;
 }
 
+
+// if return -1, caller need to delete args itself
 int RtpProcess::add_pipe_event(Args* args)
 {
     int ret = 0;
@@ -193,6 +195,7 @@ int RtpProcess::add_pipe_event(Args* args)
         if(push(m_rtp_q, pipe_event))
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "queue is full, can not push offer req");
+            pipe_event->args_data = NULL;
             delete pipe_event;
             ret = -1;
         }
@@ -202,18 +205,13 @@ int RtpProcess::add_pipe_event(Args* args)
             int len = write(m_fd_pipe[1], buf, sizeof(buf));
             if(len <= 0)
             {
-                void* tmpsdp = NULL;
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "offerProcess failed, pipe write issue, errno %d", errno);
-                pop(m_rtp_q, &tmpsdp);
-                delete pipe_event;
-                ret = -1;
             }
         }
     }
     else
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rep process thread has exit");
-        delete args;
         ret = -1;
     }
     return ret;

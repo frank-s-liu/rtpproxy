@@ -18,13 +18,19 @@ static const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELET
 static void processPingCheck(void* args)
 {
     PingCheckArgs* pingArg = (PingCheckArgs*)args;
-    ControlProcess::getInstance()->add_pipe_event(pingArg);
+    if(0 != ControlProcess::getInstance()->add_pipe_event(pingArg))
+    {
+        delete pingArg;
+    }
 }
 
 static void processStateCheck(void* args)
 {
     StateCheckArgs* stateArgs = (StateCheckArgs*)args;
-    ControlProcess::getInstance()->add_pipe_event(stateArgs);
+    if(0 != ControlProcess::getInstance()->add_pipe_event(stateArgs))
+    {
+        delete stateArgs;
+    }
 }
 
 CmdSessionState::CmdSessionState(CmdSession* cs)
@@ -126,6 +132,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                {
                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
                                                                    CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
+                   delete sdpArg;
                    goto err_ret;
                }
            }
@@ -199,8 +206,40 @@ CmdSessionOfferProcessingState::~CmdSessionOfferProcessingState()
 
 int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextState)
 {
-    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"currently not process cmd in state of %s, call id %s", StateName[m_state], m_cs->m_session_key->m_cookie);
-    return -1;
+    int ret = 0;
+    Args* rtparg = NULL;
+    switch(cmd)
+    {
+        case OFFER_CMD:
+        case ANSWER_CMD:
+        case PING_CMD:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"currently can not process cmd %s in CmdSessionOfferProcessingState, call id %s, cmd was discard", 
+                                                            CMD_STR[cmd], m_cs->m_session_key->m_cookie);
+            break;
+        }
+        case DELETE_CMD:
+        {
+            rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
+                                                                CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
+                delete rtparg;
+                goto err_ret;
+            }
+        }
+    }
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"currently can not process cmd in state of %s, call id %s, cmd was discard", StateName[m_state], m_cs->m_session_key->m_cookie);
+    return ret;
+
+err_ret:
+    ret = -1;
+    if(rtparg)
+    {
+        delete rtparg;
+    }
+    return ret;
 }
 
 #if 0
@@ -277,7 +316,102 @@ CmdSessionOfferProcessedState::~CmdSessionOfferProcessedState()
 
 int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextState)
 {
-    return 0;
+    int ret = 0;
+    Sdp_session* sdp = NULL;
+    SDPArgs* sdpArg = NULL;
+    switch (cmd)
+    {
+        case OFFER_CMD:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd of OFFER_CMD in CmdSessionOfferProcessedState",
+                                                            m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
+            goto err_ret;
+        }
+        case ANSWER_CMD:
+        {
+            std::string* v = NULL;
+            std::string* direction = NULL;
+            m_cs->getCmdValueByStrKey("sdp", &v);
+            m_cs->getCmdValueByStrKey("direction", &direction);
+            if(v && direction)
+            {
+                RTPDirection dir = MAX_DIRECTION;
+                sdp = new Sdp_session();
+                sdp->parse(v->c_str(), v->length());
+                std::string dir1("8:external8:internal");
+                std::string dir2("8:internal:8:external");
+                if(*direction == dir1)
+                {
+                    dir = EXTERNAL_PEER;
+                }
+                else if(*direction == dir2)
+                {
+                    dir = INTERNAL_PEER;
+                }
+                else
+                {
+                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "err direction %s for cmd session: %s to process cmd %s", 
+                                                                    direction->c_str(), m_cs->m_session_key->m_cookie, CMD_STR[OFFER_CMD]);
+                    goto err_ret;
+                }
+                sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+                sdpArg->sdp = sdp;
+                sdpArg->direction = dir;
+                if(0 != processSdpArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
+                {
+                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
+                                                                    CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
+                    delete sdpArg;
+                    goto err_ret;
+                }
+            }
+            else
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no sdp or no direction in cmd session %s, to process cmd of OFFER_CMD", m_cs->m_session_key->m_cookie);
+                goto err_ret;
+            }
+            *nextState = new CmdSessionOfferProcessingState(m_cs);
+            StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            args->state = CMDSESSION_OFFER_PROCESSING_STATE;
+            if(0 != add_task(1600, processStateCheck, args))
+            {
+                delete args;
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
+            ret = 0;
+            break;
+        }
+        case DELETE_CMD:
+        {
+            break;
+        }
+        case PING_CMD:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process pingpong cmd  in CmdSessionOfferProcessedState", 
+                                                             m_cs->m_session_key->m_cookie, cmd);
+            goto err_ret;
+        }
+        default:
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s process unknown cmd %d in CmdSessionOfferProcessedState", 
+                                                             m_cs->m_session_key->m_cookie, cmd);
+            goto err_ret;
+        }
+    }
+    return ret;
+
+err_ret:
+    if(sdp)
+    {
+        delete sdp;
+    }
+    if(sdpArg)
+    {
+        delete sdpArg;
+    }
+    ret = -1;
+    *nextState = NULL;
+    return ret;
 }
 
 #if 0

@@ -81,7 +81,10 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
             arg->direction = EXTERNAL_PEER;
-            ControlProcess::getInstance()->add_pipe_event(arg);
+            if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
+            {
+                delete arg;
+            }
             break;
         }
         case INTERNAL_PEER:
@@ -116,7 +119,10 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
             arg->direction = INTERNAL_PEER;
-            ControlProcess::getInstance()->add_pipe_event(arg);
+            if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
+            {
+                delete arg;
+            }
             break;
         }
         default:
