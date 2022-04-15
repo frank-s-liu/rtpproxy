@@ -24,7 +24,6 @@ static void fireArgs2controlProcess(void* args)
     }
 }
 
-
 CmdSessionState::CmdSessionState(CmdSession* cs)
 {
     m_cs = cs;
@@ -401,6 +400,14 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 rtparg = NULL;
                 goto err_ret;
             }
+            *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            if(0 != add_task(4000, fireArgs2controlProcess, delCmdArg))
+            {
+                delete delCmdArg;
+                delCmdArg = NULL;
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
             break;
         }
         case PING_CMD:
@@ -458,9 +465,10 @@ CmdSessionDeleteState::~CmdSessionDeleteState()
 
 int CmdSessionDeleteState::processCMD(int cmd, CmdSessionState** nextState)
 {
-    return 0;
+    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd of %s in state CmdSessionDeleteState", m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
+    *nextState = NULL;
+    return -1;
 }
-
 
 
 
