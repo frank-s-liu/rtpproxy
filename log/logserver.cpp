@@ -13,9 +13,8 @@
 char* LOGNAME = NULL;
 const char* DEFAULTFILENAME = "./test.log";
 const int LOGSIZE= 268435456; // 256M
-const unsigned int IOBUFFERSIZE = 65536;
+const unsigned int IOBUFFERSIZE = 32768;
 
-static char* s_iobuffer = NULL;
 static ResourceManager* s_resource = NULL;
 Logserver* Logserver::s_logserver = NULL;
 
@@ -23,6 +22,7 @@ Logserver* Logserver::s_logserver = NULL;
 Logserver::Logserver():Thread("log2File")
 {
     m_filePath_name = NULL;
+    m_iobuffer = NULL;
 }
 
 Logserver::Logserver(const char* path, const char* name):Thread("log2File")
@@ -37,6 +37,7 @@ Logserver::Logserver(const char* path, const char* name):Thread("log2File")
         m_filePath_name = (char*)ResourceManager::getInstance()->getresource(namelen);
         snprintf(m_filePath_name, namelen, "%s", DEFAULTFILENAME);
     }
+    m_iobuffer = NULL;
     init();
 }
 
@@ -51,6 +52,11 @@ Logserver::~Logserver()
     {
         fclose(m_logfile);
         m_logfile = NULL;
+    }
+    if(m_iobuffer)
+    {
+        delete[] m_iobuffer;
+        m_iobuffer = NULL;
     }
 }
 
@@ -122,8 +128,8 @@ void Logserver::init()
         rewind(m_logfile);
     }
     s_resource = ResourceManager::getInstance();
-    s_iobuffer = (char*)s_resource->getresource(IOBUFFERSIZE);
-    setvbuf (m_logfile, s_iobuffer, _IOFBF, IOBUFFERSIZE);
+    m_iobuffer = new char[IOBUFFERSIZE];
+    setvbuf (m_logfile, m_iobuffer, _IOFBF, IOBUFFERSIZE);
 }
 
 void Logserver::writeLog2File()
@@ -206,7 +212,7 @@ void Logserver::rename()
     }
     truncate(m_filePath_name, 0);
     rewind(m_logfile);
-    setvbuf (m_logfile, s_iobuffer, _IOFBF, IOBUFFERSIZE);
+    setvbuf (m_logfile, m_iobuffer, _IOFBF, IOBUFFERSIZE);
 }
 
 Logserver* Logserver::getInstance()

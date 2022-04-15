@@ -27,6 +27,7 @@ private:
 private:
     char* m_filePath_name;
     FILE* m_logfile;
+    char* m_iobuffer;
     static Logserver* s_logserver;
 };
 
