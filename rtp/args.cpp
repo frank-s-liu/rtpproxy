@@ -43,6 +43,7 @@ int PingCheckArgs::processCmd()
     }    
     else 
     {        
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "check ping, but not find ping session %s", cs_cookie);
         return -1;
     }        
 }
@@ -79,6 +80,7 @@ int StateCheckArgs::processCmd()
     }
     else 
     {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "check state, but not find cmd session %s", cs_key);
         return -1;
     }
 }
