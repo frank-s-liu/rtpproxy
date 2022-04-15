@@ -225,6 +225,7 @@ Epoll_data::~Epoll_data()
     }
     if(m_sessions_l)
     {
+        // delete all sessin keys
         Sessions_l::iterator ite = m_sessions_l->begin();
         for(; ite != m_sessions_l->end(); )
         {
@@ -573,6 +574,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         {
             if(0 != cs->process_cmd(cookie+2))
             {
+                CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
                 delete cs;
             }
         }

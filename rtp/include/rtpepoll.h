@@ -73,7 +73,7 @@ public:
 
 public:
     SocketInfo*              m_socket;   //socket info
-    Sessions_l*              m_sessions_l; // sessions need to send msg but blocked in socket  
+    Sessions_l*              m_sessions_l; // session keys need to send msg but blocked in socket  
     int                      m_session_count;
     int                      m_epoll_fd;
     unsigned char            m_epoll_fd_type;
