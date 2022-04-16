@@ -182,6 +182,7 @@ public:
 
 // a=crypto:<tag> <crypto-suite> <key-params> [<session-params>]
 // key-params = <key-method> ":" <key-info> , such as  "inline:" <key||salt> ["|" lifetime] ["|" MKI ":" length]
+// a=crypto:2 AES_CM_128_HMAC_SHA1_80 inline:WVNfX19zZW1jdGwgKCkgewkyMjA7fQp9CnVubGVz|2^20|1:4;
 class Attr_crypto : public Sdp_attribute
 {
 public:
@@ -190,9 +191,12 @@ public:
     virtual int serialize(char* buf, int buflen);
     virtual int parse(const char* line);
 public:
-    cstr suite_str;
-    cstr key_params;
-    short tag;
+    cstr                     suite_str;
+    cstr                     key_params;
+    unsigned long long       lifetime;  // max number of SRTP or SRTCP packets using this master key
+    unsigned short           tag;
+    unsigned char            mki_v;
+    unsigned char            mki_len;   //MKI and byte length of the MKI field in SRTP packets
 };
 
 class Attr_sendrecv : public Sdp_attribute

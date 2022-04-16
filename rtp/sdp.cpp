@@ -470,6 +470,9 @@ Attr_crypto::Attr_crypto()
     suite_str.len = 0;
     key_params.s = NULL;
     key_params.len = 0;
+    lifetime = 0;
+    mki_v = 0;
+    mki_len = 0;
 }
 
 Attr_crypto::~Attr_crypto()
@@ -515,7 +518,9 @@ int Attr_crypto::parse(const char* line)
     const char* pos = strstr(line, "a=crypto:");
     const char* end = strstr(line, "\r\n");
     char* suit_str = NULL;
-    const char* kp_start = NULL;
+    char* kp_start = NULL;
+    char* lt_start = NULL;  //lifetime
+    char* mki_start = NULL;
     if(!end || !pos || pos > end)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse failed, %s", line);
@@ -546,9 +551,66 @@ int Attr_crypto::parse(const char* line)
     {
         kp_start++;
     }
-    key_params.len = end - kp_start;
+    lt_start = strchr(kp_start, '|');
+    if(!lt_start)
+    {
+        pos = end - 1;
+    }
+    else
+    {
+        pos = lt_start - 1;
+    }
+    // delete whitespace if has
+    while(pos && pos>kp_start && *pos==' ')
+    {
+        pos--;
+    }
+    key_params.len = pos - kp_start + 1;
     key_params.s = new char[key_params.len+1];
     snprintf(key_params.s, key_params.len+1, "%s", kp_start);
+
+    if(lt_start)
+    {
+        lt_start++;
+        while(lt_start && lt_start<end && *lt_start==' ')
+        {
+            lt_start++;
+        }
+        if(lt_start[0]=='2' && lt_start[1] == '^')
+        {
+            lt_start += 2;
+            int lift = strtol(lt_start, &mki_start, 10);
+            if(!mki_start || *mki_start!='|' || mki_start>end)
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse lifetime failed, %s", line);
+                return -1;
+            }
+            lifetime = 1 << lift;
+        }
+        else
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse lifetime failed, %s", line);
+            return -1;
+        }
+    }
+    if(mki_start)
+    {
+       char* mki_len_start = NULL;
+       char* mki_len_end = NULL;
+       mki_start++;
+       mki_v = strtol(mki_start, &mki_len_start, 10);
+       if(!mki_len_start || *mki_len_start != ':' || mki_len_start>end)
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki value failed, %s", line);
+           return -1;
+       }
+       mki_len = strtol(mki_len_start, &mki_len_end, 10);
+       if(!mki_len_end || mki_len_end > end)
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki length failed, %s", line);
+           return -1;
+       }
+    }
     parsed = 1;
     return 0;
 }
