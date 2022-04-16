@@ -495,7 +495,7 @@ int Attr_crypto::serialize(char* buf, int buflen)
 {
     if(buf && parsed)
     {
-        int len = snprintf(buf, buflen, "a=crypto:%d %s %s\r\n", tag, suite_str.s, key_params.s);
+        int len = snprintf(buf, buflen, "a=crypto:%d %s %s", tag, suite_str.s, key_params.s);
         if (len >= buflen)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed %d %s %s in buf, buf len %d.", tag, suite_str.s, key_params.s, buflen);
@@ -503,6 +503,25 @@ int Attr_crypto::serialize(char* buf, int buflen)
         }
         else
         {
+            if(lifetime>0)
+            {
+                int lifelen = snprintf(&buf[len], buflen-len, "|2^%d", lifetime);
+                if(lifelen >= buflen-len)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed for lifetime parameters %d", lifetime);
+                    return -1;
+                }
+                len += lifelen;
+            }
+            if(mki_v)
+            {
+                int mki_l = snprintf(&buf[len], buflen-len, "|%d:%d\r\n", mki_v, mki_len);
+                if(mki_l >= buflen-len)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed for MKI parameters %d %d", mki_v, mki_len);
+                    return -1;
+                }
+            }
             return 0;
         }
     }
@@ -579,13 +598,12 @@ int Attr_crypto::parse(const char* line)
         if(lt_start[0]=='2' && lt_start[1] == '^')
         {
             lt_start += 2;
-            int lift = strtol(lt_start, &mki_start, 10);
+            lifetime = strtol(lt_start, &mki_start, 10);
             if(!mki_start || *mki_start!='|' || mki_start>end)
             {
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse lifetime failed, %s", line);
                 return -1;
             }
-            lifetime = 1 << lift;
         }
         else
         {
