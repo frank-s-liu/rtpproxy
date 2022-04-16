@@ -347,28 +347,31 @@ int CmdSession::process_cmd(char* cmdstr)
     int cmd = 0;
     int cmdlen = strlen(cmdstr);
     int ret;
-    tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd str is[%s]", cmdstr);
     parsingCmd(cmdstr, cmdlen);
     cmd = getCmd();
     CmdSessionState* css = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s is processing cmd [%d]", m_session_key->m_cookie, cmd);
     ret =m_css->processCMD(cmd, &css);
     if(0 == ret && css)
     {
         delete m_css;
         m_css = css;
     }
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s has processed cmd [%d], result is %s ", m_session_key->m_cookie, cmd, ret==0?"SUCCESS":"FAILED");
     return ret;
 }
 
 int CmdSession::process_cmd(int cmd)
 {
     CmdSessionState* css = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s is processing cmd [%d]", m_session_key->m_cookie, cmd);
     int ret = m_css->processCMD(cmd, &css);
     if(0 == ret && css)
     {
         delete m_css;
         m_css = css;
     }
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s has processed cmd [%d], result is %s ", m_session_key->m_cookie, cmd, ret==0?"SUCCESS":"FAILED");
     return ret;
 }
 
