@@ -6,6 +6,7 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_socket = NULL;
     m_rtpSession = rtp_session;
     m_bridged = 0;
+    m_cry_cxt = NULL;
 }
 
 RtpStream::~RtpStream()
@@ -16,6 +17,10 @@ RtpStream::~RtpStream()
         m_socket = NULL;
     }
     m_rtpSession = NULL;
+    if(m_cry_cxt)
+    {
+        delete m_cry_cxt;
+    }
 }
 
 unsigned short RtpStream::getLocalPort()

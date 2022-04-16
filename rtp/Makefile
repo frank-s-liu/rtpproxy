@@ -14,7 +14,8 @@ C_OBJS := $(addprefix $(C_ODIR),$(C_SRCS:.c=.o))
 C_DEPS := $(addprefix $(C_ODIR),$(C_SRCS:.c=.d)) 
 
 
-INCLUDE_DIR := -I ../export/logExport -I ../export/utilExport -I ../export/mempoolExport  -I ./include  -I ./export -I ../export/transportExport -I../linklibs/include -I ../export/timerEventExport -I ../export/tinyxmlExport
+INCLUDE_DIR := -I ../export/logExport -I ../export/utilExport -I ../export/mempoolExport  -I ./include  -I ./export -I ../export/transportExport \
+               -I../export/thirdExport -I ../export/timerEventExport -I ../export/tinyxmlExport
 CXXFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector  $(INCLUDE_DIR)
 CFLAGS := -g -fPIC -Wall -Werror -fno-omit-frame-pointer -fstack-protector $(INCLUDE_DIR)
 

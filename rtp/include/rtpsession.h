@@ -4,6 +4,7 @@
 #include "sessionKey.h"
 #include "sdp.h"
 #include "udpSocket.h"
+#include "crypto.h"
 
 
 class RtpSession;
@@ -20,11 +21,12 @@ public:
     unsigned short getLocalPort();
     int getLocalAddress(char* buf, int buflen);
 private:
-    Network_address     m_addr_peer; // peer address
-    UdpSrvSocket*       m_socket;  // local address
-    RtpSession*         m_rtpSession;
-    RTPDirection        m_direction;
-    unsigned char       m_bridged;
+    Network_address             m_addr_peer; // peer address
+    UdpSrvSocket*               m_socket;  // local address
+    RtpSession*                 m_rtpSession;
+    Crypto_context*             m_cry_cxt; // external using encryption
+    RTPDirection                m_direction;
+    unsigned char               m_bridged;
 };
 
 class RtpSession
