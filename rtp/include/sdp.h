@@ -193,10 +193,10 @@ public:
 public:
     cstr                     suite_str;
     cstr                     key_params;
-    unsigned long long       lifetime;  // max number of SRTP or SRTCP packets using this master key
     unsigned short           tag;
     unsigned char            mki_v;
     unsigned char            mki_len;   //MKI and byte length of the MKI field in SRTP packets
+    unsigned char            lifetime;  // max number of SRTP or SRTCP packets using this master key  max packages = ( 1 < lifetime)
 };
 
 class Attr_sendrecv : public Sdp_attribute
