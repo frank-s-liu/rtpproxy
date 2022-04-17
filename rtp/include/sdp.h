@@ -247,6 +247,7 @@ public:
     int serialize(char* buf, int buflen);
     int replacePort(unsigned short port);
     int replaceTransport(unsigned char type);
+    int removecryptoAttrs();
 public:
     /* RFC 3551 table 4, 5
      for static fmt, maybe SDP omit the attribute of rtpmap,

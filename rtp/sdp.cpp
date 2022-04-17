@@ -885,6 +885,34 @@ int Sdp_media::replaceTransport(unsigned char type)
     return -1;
 }
 
+int Sdp_media::removecryptoAttrs()
+{
+    if(parsed)
+    {
+        Attrs_l::iterator ite_a = attrs.begin();
+        for(; ite_a!=attrs.end(); )
+        {
+            Sdp_attribute* a = *ite_a;
+            if(a && a->attr_type == ATTR_CRYPTO)
+            {
+                delete a;
+                ite_a = attrs.erase(ite_a);
+                continue;
+            }
+            else
+            {
+                ite_a++;
+                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, seems push a null attr to this list");
+            }
+        }
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
 Sdp_media::~Sdp_media()
 {
     if(fmts.len)
@@ -892,6 +920,19 @@ Sdp_media::~Sdp_media()
         delete[] fmts.s;
         fmts.s = NULL;
         fmts.len = 0;
+    }
+    Attrs_l::iterator ite_a = attrs.begin();
+    for(; ite_a!=attrs.end();)
+    {
+        if(*ite_a)
+        {
+            delete *ite_a;
+        }
+        else
+        {
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, seems push a null attr to this list");
+        }
+        ite_a = attrs.erase(ite_a);
     }
 }
 
@@ -1074,14 +1115,28 @@ Sdp_session::~Sdp_session()
     for(; ite_l != m_media_l.end(); )
     {
         if(*ite_l)
-        { 
+        {
             delete *ite_l;
         }
         else
-        {   
+        {
             tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, sdp media instance is NULL");
         }
         ite_l = m_media_l.erase(ite_l);
+    }
+
+    Attrs_l::iterator ite_a = m_global_attrs_l.begin();
+    for(; ite_a!=m_global_attrs_l.end();)
+    {
+        if(*ite_a)
+        {
+            delete *ite_a;
+        }
+        else
+        {
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, seems push a null attr to this list");
+        }
+        ite_a = m_global_attrs_l.erase(ite_a);
     }
 }
 
