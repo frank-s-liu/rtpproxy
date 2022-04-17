@@ -277,6 +277,7 @@ public:
     int replaceOrigin(const char* ip, int iplen);
     int replaceCon(const char* ip, int iplen);
     int replaceMedia(unsigned short port, unsigned char transport);
+    int removeCryptoAttr();
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;

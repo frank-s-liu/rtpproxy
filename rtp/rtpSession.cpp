@@ -78,6 +78,12 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             sdp->replaceOrigin(local_internal_address, strlen(local_internal_address));
             sdp->replaceCon(local_internal_address, strlen(local_internal_address));
             ret = sdp->replaceMedia(local_rtp_port, RTP_AVP);
+            if(ret != 0)
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s replace media line error",m_session_key->m_cookie);
+                break;
+            }
+            ret = sdp->removeCryptoAttr();
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
             arg->direction = EXTERNAL_PEER;

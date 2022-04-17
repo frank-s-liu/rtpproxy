@@ -1386,8 +1386,27 @@ int Sdp_session::replaceMedia(unsigned short port, unsigned char transport)
         ret = media->replaceTransport(transport);
         if(ret != 0)
         {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session replace media failed, %d", m_parsed);
             break;
         }
     }
     return ret;
 }
+
+int Sdp_session::removeCryptoAttr()
+{
+    int ret = 0;
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        Sdp_media* media = *it;
+        ret = media->removecryptoAttrs();
+        if(ret != 0)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session remove media crypto attr failed, %d", m_parsed);
+            break;
+        }
+    }
+    return ret;
+}
+
