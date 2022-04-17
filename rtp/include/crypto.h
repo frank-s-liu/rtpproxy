@@ -3,11 +3,20 @@
 
 #include <openssl/evp.h>
 
+#include "cstr.h"
+
 static const unsigned char SRTP_MAX_MASTER_KEY_LEN = 32;
 static const unsigned char SRTP_MAX_MASTER_SALT_LEN = 14;
 static const unsigned char SRTP_MAX_SESSION_KEY_LEN = 32;
 static const unsigned char SRTP_MAX_SESSION_SALT_LEN = 14;
 static const unsigned char SRTP_MAX_SESSION_AUTH_LEN = 20;
+
+typedef int (*session_key_init_func)(class Crypto_context*);
+typedef int (*session_key_cleanup_func)(class Crypto_context*);
+typedef int (*crypto_rtp_cb)(class Crypto_context*, struct rtp_header*, cstr*, uint64_t);
+typedef int (*crypto_rtcp_cb)(class Crypto_context*, struct rtcp_packet*, cstr*, uint64_t);
+
+void crypto_suit_init();
 
 struct crypto_suite 
 {
@@ -22,17 +31,17 @@ struct crypto_suite
     unsigned char                         srtcp_auth_key_len;
     unsigned long long                    srtp_lifetime;
     unsigned long long                    srtcp_lifetime;       
-    int                                   kernel_cipher;
-    int                                   kernel_hmac;
+    //int                                   kernel_cipher;
+    //int                                   kernel_hmac;
     //crypto_rtp_cb                         encrypt_rtp;
     //crypto_rtp_cb                         decrypt_rtp;
     //crypto_rtcp_cb                        encrypt_rtcp;
     //crypto_rtcp_cb                        decrypt_rtcp;
     //hash_func_rtp                         hash_rtp;
     //hash_func_rtcp                        hash_rtcp;
+    session_key_init_func                 session_key_init;
+    session_key_cleanup_func              session_key_cleanup;
     const EVP_CIPHER*                     aes_evp;
-    unsigned int                          idx;
-    cstr                                  name_str;
     const EVP_CIPHER*                     (*aead_evp)(void);
 };
 
@@ -63,7 +72,7 @@ private:
     void deinit_crypto_param();
 public:
     struct crypto_params                m_params;
-    void*                               m_session_key_ctx[2];
+    EVP_CIPHER_CTX*                     m_session_key_ctx[2];
     char                                m_session_key[SRTP_MAX_SESSION_KEY_LEN];
     char                                m_session_salt[SRTP_MAX_SESSION_SALT_LEN];
     char                                m_session_auth_key[SRTP_MAX_SESSION_AUTH_LEN];
