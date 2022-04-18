@@ -12,7 +12,7 @@ union Test_little_endian
 
 static int is_little_endian()
 {
-    Test_little_endian little;
+    union Test_little_endian little;
     little.b = 1;
     if(1 == little.a)
     {
@@ -283,7 +283,7 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package is too short");
         goto error;
     }
-    rtp = (Rtp_Fixed_header*)s->s;
+    rtp = (struct Rtp_Fixed_header*)s->s;
     if(s_little_endian == 1)
     {
         cc = rtp->v_p_x_cc.v_p_x_cc_little.cc;

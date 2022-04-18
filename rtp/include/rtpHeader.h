@@ -57,7 +57,7 @@ struct RFC_payload
 
 struct Rtp_payload 
 {
-    const RFC_payload* pl;
+    const struct RFC_payload* pl;
     cstr encoding_with_full_params; // "opus/48000/2"
     unsigned char for_transcoding:1;
     unsigned char accepted:1;
