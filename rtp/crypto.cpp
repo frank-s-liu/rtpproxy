@@ -204,16 +204,17 @@ int crypto_gen_session_key(Crypto_context *c, cstr *out, unsigned char label, in
     return 0;
 }
 
-Crypto_context::Crypto_context()
+Crypto_context::Crypto_context(Crypto_Suite cry_suit)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-    init_crypto_param();
+    init_crypto_param(cry_suit);
     m_session_key_ctx[0] = NULL;
     m_session_key_ctx[1] = NULL;
     m_session_key[0] = '\0';
     m_session_salt[0] = '\0';
     m_session_auth_key[0] = '\0';
     m_have_session_key = 0;
+    m_params.crypto_suite->session_key_init(this);
 #else
     assert(0);
 #endif
@@ -235,10 +236,10 @@ void Crypto_context::deinit_crypto_param()
     m_params.crypto_suite = NULL;
 }
 
-void Crypto_context::init_crypto_param()
+void Crypto_context::init_crypto_param(Crypto_Suite cry_suit)
 {
     m_params.mki = NULL;
-    m_params.crypto_suite = NULL;
+    m_params.crypto_suite = &s_crypto_suites[cry_suit];
     m_params.master_key[0] = '\0';
     m_params.master_salt[0] = '\0';
     m_params.mki_len = 0;

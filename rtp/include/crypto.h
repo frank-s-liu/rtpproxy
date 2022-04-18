@@ -4,6 +4,7 @@
 #include <openssl/evp.h>
 
 #include "cstr.h"
+#include "rtpEnum.h"
 
 static const unsigned char SRTP_MAX_MASTER_KEY_LEN = 32;
 static const unsigned char SRTP_MAX_MASTER_SALT_LEN = 14;
@@ -65,10 +66,10 @@ struct crypto_params
 class Crypto_context 
 {
 public:
-    Crypto_context();
+    Crypto_context(Crypto_Suite cry_suit);
     virtual ~Crypto_context();
 private:
-    void init_crypto_param();
+    void init_crypto_param(Crypto_Suite cry_suit);
     void deinit_crypto_param();
 public:
     struct crypto_params                m_params;
