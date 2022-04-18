@@ -14,7 +14,7 @@ static const unsigned char SRTP_MAX_SESSION_AUTH_LEN = 20;
 
 typedef int (*session_key_init_func)(class Crypto_context*);
 typedef int (*session_key_cleanup_func)(class Crypto_context*);
-typedef int (*crypto_rtp_cb)(class Crypto_context*, struct rtp_header*, cstr*, uint64_t);
+typedef int (*crypto_rtp_cb)(class Crypto_context*, struct Rtp_Fixed_header*, cstr*, uint64_t);
 typedef int (*crypto_rtcp_cb)(class Crypto_context*, struct rtcp_packet*, cstr*, uint64_t);
 
 void crypto_suit_init();
@@ -34,7 +34,7 @@ struct crypto_suite
     unsigned long long                    srtcp_lifetime;       
     //int                                   kernel_cipher;
     //int                                   kernel_hmac;
-    //crypto_rtp_cb                         encrypt_rtp;
+    crypto_rtp_cb                         encrypt_rtp;
     //crypto_rtp_cb                         decrypt_rtp;
     //crypto_rtcp_cb                        encrypt_rtcp;
     //crypto_rtcp_cb                        decrypt_rtcp;

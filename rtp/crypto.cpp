@@ -2,12 +2,31 @@
 #include <openssl/hmac.h>
 #include <string.h>  // memcpy
 #include <assert.h>
+#include <arpa/inet.h>
+
 
 #include "crypto.h"
 #include "rtpEnum.h"
+#include "rtpHeader.h"
 
 static int aes_gcm_session_key_init(class Crypto_context *c);
 static int evp_session_key_cleanup(class Crypto_context *c);
+static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx);
+
+union aes_gcm_rtp_iv 
+{
+    unsigned char bytes[12];
+    struct 
+    {
+        uint16_t zeros;
+        uint32_t ssrc;
+        uint32_t roq; 
+        uint16_t seq;
+    } __attribute__((__packed__));
+} __attribute__((__packed__));
+    
+static_assert(sizeof(union aes_gcm_rtp_iv) == 12, "union aes_gcm_rtp_iv not packed");
+
 
 struct crypto_suite s_crypto_suites[MAX_CRYPTO_SUIT] = 
 {
@@ -25,7 +44,7 @@ struct crypto_suite s_crypto_suites[MAX_CRYPTO_SUIT] =
         .srtcp_lifetime              = 1ULL << 31,
         //.kernel_cipher               = REC_AEAD_AES_GCM_256,
         //.kernel_hmac                 = REH_NULL,
-        //.encrypt_rtp                 = aes_gcm_encrypt_rtp,
+        .encrypt_rtp                 = aes_gcm_encrypt_rtp,
         //.decrypt_rtp                 = aes_gcm_decrypt_rtp,
         //.encrypt_rtcp                = aes_gcm_encrypt_rtcp,
         //.decrypt_rtcp                = aes_gcm_decrypt_rtcp,
@@ -203,6 +222,38 @@ int crypto_gen_session_key(Crypto_context *c, cstr *out, unsigned char label, in
 
     return 0;
 }
+
+static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx) 
+{
+    union aes_gcm_rtp_iv iv;
+    int len, ciphertext_len;
+
+    memcpy(iv.bytes, c->m_session_salt, c->m_params.crypto_suite->session_salt_len);
+
+    iv.ssrc ^= r->ssrc;
+    iv.roq ^= htonl((idx & 0x00ffffffff0000ULL) >> 16);
+    iv.seq ^= htons(idx & 0x00ffffULL);
+
+    EVP_EncryptInit_ex(c->m_session_key_ctx[0], c->m_params.crypto_suite->aead_evp(), NULL,
+                    (const unsigned char *) c->m_session_key, iv.bytes);
+
+    // nominally 12 bytes of AAD
+    EVP_EncryptUpdate(c->m_session_key_ctx[0], NULL, &len, (const unsigned char*)r, s->s - (char*)r);
+
+    EVP_EncryptUpdate(c->m_session_key_ctx[0], (unsigned char*) s->s, &len,
+                    (const unsigned char*) s->s, s->len);
+    ciphertext_len = len;
+    if (!EVP_EncryptFinal_ex(c->m_session_key_ctx[0], (unsigned char *) s->s+len, &len))
+            return 1;
+    ciphertext_len += len;
+    // append the tag to the str buffer
+    EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_GET_TAG, 16, s->s+ciphertext_len);
+    s->len = ciphertext_len + 16;
+
+    return 0;
+}
+
+
 
 Crypto_context::Crypto_context(Crypto_Suite cry_suit)
 {
