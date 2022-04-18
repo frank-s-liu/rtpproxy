@@ -49,4 +49,33 @@ enum Crypto_Suite
     MAX_CRYPTO_SUIT
 };
 
+
+enum RFC_RTP_PAYLOAD_TYPE_INDEX  // not payload type value
+{
+    PCMU_INDEX = 0,
+    GSM_INDEX,
+    G723_INDEX,
+    DVI4_8000_INDEX,
+    DVI4_16000_INDEX,
+    LPC_INDEX,
+    PCMA_INDEX,
+    G722_INDEX,
+    L16_1_CHANEL_INDEX,
+    L16_2_CHANEL_INDEX,
+    QCELP_INDEX,
+    CN_INDEX,
+    MPA_INDEX,
+    G728_INDEX,
+    DVI4_11025_INDEX,
+    DVI4_22050_INDEX,
+    G729_INDEX,
+    CelB_INDEX,
+    JPEG_INDEX,
+    nv_INDEX,
+    H261_INDEX,
+    MPV_INDEX,
+    MP2T_INDEX,
+    H263_INDEX,
+    MAX_PAYLOAD_TYPE_INDEX
+};
 #endif
