@@ -36,6 +36,7 @@ struct Rtp_Fixed_header
     uint32_t csrc[0];  // 0 to 15 items, 32 bits each
 } __attribute__ ((packed));
 
+// only support after c++11
 static_assert(sizeof(struct Rtp_Fixed_header) == 12, "must be not align here");
 
 struct Rtp_extension 
