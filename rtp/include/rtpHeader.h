@@ -36,12 +36,15 @@ struct Rtp_Fixed_header
     uint32_t csrc[0];  // 0 to 15 items, 32 bits each
 } __attribute__ ((packed));
 
+static_assert(sizeof(struct Rtp_Fixed_header) == 12, "must be not align here");
 
 struct Rtp_extension 
 {
     uint16_t undefined;
     uint16_t length;
 } __attribute__ ((packed));
+
+static_assert(sizeof(struct Rtp_extension) == 4, "must be not align here");
 
 struct RFC_payload
 {
