@@ -77,7 +77,7 @@ public:
     char                                m_session_key[SRTP_MAX_SESSION_KEY_LEN];
     char                                m_session_salt[SRTP_MAX_SESSION_SALT_LEN];
     char                                m_session_auth_key[SRTP_MAX_SESSION_AUTH_LEN];
-    unsigned char                       m_have_session_key:1;  // has generate session key or not
+    unsigned char                       m_have_session_key:1;  // has generate session key success or not
 };
 
 #endif

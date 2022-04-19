@@ -224,6 +224,10 @@ int crypto_gen_session_key(Crypto_context *c, cstr *out, unsigned char label, in
     return 0;
 }
 
+/**
+ * RFC 3711 chipter 3.2.1 
+ *    index = 2^16 * ROC + SEQ.
+ **/
 static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx) 
 {
     union aes_gcm_rtp_iv iv;
