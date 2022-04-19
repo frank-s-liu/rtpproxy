@@ -12,6 +12,7 @@
 static int aes_gcm_session_key_init(class Crypto_context *c);
 static int evp_session_key_cleanup(class Crypto_context *c);
 static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx);
+static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx);
 
 union aes_gcm_rtp_iv 
 {
@@ -45,7 +46,7 @@ struct crypto_suite s_crypto_suites[MAX_CRYPTO_SUIT] =
         //.kernel_cipher               = REC_AEAD_AES_GCM_256,
         //.kernel_hmac                 = REH_NULL,
         .encrypt_rtp                 = aes_gcm_encrypt_rtp,
-        //.decrypt_rtp                 = aes_gcm_decrypt_rtp,
+        .decrypt_rtp                 = aes_gcm_decrypt_rtp,
         //.encrypt_rtcp                = aes_gcm_encrypt_rtcp,
         //.decrypt_rtcp                = aes_gcm_decrypt_rtcp,
         .session_key_init            = aes_gcm_session_key_init,
@@ -228,7 +229,7 @@ static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cs
     union aes_gcm_rtp_iv iv;
     int len, ciphertext_len;
 
-    memcpy(iv.bytes, c->m_session_salt, c->m_params.crypto_suite->session_salt_len);
+    memcpy(iv.bytes, c->m_session_salt, 12);
 
     iv.ssrc ^= r->ssrc;
     iv.roq ^= htonl((idx & 0x00ffffffff0000ULL) >> 16);
@@ -253,6 +254,39 @@ static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cs
     return 0;
 }
 
+static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx) 
+{
+    union aes_gcm_rtp_iv iv;
+    int len, plaintext_len;
+
+    if (s->len < 16)
+    {
+        return -1;
+    }
+    memcpy(iv.bytes, c->m_session_salt, 12);
+
+    iv.ssrc ^= r->ssrc;
+    iv.roq ^= htonl((idx & 0x00ffffffff0000ULL) >> 16);
+    iv.seq ^= htons(idx & 0x00ffffULL);
+
+    EVP_DecryptInit_ex(c->m_session_key_ctx[0], c->m_params.crypto_suite->aead_evp(), NULL,
+                    (const unsigned char*) c->m_session_key, iv.bytes);
+
+    // nominally 12 bytes of AAD
+    EVP_DecryptUpdate(c->m_session_key_ctx[0], NULL, &len, (const unsigned char*)r, s->s - (char *)r);
+
+    // decrypt partial buffer - the last 16 bytes are the tag
+    EVP_DecryptUpdate(c->m_session_key_ctx[0], (unsigned char *) s->s, &len,
+                    (const unsigned char*) s->s, s->len-16);
+    plaintext_len = len;
+    EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_SET_TAG, 16, s->s + s->len-16);
+    if (!EVP_DecryptFinal_ex(c->m_session_key_ctx[0], (unsigned char*) s->s+len, &len))
+            return 1;
+    plaintext_len += len;
+    s->len = plaintext_len;
+
+    return 0;
+}
 
 
 Crypto_context::Crypto_context(Crypto_Suite cry_suit)

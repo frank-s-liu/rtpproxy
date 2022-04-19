@@ -35,7 +35,7 @@ struct crypto_suite
     //int                                   kernel_cipher;
     //int                                   kernel_hmac;
     crypto_rtp_cb                         encrypt_rtp;
-    //crypto_rtp_cb                         decrypt_rtp;
+    crypto_rtp_cb                         decrypt_rtp;
     //crypto_rtcp_cb                        encrypt_rtcp;
     //crypto_rtcp_cb                        decrypt_rtcp;
     //hash_func_rtp                         hash_rtp;
