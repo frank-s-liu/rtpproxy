@@ -1,5 +1,7 @@
 #include "sdp.h"
 #include "log.h"
+#include "rtpConstStr.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -473,6 +475,7 @@ Attr_crypto::Attr_crypto()
     lifetime = 0;
     mki_v = 0;
     mki_len = 0;
+    attr_type = ATTR_CRYPTO;
 }
 
 Attr_crypto::~Attr_crypto()
@@ -495,7 +498,7 @@ int Attr_crypto::serialize(char* buf, int buflen)
 {
     if(buf && parsed)
     {
-        int len = snprintf(buf, buflen, "a=crypto:%d %s %s", tag, suite_str.s, key_params.s);
+        int len = snprintf(buf, buflen, "a=crypto:%d %s inline:%s", tag, suite_str.s, key_params.s);
         if (len >= buflen)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed %d %s %s in buf, buf len %d.", tag, suite_str.s, key_params.s, buflen);
@@ -570,6 +573,7 @@ int Attr_crypto::parse(const char* line)
     {
         kp_start++;
     }
+    kp_start += strlen("inline:");
     lt_start = strchr(kp_start, '|');
     if(!lt_start)
     {
@@ -617,7 +621,8 @@ int Attr_crypto::parse(const char* line)
        char* mki_len_end = NULL;
        mki_start++;
        mki_v = strtol(mki_start, &mki_len_start, 10);
-       if(!mki_len_start || *mki_len_start != ':' || mki_len_start>end)
+       // now only support mki value is one byte value
+       if(!mki_len_start || *mki_len_start != ':' || mki_len_start>end || mki_v > 255)
        {
            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki value failed, %s", line);
            return -1;
@@ -635,7 +640,7 @@ int Attr_crypto::parse(const char* line)
 
 Attr_sendrecv::Attr_sendrecv()
 {
-
+    attr_type = ATTR_SENDRECV;
 }
 
 Attr_sendrecv::~Attr_sendrecv()
@@ -724,6 +729,7 @@ int Attr_sendrecv::parse(const char* line)
 
 Attr_rtcp::Attr_rtcp()
 {
+    attr_type = ATTR_RTCP;
     port = 0;
 }
 
@@ -790,6 +796,7 @@ int Attr_rtcp::parse(const char* line)
 
 Attr_unknown::Attr_unknown()
 {
+    attr_type = ATTR_END_OF_CANDIDATES;
     line.s = NULL;
     line.len = 0;
 }
@@ -1408,5 +1415,48 @@ int Sdp_session::removeCryptoAttr()
         }
     }
     return ret;
+}
+
+Sdp_attribute* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
+{
+    Sdp_attribute* attr = NULL;
+    Sdp_media* audiMedia = NULL;
+    unsigned int chip_str_len = strlen(s_crypto_suite_str[chip]);
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        if((*it)->media_type != AUDIO)
+        {
+            continue;
+        }
+        audiMedia = *it;
+    }
+    if(attr == NULL)
+    {
+        return NULL;
+    } 
+    Attrs_l::iterator ite_a = audiMedia->attrs.begin();
+    for(; ite_a!=audiMedia->attrs.end();)
+    {
+        Sdp_attribute* a = *ite_a;
+        if(a)
+        {
+           if(a->attr_type == ATTR_CRYPTO)
+           {
+               Attr_crypto* crppto_a = (Attr_crypto*)a;
+               if(0 == strncmp(crppto_a->suite_str.s, s_crypto_suite_str[chip], crppto_a->suite_str.len<chip_str_len?crppto_a->suite_str.len:chip_str_len))
+               {
+                   return a;
+               }
+               continue;
+           }
+           continue;
+        }
+        else
+        {
+            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, seems push a null attr to this list");
+        }
+    }
+    return attr;
 }
 

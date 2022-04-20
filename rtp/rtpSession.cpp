@@ -16,6 +16,8 @@ RtpSession::RtpSession()
 
 RtpSession::RtpSession(SessionKey* key, RtpProcess* process)
 {
+    m_external = NULL;
+    m_internal = NULL;
     m_session_key = key;
     m_rtp_sendrecv_process = process;
     process->putRtpSession(this);
@@ -67,6 +69,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_internal = new RtpStream(this);;
                 m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
                 m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+                
+
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
             }
             else

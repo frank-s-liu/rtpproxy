@@ -5,6 +5,7 @@
 
 #include "cstr.h"
 #include "rtpEnum.h"
+#include "sdp.h"
 
 static const unsigned char SRTP_MAX_MASTER_KEY_LEN = 32;
 static const unsigned char SRTP_MAX_MASTER_SALT_LEN = 14;
@@ -68,6 +69,8 @@ class Crypto_context
 public:
     Crypto_context(Crypto_Suite cry_suit);
     virtual ~Crypto_context();
+    int set_crypto_param(Attr_crypto* a);
+
 private:
     void init_crypto_param(Crypto_Suite cry_suit);
     void deinit_crypto_param();

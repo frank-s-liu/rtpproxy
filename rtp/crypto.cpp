@@ -8,6 +8,7 @@
 #include "crypto.h"
 #include "rtpEnum.h"
 #include "rtpHeader.h"
+#include "base64.h"
 
 static int aes_gcm_session_key_init(class Crypto_context *c);
 static int evp_session_key_cleanup(class Crypto_context *c);
@@ -335,4 +336,26 @@ void Crypto_context::init_crypto_param(Crypto_Suite cry_suit)
     m_params.session_params.unencrypted_srtcp = 0;
     m_params.session_params.unencrypted_srtp = 0;
     m_params.session_params.unauthenticated_srtp = 0;
+}
+
+int Crypto_context::set_crypto_param(Attr_crypto* a)
+{
+    int ret = 0;
+    unsigned char b64decode[256];
+    if(a->mki_len)
+    {
+        m_params.mki = new unsigned char[a->mki_len+1]; // add mki_len byte into srtp package, the value is a->mki_v in network order
+        m_params.mki[a->mki_len] = '\0';
+        unsigned char v = (unsigned char)a->mki_v;
+        memcpy(m_params.mki, &v, a->mki_len);
+        m_params.mki_len = a->mki_len;
+    }
+    ret = base64Decode(a->key_params.s, a->key_params.len, b64decode, sizeof(b64decode));
+    if(ret != 0)
+    {
+        return ret;
+    }
+    memcpy(m_params.master_key, b64decode, m_params.crypto_suite->master_key_len);
+    memcpy(m_params.master_salt, &b64decode[m_params.crypto_suite->master_key_len], m_params.crypto_suite->master_salt_len);
+    return 0;
 }

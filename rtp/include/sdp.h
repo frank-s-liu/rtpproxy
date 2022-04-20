@@ -194,8 +194,8 @@ public:
     cstr                     suite_str;
     cstr                     key_params;
     unsigned short           tag;
-    unsigned char            mki_v;
-    unsigned char            mki_len;   //MKI and byte length of the MKI field in SRTP packets
+    unsigned short           mki_v;     // now only support one byte value, don't need to change to network order
+    unsigned char            mki_len;   // MKI and byte length of the MKI field in SRTP packets // Only 8-bit alignment is assumed. RFC 3711
     unsigned char            lifetime;  // max number of SRTP or SRTCP packets using this master key  max packages = ( 1 < lifetime)
 };
 
@@ -278,6 +278,7 @@ public:
     int replaceCon(const char* ip, int iplen);
     int replaceMedia(unsigned short port, unsigned char transport);
     int removeCryptoAttr();
+    Sdp_attribute* getcryptoAttrFromAudioMedia(Crypto_Suite chip);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;

@@ -20,6 +20,7 @@ public:
     int recv(unsigned char* buf, int len);
     unsigned short getLocalPort();
     int getLocalAddress(char* buf, int buflen);
+    int processCrypto(Sdp_session* sdp);
 private:
     Network_address             m_addr_peer; // peer address
     UdpSrvSocket*               m_socket;  // local address

@@ -7,6 +7,7 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_rtpSession = rtp_session;
     m_bridged = 0;
     m_cry_cxt = NULL;
+    m_direction = MAX_DIRECTION;
 }
 
 RtpStream::~RtpStream()
@@ -21,6 +22,26 @@ RtpStream::~RtpStream()
     {
         delete m_cry_cxt;
     }
+}
+
+int RtpStream::processCrypto(Sdp_session* sdp)
+{
+// prefer to using AEAD_AES_256_GCM
+// need to add the prefer suit chip into configuratiopn
+// TBD
+    Sdp_attribute* a = sdp->getcryptoAttrFromAudioMedia(AEAD_AES_256_GCM);
+    if(!a)
+    {
+        //a = sdp->getLittleTagcryptoAttrFromAudioMedia();
+        return -1;
+    }
+    if(m_cry_cxt)
+    {
+        delete m_cry_cxt;
+    }
+    m_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
+    m_cry_cxt->set_crypto_param((Attr_crypto*)a);
+    return 0;
 }
 
 unsigned short RtpStream::getLocalPort()
