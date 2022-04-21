@@ -516,7 +516,7 @@ int Attr_crypto::serialize(char* buf, int buflen)
                 }
                 len += lifelen;
             }
-            if(mki_v)
+            if(mki_v && mki_len>0)
             {
                 int mki_l = snprintf(&buf[len], buflen-len, "|%d:%d\r\n", mki_v, mki_len);
                 if(mki_l >= buflen-len)
@@ -925,7 +925,41 @@ int Sdp_media::removecryptoAttrs()
             else
             {
                 ite_a++;
-                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknow issue, seems push a null attr to this list");
+            }
+        }
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+int Sdp_media::removecryptoAttrsExclude(unsigned short exclude_tag)
+{
+    if(parsed)
+    {
+        Attrs_l::iterator ite_a = attrs.begin();
+        for(; ite_a!=attrs.end(); )
+        {
+            Sdp_attribute* a = *ite_a;
+            if(a && a->attr_type == ATTR_CRYPTO)
+            {
+                Attr_crypto* crypto = (Attr_crypto*)a;
+                if(crypto->tag != exclude_tag)
+                {
+                    delete a;
+                    ite_a = attrs.erase(ite_a);
+                }
+                else
+                {
+                    ite_a++;
+                }
+                continue;
+            }
+            else
+            {
+                ite_a++;
             }
         }
         return 0;
@@ -1433,9 +1467,27 @@ int Sdp_session::removeCryptoAttr()
     return ret;
 }
 
-Sdp_attribute* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
+int Sdp_session::removeCryptoAttrExclude(unsigned short exclude_tag)
 {
-    Sdp_attribute* attr = NULL;
+    int ret = 0;
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        Sdp_media* media = *it;
+        ret = media->removecryptoAttrsExclude(exclude_tag);
+        if(ret != 0)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp session remove media crypto attr failed, %d", m_parsed);
+            break;
+        }
+    }
+    return ret;
+
+}
+
+Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
+{
+    Attr_crypto* attr = NULL;
     Sdp_media* audiMedia = NULL;
     unsigned int chip_str_len = strlen(s_crypto_suite_str[chip]);
     Medias_l::iterator it;
@@ -1462,7 +1514,7 @@ Sdp_attribute* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
                Attr_crypto* crppto_a = (Attr_crypto*)a;
                if(0 == strncmp(crppto_a->suite_str.s, s_crypto_suite_str[chip], crppto_a->suite_str.len<chip_str_len?crppto_a->suite_str.len:chip_str_len))
                {
-                   return a;
+                   return crppto_a;
                }
                continue;
            }

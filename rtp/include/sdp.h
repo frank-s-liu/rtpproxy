@@ -254,6 +254,7 @@ public:
     int replacePort(unsigned short port);
     int replaceTransport(unsigned char type);
     int removecryptoAttrs();
+    int removecryptoAttrsExclude(unsigned short exclude_tag);
 public:
     /* RFC 3551 table 4, 5
      for static fmt, maybe SDP omit the attribute of rtpmap,
@@ -284,7 +285,8 @@ public:
     int replaceCon(const char* ip, int iplen);
     int replaceMedia(unsigned short port, unsigned char transport);
     int removeCryptoAttr();
-    Sdp_attribute* getcryptoAttrFromAudioMedia(Crypto_Suite chip);
+    int removeCryptoAttrExclude(unsigned short exclude_tag);
+    Attr_crypto* getcryptoAttrFromAudioMedia(Crypto_Suite chip);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;

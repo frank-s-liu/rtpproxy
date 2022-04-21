@@ -25,8 +25,10 @@ private:
     Network_address             m_addr_peer; // peer address
     UdpSrvSocket*               m_socket;  // local address
     RtpSession*                 m_rtpSession;
-    Crypto_context*             m_cry_cxt; // external using encryption
+    Crypto_context*             m_remote_cry_cxt; // external using encryption
+    Crypto_context*             m_local_cry_cxt; // external using encryption
     RTPDirection                m_direction;
+    cstr                        m_local_sdp;
     unsigned char               m_bridged;
 };
 
