@@ -193,9 +193,11 @@ public:
 public:
     cstr                     suite_str;
     cstr                     key_params;
+    unsigned char            mki_v;     // this value in network order was appending in srtp package, the byte length is mki_len. 
     unsigned short           tag;
-    unsigned short           mki_v;     // now only support one byte value, don't need to change to network order, so the value in sdp should be 1~255
-    unsigned char            mki_len;   // MKI and byte length of the MKI field in SRTP packets // Only 8-bit alignment is assumed. RFC 3711
+    unsigned char            mki_len;   // MKI and byte length of the MKI field in SRTP packets 
+                                        // Only 8-bit alignment is assumed. RFC 3711
+                                        // normally, length can be 1(char), 2(short), 4(int), 8(long), now not support for others
     unsigned char            lifetime;  // max number of SRTP or SRTCP packets using this master key  max packages = ( 1 < lifetime)
 };
 

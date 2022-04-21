@@ -9,6 +9,7 @@
 #include "rtpEnum.h"
 #include "rtpHeader.h"
 #include "base64.h"
+#include "util.h"
 
 static int aes_gcm_session_key_init(class Crypto_context *c);
 static int evp_session_key_cleanup(class Crypto_context *c);
@@ -346,8 +347,28 @@ int Crypto_context::set_crypto_param(Attr_crypto* a)
     {
         m_params.mki = new unsigned char[a->mki_len+1]; // add mki_len byte into srtp package, the value is a->mki_v in network order
         m_params.mki[a->mki_len] = '\0';
-        unsigned char v = (unsigned char)a->mki_v;
-        memcpy(m_params.mki, &v, a->mki_len);
+        if(a->mki_len == sizeof(char))
+        {
+            memcpy(m_params.mki, &a->mki_v, a->mki_len);
+        }
+        else if(a->mki_len == sizeof(short))
+        {
+            unsigned short v = a->mki_v;
+            v = htons(v);
+            memcpy(m_params.mki, &v, a->mki_len);
+        }
+        else if(a->mki_len == sizeof(int))
+        {
+            unsigned int v = a->mki_v;
+            v = htonl(v);
+            memcpy(m_params.mki, &v, a->mki_len);
+        }
+        else if(a->mki_len == sizeof(long))
+        {
+            unsigned long v = a->mki_v;
+            v = hton64(v);
+            memcpy(m_params.mki, &v, a->mki_len);
+        }
         m_params.mki_len = a->mki_len;
     }
     ret = base64Decode(a->key_params.s, a->key_params.len, b64decode, sizeof(b64decode));

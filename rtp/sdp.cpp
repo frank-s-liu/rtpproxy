@@ -620,17 +620,23 @@ int Attr_crypto::parse(const char* line)
        char* mki_len_start = NULL;
        char* mki_len_end = NULL;
        mki_start++;
-       mki_v = strtol(mki_start, &mki_len_start, 10);
+       int mki_v_ = strtol(mki_start, &mki_len_start, 10);
        // now only support mki value is one byte value
-       if(!mki_len_start || *mki_len_start != ':' || mki_len_start>end || mki_v > 255)
+       if(!mki_len_start || *mki_len_start != ':' || mki_len_start>end || mki_v_ > 255)
        {
            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki value failed, %s", line);
            return -1;
        }
+       mki_v = mki_v_;
        mki_len = strtol(mki_len_start, &mki_len_end, 10);
        if(!mki_len_end || mki_len_end > end)
        {
            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki length failed, %s", line);
+           return -1;
+       }
+       if(mki_len != sizeof(char) && mki_len!= sizeof(short) && mki_len!=sizeof(int) && sizeof(long))
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki length failed, %d", mki_len);
            return -1;
        }
     }
