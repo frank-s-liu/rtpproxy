@@ -180,8 +180,12 @@ public:
     unsigned short payload_type;
 };
 
+// RFC 4568
 // a=crypto:<tag> <crypto-suite> <key-params> [<session-params>]
 // key-params = <key-method> ":" <key-info> , such as  "inline:" <key||salt> ["|" lifetime] ["|" MKI ":" length]
+// <session-params> =  not support
+//   UNENCRYPTED_SRTCP signals that the SRTCP packet payloads are not encrypted.
+//   UNENCRYPTED_SRTP signals that the SRTP packet payloads are not encrypted
 // a=crypto:2 AES_CM_128_HMAC_SHA1_80 inline:WVNfX19zZW1jdGwgKCkgewkyMjA7fQp9CnVubGVz|2^20|1:4;
 class Attr_crypto : public Sdp_attribute
 {

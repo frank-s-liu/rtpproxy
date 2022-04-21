@@ -47,6 +47,8 @@ struct crypto_suite
     const EVP_CIPHER*                     (*aead_evp)(void);
 };
 
+// now not support session parameters in sdp attribute of crypto 
+// always using encrpte srtp playload
 struct crypto_session_params 
 {
     unsigned char    unencrypted_srtcp:1;

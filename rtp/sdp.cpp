@@ -639,6 +639,16 @@ int Attr_crypto::parse(const char* line)
            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute parse mki length failed, %d", mki_len);
            return -1;
        }
+       while(mki_len_end && *mki_len_end == ' ')
+       {
+           mki_len_end++;
+       }
+       if(mki_len_end != end)
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, 
+                    "crypto attribute parse session parameters failed, not support now, %s", line);
+           return -1;
+       }
     }
     parsed = 1;
     return 0;
