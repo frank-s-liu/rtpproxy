@@ -194,6 +194,7 @@ public:
     virtual ~Attr_crypto();
     virtual int serialize(char* buf, int buflen);
     virtual int parse(const char* line);
+    int replaceKeyParamter(char* newkey, int key_len);
 public:
     cstr                     suite_str;
     cstr                     key_params;

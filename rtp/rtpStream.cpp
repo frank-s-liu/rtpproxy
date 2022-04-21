@@ -3,6 +3,7 @@
 #include "rtpsession.h"
 #include "rtpSendRecvProcs.h"
 #include "log.h"
+#include "base64.h"
 
 static unsigned char randomChar[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                              'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -61,9 +62,14 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
     char local_internal_address[64];
     local_internal_address[0] = '\0';
     Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(AEAD_AES_256_GCM);
+    unsigned char base64key[128];
+    unsigned char srckey[64];
+    unsigned int len = 0;
     if(!a)
     {
         //a = remote_sdp->getLittleTagcryptoAttrFromAudioMedia();
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no AEAD_AES_256_GCM chip suit",
+                                                          m_rtpSession->m_session_key->m_cookie);
         return -1;
     }
     if(m_remote_cry_cxt)
@@ -76,8 +82,20 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
     m_local_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
     randomString(m_local_cry_cxt->m_params.master_key,  m_local_cry_cxt->m_params.crypto_suite->master_key_len);
     randomString(m_local_cry_cxt->m_params.master_salt, m_local_cry_cxt->m_params.crypto_suite->master_salt_len);
-    m_local_cry_cxt->m_params.mki = NULL;
-    m_local_cry_cxt->m_params.mki_len = 0;
+    len = snprintf((char*)srckey, sizeof(srckey), "%s%s",m_local_cry_cxt->m_params.master_key, m_local_cry_cxt->m_params.master_salt);
+    if(len >= sizeof(srckey))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s produce random key error",
+                                                          m_rtpSession->m_session_key->m_cookie);
+        return -1;
+    }
+    base64Encode(srckey, len, base64key, sizeof(base64key));
+    if(m_remote_cry_cxt->m_params.mki_len)
+    {
+        m_local_cry_cxt->m_params.mki = new unsigned char[m_remote_cry_cxt->m_params.mki_len+1];
+        memcpy(m_local_cry_cxt->m_params.mki, m_remote_cry_cxt->m_params.mki, m_remote_cry_cxt->m_params.mki_len);
+    }
+    m_local_cry_cxt->m_params.mki_len = m_remote_cry_cxt->m_params.mki_len;
   
     getLocalAddress(local_internal_address, sizeof(local_internal_address));
     local_rtp_port = getLocalPort();
@@ -90,6 +108,7 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
                                                           m_rtpSession->m_session_key->m_cookie);
     }
     ret = remote_sdp->removeCryptoAttrExclude(a->tag);
+    a->replaceKeyParamter((char*)base64key, strlen((const char*)base64key));
     return 0;
 }
 

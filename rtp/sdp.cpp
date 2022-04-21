@@ -535,6 +535,21 @@ int Attr_crypto::serialize(char* buf, int buflen)
     }
 }
 
+int Attr_crypto::replaceKeyParamter(char* newkey, int key_len)
+{
+    if(parsed)
+    {
+        if(key_params.len)
+        {
+            delete[] key_params.s;
+        }
+        key_params.s = newkey;
+        key_params.len = key_len;
+        return 0;
+    }
+    return -1;
+}
+
 int Attr_crypto::parse(const char* line)
 {
     const char* pos = strstr(line, "a=crypto:");
