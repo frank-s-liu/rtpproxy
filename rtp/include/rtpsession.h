@@ -20,9 +20,11 @@ public:
     int recv(unsigned char* buf, int len);
     unsigned short getLocalPort();
     int getLocalAddress(char* buf, int buflen);
-    int processCrypto(Sdp_session* sdp);
+    int chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper);
     int addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper);
     int produceLocalInternalSdp(Sdp_session* sdp);
+public:
+    cstr                        m_local_sdp;
 private:
     Network_address             m_addr_peer; // peer address
     UdpSrvSocket*               m_socket;  // local address
@@ -30,7 +32,6 @@ private:
     Crypto_context*             m_remote_cry_cxt; // external using encryption
     Crypto_context*             m_local_cry_cxt; // external using encryption
     RTPDirection                m_direction;
-    cstr                        m_local_sdp;
     unsigned char               m_bridged;
 };
 

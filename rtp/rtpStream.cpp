@@ -94,7 +94,7 @@ int RtpStream::produceLocalInternalSdp(Sdp_session* remote_sdp)
     return 0;
 }
 
-int RtpStream::processCrypto(Sdp_session* remote_sdp)
+int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
 {
 // prefer to using AEAD_AES_256_GCM
 // need to add the prefer suit chip into configuratiopn
@@ -104,7 +104,7 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
     unsigned short local_rtp_port = 0;
     char local_internal_address[64];
     local_internal_address[0] = '\0';
-    Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(AEAD_AES_256_GCM);
+    Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(chiper);
     unsigned char base64key[128];
     unsigned char srckey[64];
     unsigned int len = 0;
