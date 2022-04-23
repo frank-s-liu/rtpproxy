@@ -70,7 +70,6 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
                 m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
                 m_external->processCrypto(sdp);
-
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
             }
             else
@@ -126,6 +125,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             sdp->replaceOrigin(local_external_address, strlen(local_external_address));
             sdp->replaceCon(local_external_address, strlen(local_external_address));
             ret = sdp->replaceMedia(local_rtp_port, RTP_SAVP);
+            m_external->addCrypto2External(sdp, AEAD_AES_256_GCM);
+
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
             arg->direction = INTERNAL_PEER;

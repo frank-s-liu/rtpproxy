@@ -31,6 +31,8 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_bridged = 0;
     m_remote_cry_cxt = NULL;
     m_local_cry_cxt = NULL;
+    m_local_sdp.s = NULL;
+    m_local_sdp.len = 0;
     m_direction = MAX_DIRECTION;
 }
 
@@ -50,6 +52,46 @@ RtpStream::~RtpStream()
     {
         delete m_local_cry_cxt;
     }
+    if(m_local_sdp.len > 0)
+    {
+        delete[] m_local_sdp.s;
+    }
+}
+
+int RtpStream::produceLocalInternalSdp(Sdp_session* remote_sdp)
+{
+    int ret = 0;
+    unsigned short local_rtp_port = 0;
+    char local_internal_address[64];
+    local_internal_address[0] = '\0';
+    getLocalAddress(local_internal_address, sizeof(local_internal_address));
+    local_rtp_port = getLocalPort();
+    remote_sdp->replaceOrigin(local_internal_address, strlen(local_internal_address));
+    remote_sdp->replaceCon(local_internal_address, strlen(local_internal_address));
+    ret = remote_sdp->replaceMedia(local_rtp_port, RTP_AVP);
+    if(ret != 0)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s replace media line error",
+                                                          m_rtpSession->m_session_key->m_cookie);
+    }
+    ret = remote_sdp->removeCryptoAttr();
+    if(m_local_sdp.len >0)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s has local internal sdp str",
+                                                           m_rtpSession->m_session_key->m_cookie);
+        return -1;
+    }
+    m_local_sdp.s = new char[MAX_SDP_LEN];
+    m_local_sdp.len = MAX_SDP_LEN;
+    ret = remote_sdp->serialize(m_local_sdp.s, &m_local_sdp.len);
+    if(ret != 0)
+    {
+        delete[] m_local_sdp.s;
+        m_local_sdp.s = NULL;
+        m_local_sdp.len = 0;
+        return -1;
+    }
+    return 0;
 }
 
 int RtpStream::processCrypto(Sdp_session* remote_sdp)
@@ -110,6 +152,12 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
     }
     ret = remote_sdp->removeCryptoAttrExclude(a->tag);
     a->replaceKeyParamter((char*)base64key, strlen((const char*)base64key));
+    if(m_local_sdp.len >0)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s has local external sdp str",
+                                                           m_rtpSession->m_session_key->m_cookie);
+        return -1;
+    }
     m_local_sdp.s = new char[MAX_SDP_LEN];
     m_local_sdp.len = MAX_SDP_LEN;
     ret = remote_sdp->serialize(m_local_sdp.s, &m_local_sdp.len);
@@ -125,11 +173,12 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
 
 int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
 {
+    Attr_crypto* a = NULL;
     if(!m_local_cry_cxt)
     {
         unsigned char base64key[MAX_CRYPTO_SUIT_KEYSTR_LEN];
         unsigned char srckey[MAX_CRYPTO_SUIT_KEYSTR_LEN];
-        Attr_crypto* a = new Attr_crypto();
+        a = new Attr_crypto();
         a->suite_str.s = new char[MAX_CRYPTO_SUIT_STR_LEN];
         int len = snprintf(a->suite_str.s, MAX_CRYPTO_SUIT_STR_LEN, "%s", s_crypto_suite_str[chiper]);
         a->suite_str.len = len;
@@ -142,17 +191,23 @@ int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s produce random key error",
                                                               m_rtpSession->m_session_key->m_cookie);
-            return -1;
+            goto errret;
         }
         base64Encode(srckey, len, base64key, sizeof(base64key));
         m_local_cry_cxt->m_params.mki_len = 0;
-        a->tag = 1;
+        a->tag = 1+chiper;
         a->key_params.s = new char[MAX_CRYPTO_SUIT_KEYSTR_LEN];
         len = snprintf(a->key_params.s, MAX_CRYPTO_SUIT_KEYSTR_LEN, "%s", base64key);
         a->key_params.len = len;
         sdp->addCrypto2AudioMedia(a);
     }
     return 0;
+errret:
+    if(a)
+    {
+        delete a;
+    }
+    return -1;
 }
 
 unsigned short RtpStream::getLocalPort()
