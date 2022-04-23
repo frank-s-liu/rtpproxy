@@ -1497,14 +1497,13 @@ int Sdp_session::removeCryptoAttrExclude(unsigned short exclude_tag)
         }
     }
     return ret;
-
 }
 
 Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
 {
     Attr_crypto* attr = NULL;
     Sdp_media* audiMedia = NULL;
-    unsigned int chip_str_len = strlen(s_crypto_suite_str[chip]);
+    int chip_str_len = strlen(s_crypto_suite_str[chip]);
     Medias_l::iterator it;
     for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
     {
@@ -1513,6 +1512,7 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
             continue;
         }
         audiMedia = *it;
+        break;
     }
     if(attr == NULL)
     {
@@ -1543,3 +1543,23 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
     return attr;
 }
 
+int Sdp_session::addCrypto2AudioMedia(Attr_crypto* a)
+{
+    Sdp_media* audiMedia = NULL;
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        if((*it)->media_type != AUDIO)
+        {
+            continue;
+        }
+        audiMedia = *it;
+        break;
+    }
+    if(audiMedia == NULL)
+    {
+        return -1;
+    } 
+    audiMedia->attrs.push_back(a);
+    return 0;
+}

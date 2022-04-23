@@ -4,6 +4,7 @@
 #include "rtpSendRecvProcs.h"
 #include "log.h"
 #include "base64.h"
+#include "rtpConstStr.h"
 
 static unsigned char randomChar[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                              'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -109,6 +110,48 @@ int RtpStream::processCrypto(Sdp_session* remote_sdp)
     }
     ret = remote_sdp->removeCryptoAttrExclude(a->tag);
     a->replaceKeyParamter((char*)base64key, strlen((const char*)base64key));
+    m_local_sdp.s = new char[MAX_SDP_LEN];
+    m_local_sdp.len = MAX_SDP_LEN;
+    ret = remote_sdp->serialize(m_local_sdp.s, &m_local_sdp.len);
+    if(ret != 0)
+    {
+        delete[] m_local_sdp.s;
+        m_local_sdp.s = NULL;
+        m_local_sdp.len = 0;
+        return -1;
+    }
+    return 0;
+}
+
+int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
+{
+    if(!m_local_cry_cxt)
+    {
+        unsigned char base64key[MAX_CRYPTO_SUIT_KEYSTR_LEN];
+        unsigned char srckey[MAX_CRYPTO_SUIT_KEYSTR_LEN];
+        Attr_crypto* a = new Attr_crypto();
+        a->suite_str.s = new char[MAX_CRYPTO_SUIT_STR_LEN];
+        int len = snprintf(a->suite_str.s, MAX_CRYPTO_SUIT_STR_LEN, "%s", s_crypto_suite_str[chiper]);
+        a->suite_str.len = len;
+        
+        m_local_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
+        randomString(m_local_cry_cxt->m_params.master_key,  m_local_cry_cxt->m_params.crypto_suite->master_key_len);
+        randomString(m_local_cry_cxt->m_params.master_salt, m_local_cry_cxt->m_params.crypto_suite->master_salt_len);
+        len = snprintf((char*)srckey, sizeof(srckey), "%s%s",m_local_cry_cxt->m_params.master_key, m_local_cry_cxt->m_params.master_salt);
+        if(len >= (int)sizeof(srckey))
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s produce random key error",
+                                                              m_rtpSession->m_session_key->m_cookie);
+            return -1;
+        }
+        base64Encode(srckey, len, base64key, sizeof(base64key));
+        m_local_cry_cxt->m_params.mki_len = 0;
+        a->tag = 1;
+        a->key_params.s = new char[MAX_CRYPTO_SUIT_KEYSTR_LEN];
+        len = snprintf(a->key_params.s, MAX_CRYPTO_SUIT_KEYSTR_LEN, "%s", base64key);
+        a->key_params.len = len;
+        sdp->addCrypto2AudioMedia(a);
+    }
     return 0;
 }
 

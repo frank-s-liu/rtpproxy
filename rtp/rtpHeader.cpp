@@ -275,10 +275,10 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
 {
     struct Rtp_Fixed_header* rtp;
     //struct Rtp_extension* ext;
-    unsigned int rtp_header_size = sizeof(struct Rtp_Fixed_header);
+    int rtp_header_size = sizeof(struct Rtp_Fixed_header);
     unsigned char cc, x, v, p;
     unsigned char padding_num = 0;
-    if(s->len < sizeof(struct Rtp_Fixed_header))
+    if(s->len < (int)sizeof(struct Rtp_Fixed_header))
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package is too short");
         goto error;

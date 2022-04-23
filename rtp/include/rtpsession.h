@@ -21,6 +21,7 @@ public:
     unsigned short getLocalPort();
     int getLocalAddress(char* buf, int buflen);
     int processCrypto(Sdp_session* sdp);
+    int addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper);
 private:
     Network_address             m_addr_peer; // peer address
     UdpSrvSocket*               m_socket;  // local address

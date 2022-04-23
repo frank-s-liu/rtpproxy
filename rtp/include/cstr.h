@@ -4,7 +4,7 @@
 typedef struct c_str
 {
    char* s;
-   unsigned int len;
+   int len;
 }cstr;
 
 

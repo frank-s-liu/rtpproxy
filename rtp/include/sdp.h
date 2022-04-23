@@ -7,6 +7,7 @@
 #include <list>
 #include <string>
 
+static const int MAX_SDP_LEN = 1024;
 
 enum NetType
 {
@@ -187,6 +188,8 @@ public:
 //   UNENCRYPTED_SRTCP signals that the SRTCP packet payloads are not encrypted.
 //   UNENCRYPTED_SRTP signals that the SRTP packet payloads are not encrypted
 // a=crypto:2 AES_CM_128_HMAC_SHA1_80 inline:WVNfX19zZW1jdGwgKCkgewkyMjA7fQp9CnVubGVz|2^20|1:4;
+static const int MAX_CRYPTO_SUIT_STR_LEN = 64;
+static const int MAX_CRYPTO_SUIT_KEYSTR_LEN = 128;
 class Attr_crypto : public Sdp_attribute
 {
 public:
@@ -288,6 +291,7 @@ public:
     int removeCryptoAttr();
     int removeCryptoAttrExclude(unsigned short exclude_tag);
     Attr_crypto* getcryptoAttrFromAudioMedia(Crypto_Suite chip);
+    int addCrypto2AudioMedia(Attr_crypto* a);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;
