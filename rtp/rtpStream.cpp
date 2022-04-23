@@ -34,6 +34,8 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_local_sdp.s = NULL;
     m_local_sdp.len = 0;
     m_direction = MAX_DIRECTION;
+    m_local_crypto_tag = 0;
+    m_local_crypto_chiper = AEAD_AES_256_GCM;
 }
 
 RtpStream::~RtpStream()
@@ -111,18 +113,19 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     if(!a)
     {
         //a = remote_sdp->getLittleTagcryptoAttrFromAudioMedia();
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no AEAD_AES_256_GCM chip suit",
-                                                          m_rtpSession->m_session_key->m_cookie);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no chip suit %s",
+                                                          m_rtpSession->m_session_key->m_cookie,
+                                                          s_crypto_suite_str[chiper]);
         return -1;
     }
     if(m_remote_cry_cxt)
     {
         delete m_remote_cry_cxt;
     }
-    m_remote_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
+    m_remote_cry_cxt = new Crypto_context(chiper);
     m_remote_cry_cxt->set_crypto_param((Attr_crypto*)a);
 
-    m_local_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
+    m_local_cry_cxt = new Crypto_context(chiper);
     randomString(m_local_cry_cxt->m_params.master_key,  m_local_cry_cxt->m_params.crypto_suite->master_key_len);
     randomString(m_local_cry_cxt->m_params.master_salt, m_local_cry_cxt->m_params.crypto_suite->master_salt_len);
     len = snprintf((char*)srckey, sizeof(srckey), "%s%s",m_local_cry_cxt->m_params.master_key, m_local_cry_cxt->m_params.master_salt);
@@ -171,6 +174,33 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     return 0;
 }
 
+int RtpStream::checkAndSetRemoteCrypto(Sdp_session* remote_sdp)
+{
+    Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(m_local_crypto_chiper);
+    if(!a)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no  chip suit %s",
+                                                          m_rtpSession->m_session_key->m_cookie, 
+                                                          s_crypto_suite_str[m_local_crypto_chiper]);
+        return -1;
+    }
+    if(a->tag != m_local_crypto_tag)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s chip suit %s has wrong tag",
+                                                          m_rtpSession->m_session_key->m_cookie, 
+                                                          s_crypto_suite_str[m_local_crypto_chiper]);
+        return -1;
+    }
+    if(m_remote_cry_cxt)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s has rmt_cry_cxt", m_rtpSession->m_session_key->m_cookie);
+        delete m_remote_cry_cxt;
+    }
+    m_remote_cry_cxt = new Crypto_context(m_local_crypto_chiper);
+    m_remote_cry_cxt->set_crypto_param((Attr_crypto*)a);
+    return 0;
+}
+
 int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
 {
     Attr_crypto* a = NULL;
@@ -183,7 +213,7 @@ int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
         int len = snprintf(a->suite_str.s, MAX_CRYPTO_SUIT_STR_LEN, "%s", s_crypto_suite_str[chiper]);
         a->suite_str.len = len;
         
-        m_local_cry_cxt = new Crypto_context(AEAD_AES_256_GCM);
+        m_local_cry_cxt = new Crypto_context(chiper);
         randomString(m_local_cry_cxt->m_params.master_key,  m_local_cry_cxt->m_params.crypto_suite->master_key_len);
         randomString(m_local_cry_cxt->m_params.master_salt, m_local_cry_cxt->m_params.crypto_suite->master_salt_len);
         len = snprintf((char*)srckey, sizeof(srckey), "%s%s",m_local_cry_cxt->m_params.master_key, m_local_cry_cxt->m_params.master_salt);
@@ -200,6 +230,8 @@ int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
         len = snprintf(a->key_params.s, MAX_CRYPTO_SUIT_KEYSTR_LEN, "%s", base64key);
         a->key_params.len = len;
         sdp->addCrypto2AudioMedia(a);
+        m_local_crypto_tag = a->tag;
+        m_local_crypto_chiper = chiper;
     }
     return 0;
 errret:
