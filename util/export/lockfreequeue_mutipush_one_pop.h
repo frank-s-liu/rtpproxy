@@ -174,12 +174,12 @@ __attribute((always_inline)) inline int get(memqueue_s* q, void** data)
     pos = tail & mask;
     do
     {
-        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x10, 0x11);
+        ok = __sync_bool_compare_and_swap(&q->msgs[pos].lock, 0x10, 0x10);
     }while(!ok);
     asm volatile ("":::"memory");
     *data = q->msgs[pos].m;
     asm volatile ("":::"memory");
-    q->msgs[pos].lock = 0x0;
+    //q->msgs[pos].lock = 0x0;
     //q->tail.tail++;
     return 0;
 }
