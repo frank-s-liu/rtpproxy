@@ -283,6 +283,7 @@ class Sdp_session
 public:
     Sdp_session();
     virtual ~Sdp_session();
+    void destroySdp();
     int parse(const char* sdp, int len);
     int serialize(char* buf, int* buflen);
     int replaceOrigin(const char* ip, int iplen);
@@ -300,6 +301,7 @@ public:
     Medias_l         m_media_l;
     Attrs_l          m_global_attrs_l;
     char             m_version[8];
+    cstr             m_sdp_str;
     unsigned char    m_parsed:1;
 };
 

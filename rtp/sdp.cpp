@@ -1166,9 +1166,16 @@ Sdp_session::Sdp_session()
     m_session_name.s = NULL;
     m_session_name.len = 0;
     m_parsed = 0;
+    m_sdp_str.len = 0;
+    m_sdp_str.s = NULL;
 }
 
 Sdp_session::~Sdp_session()
+{
+    destroySdp();
+}
+
+void Sdp_session::destroySdp()
 {
     if(m_timing.len)
     {
@@ -1182,7 +1189,13 @@ Sdp_session::~Sdp_session()
         m_session_name.s = NULL;
         m_session_name.len = 0;
     }
-
+    if(m_sdp_str.len)
+    {
+        delete[] m_sdp_str.s;
+        m_sdp_str.s = NULL;
+        m_sdp_str.len = 0;
+    }
+    
     Medias_l::iterator ite_l = m_media_l.begin();
     for(; ite_l != m_media_l.end(); )
     {
@@ -1210,6 +1223,7 @@ Sdp_session::~Sdp_session()
         }
         ite_a = m_global_attrs_l.erase(ite_a);
     }
+
 }
 
 static Sdp_attribute* parseAttr(const char* line)
