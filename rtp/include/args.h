@@ -73,6 +73,7 @@ public:
     cstr            call_id;
     Sdp_session*    sdp;
     RTPDirection    direction;
+    char            result;
 };
 
 class DeletRtp : public Args

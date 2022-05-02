@@ -47,7 +47,9 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
     int ret = 0;
     if(!sdp || 0 == sdp->m_parsed)
     {
-        return -1;
+        ret = -1;
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"sdp is null or sdp is not parsed");
+        goto errorProcess;
     }
     switch (direction)
     {
@@ -61,7 +63,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "m_internal and m_external must be both NULL all both not NULL im cmd session %s", 
                                                                   m_session_key->m_cookie);
                 ret = -1;
-                break;
+                goto errorProcess;
             }
             if(!m_external) // both NULL
             {
@@ -81,19 +83,31 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 {
                     tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s replace media line error",
                                                                       m_session_key->m_cookie);
-                    break;
+                    goto errorProcess;
                 }
                 ret = sdp->removeCryptoAttr();
             }
             else
             {
                 m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
-                //m_external->checkAndSetRemoteCrypto(sdp);
+                ret = m_external->checkAndSetRemoteCrypto(sdp);
+                if(ret != 0)
+                {
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s replace media line error",
+                                                                      m_session_key->m_cookie);
+                    goto errorProcess;
+                }
+                sdp->destroySdp();
+                sdp->m_sdp_str.len = m_internal->m_local_sdp.len;
+                sdp->m_sdp_str.s = m_internal->m_local_sdp.s;
+                m_internal->m_local_sdp.len = 0;
+                m_internal->m_local_sdp.s = NULL;
             }
             
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
-            arg->direction = EXTERNAL_PEER;
+            sdp = NULL;
+            arg->direction = direction;
             if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
             {
                 delete arg;
@@ -110,7 +124,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "m_internal and m_external must be both NULL all both not NULL im cmd session %s", 
                                                                   m_session_key->m_cookie);
                 ret = -1;
-                break;
+                goto errorProcess;
             }
             if(!m_internal) // both NULL
             {
@@ -118,21 +132,29 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_external = new RtpStream(this);;
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, direction);
                 m_internal->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_internal->produceLocalInternalSdp(sdp);
                 m_external->set_local_rtp_network("10.100.126.230", IPV4, INTERNAL_PEER);
+                m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
+
+                local_rtp_port = m_external->getLocalPort();
+                sdp->replaceOrigin(local_external_address, strlen(local_external_address));
+                sdp->replaceCon(local_external_address, strlen(local_external_address));
+                ret = sdp->replaceMedia(local_rtp_port, RTP_SAVP);
+                m_external->addCrypto2External(sdp, AEAD_AES_256_GCM);
             }
             else
             {
                 m_internal->set_remote_peer_rtp_network(&sdp->m_con.address);
+                sdp->destroySdp();
+                sdp->m_sdp_str.len = m_external->m_local_sdp.len;
+                sdp->m_sdp_str.s = m_external->m_local_sdp.s;
+                m_external->m_local_sdp.len = 0;
+                m_external->m_local_sdp.s = NULL;
             }
-            m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
-            local_rtp_port = m_external->getLocalPort();
-            sdp->replaceOrigin(local_external_address, strlen(local_external_address));
-            sdp->replaceCon(local_external_address, strlen(local_external_address));
-            ret = sdp->replaceMedia(local_rtp_port, RTP_SAVP);
-            m_external->addCrypto2External(sdp, AEAD_AES_256_GCM);
 
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
             arg->sdp = sdp;
+            sdp = NULL;
             arg->direction = INTERNAL_PEER;
             if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
             {
@@ -144,8 +166,24 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "process sdp error with direction  %d for rtp session %s", direction, m_session_key->m_cookie);
             ret = -1;
-            break;
+            goto errorProcess;
         }
+    }
+    return ret;
+
+errorProcess:
+    if(sdp)
+    {
+        delete sdp;
+        sdp = NULL;
+    }
+    SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
+    arg->sdp = NULL;
+    arg->direction = direction;
+    arg->result = -1;
+    if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
+    {
+        delete arg;
     }
     return ret;
 }

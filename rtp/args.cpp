@@ -174,6 +174,7 @@ SDPRespArgs::SDPRespArgs(const char* key, int len)
     snprintf(call_id.s, len+1, "%s", key);
     direction = MAX_DIRECTION;
     sdp = NULL;
+    result = 0;
 }
 
 SDPRespArgs::~SDPRespArgs()
