@@ -269,11 +269,37 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
         {
             return -1;
         }
+        m_socket->setnoblock();
         m_direction = direction;
         m_socket->add_read_event2EpollLoop(epoll_fd, m_data);
         return 0;
     }
     return -1;
+}
+
+int RtpStream::readAndProcess()
+{
+    unsigned char buf[2048];
+    int ret = m_socket->recv_from(buf, sizeof(buf));
+    if(-1 == ret)
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session read err, errno:%d", errno);
+        return -1;
+    }
+    if(EXTERNAL_PEER == m_direction)
+    {
+
+    }
+    else if(INTERNAL_PEER == m_direction)
+    {
+
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream direction error %d", m_direction);
+        return -1;
+    }
+    return 0;
 }
 
 int RtpStream::set_remote_peer_rtp_network(Network_address* remote_perr_addr)

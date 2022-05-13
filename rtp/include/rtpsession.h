@@ -25,6 +25,10 @@ public:
     int addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper);
     int checkAndSetRemoteCrypto(Sdp_session* sdp);
     int produceLocalInternalSdp(Sdp_session* sdp);
+    int readAndProcess();
+private:
+    int processExternalRtp();
+    int processInternalRtp();
 public:
     cstr                        m_local_sdp;
 private:

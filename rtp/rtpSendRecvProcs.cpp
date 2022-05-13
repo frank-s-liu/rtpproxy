@@ -91,11 +91,11 @@ void* RtpProcess::run()
         {
             for(int i = 0; i < fd_cnt; i++)
             {
-                Epoll_data* data = (Epoll_data*)events[i].data.ptr;
+                RTP_send_recv_epoll_data* data = (RTP_send_recv_epoll_data*)events[i].data.ptr;
                 if(events[i].events & EPOLLIN)
                 {
                     int type = data->m_epoll_fd_type;
-                    if(type == RTP_EPOLL_PIPE_FD)
+                    if(RTP_EPOLL_PIPE_FD == type)
                     {
                         char buf[1] = {0};
                         int len = read(m_fd_pipe[0], buf, sizeof(buf));
@@ -140,9 +140,10 @@ void* RtpProcess::run()
                             }
                         }
                     }
-                    else if(RTP_SEND_RECV_SOCKET_FD)
+                    else if(RTP_SEND_RECV_SOCKET_FD == type)
                     {
-                        //RtpStream
+                        RtpStream* rs = (RtpStream*)data->m_data;
+                        rs->readAndProcess();
                     }
                     else
                     {
