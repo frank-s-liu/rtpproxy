@@ -562,6 +562,7 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     }
     else
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"send sdp resp failed, msg [%s] from direction of %d", &resp[offset], direction);
         *nextState = NULL;
         return ret;
     }

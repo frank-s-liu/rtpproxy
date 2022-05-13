@@ -112,7 +112,7 @@ void* RtpProcess::run()
                                 }
                                 else
                                 {
-                                    tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue,  no spd poped");
+                                    tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue,  no pipe args poped, but recv a pipe single");
                                 }
                             }
                             else
@@ -123,13 +123,14 @@ void* RtpProcess::run()
                         }
                         else if(len == 0)
                         {
-                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, read len is 0, empty pipe");
+                            tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "unknown issue, read len is 0, empty pipe, but epoll said it can be read");
                             break;
                         }
                         else
                         {
                             if(EAGAIN == errno)
                             {
+                                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "rtp process thread pipe read was interupted, continue");
                                 continue;
                             }
                             else
@@ -156,7 +157,7 @@ void* RtpProcess::run()
                         (events[i].events & EPOLLHUP) ||
                         (events[i].events & EPOLLRDHUP))
                 {
-                    tracelog("SIP", WARNING_LOG, __FILE__, __LINE__, "socker error, event %d", events[i].events);
+                    tracelog("SIP", WARNING_LOG, __FILE__, __LINE__, "rtp process socker error, event %d", events[i].events);
                     break;
                 }
                 else
@@ -169,6 +170,7 @@ void* RtpProcess::run()
         {
             if(errno == EINTR)
             {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "rtp process thread was interupted, continue");
                 continue;
             }
             else        
