@@ -202,20 +202,37 @@ int SDPRespArgs::processCmd()
     {
         tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "don't find cmd session whose call id is %s can process SDPRespArgs", call_id.s);
         ret = -1;
-        goto ret;
+        goto errret;
     }
     else
     {
-        if((-1 == result) || (0 != cs->processSdpResp(sdp, direction)))
+        if(-1 == result)
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error, %d", call_id.s, result);
-            //CmdSessionManager::getInstance()->popCmdSession(sk);
-            //delete cs;
-            cs->process_cmd(DELETE_CMD);
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "rtp session whose call id is [%s] process rtp error, response error to singling server", call_id.s);
+            goto errret;
+        }
+        else if(0 != cs->processSdpResp(sdp, direction))
+        {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error", call_id.s);
+            goto errret;
+        }
+        else
+        {
+            delete sk;
+            sk = NULL;
+            return 0;
         }
     }
-ret:
-    delete sk;
+
+errret:
+    if(sk)
+    {
+        delete sk;
+    }
+    if(cs)
+    {
+        cs->process_cmd(DELETE_CMD);
+    }
     return ret;
 }
 

@@ -546,7 +546,14 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     int offset = 0;
     int ret = 0;
     resp[0] = '\0';
-    processSdpResp_s(sdp, m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len, resp, sizeof(resp), &offset);
+    if(sdp->m_parsed)
+    {
+        processSdpResp_s(sdp, m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len, resp, sizeof(resp), &offset);
+    }
+    else
+    {
+        snprintf(resp, sizeof(resp), "%s d3:sdp%d:%s6:result2:oke", m_cs->m_session_key->m_cookie, sdp->m_sdp_str.len, sdp->m_sdp_str.s);
+    }
     tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[offset], direction);
     ret = m_cs->sendcmd(&resp[offset]);
     if(0 == ret)
@@ -558,13 +565,13 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
         *nextState = NULL;
         return ret;
     }
-    StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-    args->state = CMDSESSION_ANSWER_PROCESSED_STATE;
-    if(0 != add_task(32000, fireArgs2controlProcess_s, args))
-    {
-        delete args;
-        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
-    }
+    //StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+    //args->state = CMDSESSION_ANSWER_PROCESSED_STATE;
+    //if(0 != add_task(32000, fireArgs2controlProcess_s, args))
+    //{
+    //    delete args;
+    //    tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+    //}
     return ret;
 }
 
