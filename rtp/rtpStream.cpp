@@ -36,6 +36,7 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_direction = MAX_DIRECTION;
     m_local_crypto_tag = 0;
     m_local_crypto_chiper = AEAD_AES_256_GCM;
+    m_data = NULL;
 }
 
 RtpStream::~RtpStream()
@@ -57,6 +58,10 @@ RtpStream::~RtpStream()
     if(m_local_sdp.len > 0)
     {
         delete[] m_local_sdp.s;
+    }
+    if(m_data)
+    {
+        delete m_data;
     }
 }
 
@@ -251,6 +256,9 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
 {
     if(type == IPV4)
     {
+        m_data = new RTP_send_recv_epoll_data();
+        m_data->m_epoll_fd_type = RTP_SEND_RECV_SOCKET_FD;
+        m_data->m_data = this;
         int epoll_fd = m_rtpSession->m_rtp_sendrecv_process->getEpoll_fd();
         if(m_socket)
         {
@@ -262,7 +270,7 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
             return -1;
         }
         m_direction = direction;
-        m_socket->add_read_event2EpollLoop(epoll_fd, this);
+        m_socket->add_read_event2EpollLoop(epoll_fd, m_data);
         return 0;
     }
     return -1;

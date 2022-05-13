@@ -80,15 +80,25 @@ public:
     cstr                     m_nocall_key; // used for pingpong
 };
 
+// RTP RTCP send recv socket epoll data
+class RTP_send_recv_epoll_data
+{
+public:
+    RTP_send_recv_epoll_data();
+    virtual ~RTP_send_recv_epoll_data();
+    
+public:
+    void*                    m_data;
+    unsigned char            m_epoll_fd_type;
+};
 
 enum socket_type
 {
     RTP_RES_CMD_SOCKET_ACCEPT_FD = 1,
     RTP_RES_CMD_SOCKET_UDP_FD,
     RTP_RES_CMD_SOCKET_TCP_FD,
-    RTP_RECV_SOCKET_FD,
-    RTP_SEND_SOCKET_FD,
-    RTCP_RECV_SOCKET_FD,
+    RTP_SEND_RECV_SOCKET_FD,
+    RTCP_SEND_RECV_SOCKET_FD,
     RTCP_SEND_SOCKET_FD,
     RTP_STATISTICS_SOCKET_FD,
 

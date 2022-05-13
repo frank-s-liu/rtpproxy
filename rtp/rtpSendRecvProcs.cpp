@@ -70,7 +70,7 @@ void* RtpProcess::run()
     int ret = 0;
     int fd_cnt = 0;
     memset(&event, 0, sizeof(event)); 
-    Epoll_data data;
+    RTP_send_recv_epoll_data data;
     data.m_epoll_fd_type = RTP_EPOLL_PIPE_FD;
     event.data.ptr = &data;
     event.events = EPOLLIN;
@@ -140,9 +140,9 @@ void* RtpProcess::run()
                             }
                         }
                     }
-                    else if(RTP_RECV_SOCKET_FD)
+                    else if(RTP_SEND_RECV_SOCKET_FD)
                     {
-
+                        //RtpStream
                     }
                     else
                     {

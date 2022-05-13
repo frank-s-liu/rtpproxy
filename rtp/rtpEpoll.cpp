@@ -587,3 +587,14 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
 }
 
 
+RTP_send_recv_epoll_data::RTP_send_recv_epoll_data()
+{
+    m_data = NULL;
+    m_epoll_fd_type = RTP_MAX_FD_TYPE;
+}
+
+RTP_send_recv_epoll_data::~RTP_send_recv_epoll_data()
+{
+    // don't need to delete data here
+    m_data = NULL;
+}

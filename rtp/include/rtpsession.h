@@ -5,6 +5,7 @@
 #include "sdp.h"
 #include "udpSocket.h"
 #include "crypto.h"
+#include "rtpepoll.h"
 
 
 class RtpSession;
@@ -32,6 +33,7 @@ private:
     RtpSession*                 m_rtpSession;
     Crypto_context*             m_remote_cry_cxt; // external using encryption
     Crypto_context*             m_local_cry_cxt; // external using encryption
+    RTP_send_recv_epoll_data*   m_data;
     RTPDirection                m_direction;
     unsigned short              m_local_crypto_tag; // to check crypto tag sdp answer from external remote
     Crypto_Suite                m_local_crypto_chiper;  // to check crypto-suit in sdp from external remote
