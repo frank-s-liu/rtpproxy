@@ -130,8 +130,8 @@ void* RtpProcess::run()
                         {
                             if(EAGAIN == errno)
                             {
-                                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "rtp process thread pipe read was interupted, continue");
-                                continue;
+                                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "rtp process thread pipe read nothing, no pipe data?");
+                                break;
                             }
                             else
                             {
