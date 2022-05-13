@@ -1223,7 +1223,7 @@ void Sdp_session::destroySdp()
         }
         ite_a = m_global_attrs_l.erase(ite_a);
     }
-
+    m_parsed = 0;
 }
 
 static Sdp_attribute* parseAttr(const char* line)
