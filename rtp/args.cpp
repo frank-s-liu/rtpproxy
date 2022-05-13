@@ -72,8 +72,9 @@ int StateCheckArgs::processCmd()
          ret = cs->checkState(this);
          if(0 != ret)
          {
-             CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
-             delete cs;
+             //CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
+             //delete cs;
+             cs->process_cmd(DELETE_CMD);
              return -1;
          }
          return 0;
@@ -205,11 +206,12 @@ int SDPRespArgs::processCmd()
     }
     else
     {
-        if(0 != cs->processSdpResp(sdp, direction))
+        if((-1 == result) || (0 != cs->processSdpResp(sdp, direction)))
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error", call_id.s);
-            CmdSessionManager::getInstance()->popCmdSession(sk);
-            delete cs;
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session whose call id is [%s] process SDPRespArgs error, %d", call_id.s, result);
+            //CmdSessionManager::getInstance()->popCmdSession(sk);
+            //delete cs;
+            cs->process_cmd(DELETE_CMD);
         }
     }
 ret:

@@ -158,6 +158,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             arg->direction = INTERNAL_PEER;
             if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
             {
+                tracelog("RTP", ERROR_LOG, __FILE__, __LINE__,"pipe issue");
                 delete arg;
             }
             break;
