@@ -1557,6 +1557,26 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
     return attr;
 }
 
+int Sdp_session::getAudioMediaPort(unsigned short* port)
+{
+    Sdp_media* audiMedia = NULL;
+    Medias_l::iterator it;
+    for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
+    {
+        if((*it)->media_type == AUDIO)
+        {
+            audiMedia = *it;
+            break;
+        }
+    }
+    if(audiMedia)
+    {
+        *port = audiMedia->port;
+        return 0;
+    }
+    return -1;
+}
+
 int Sdp_session::addCrypto2AudioMedia(Attr_crypto* a)
 {
     Sdp_media* audiMedia = NULL;

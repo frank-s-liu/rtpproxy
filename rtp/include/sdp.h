@@ -293,6 +293,7 @@ public:
     int removeCryptoAttrExclude(unsigned short exclude_tag);
     Attr_crypto* getcryptoAttrFromAudioMedia(Crypto_Suite chip);
     int addCrypto2AudioMedia(Attr_crypto* a);
+    int getAudioMediaPort(unsigned short* port);
 public:
     Sdp_origin       m_orign;
     Sdp_connection   m_con;

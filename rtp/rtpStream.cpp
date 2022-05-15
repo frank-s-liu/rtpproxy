@@ -1,4 +1,8 @@
 #include <time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 #include "rtpsession.h"
 #include "rtpSendRecvProcs.h"
@@ -354,14 +358,17 @@ decrypt:
     return 0;
 }
 
-int RtpStream::set_remote_peer_rtp_network(Network_address* remote_perr_addr)
+int RtpStream::writeProcess(cstr rtp)
 {
-    if(remote_perr_addr)
-    {
-        m_addr_peer = *remote_perr_addr;
-        return 0;
-    }
-    return -1;
+    return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&m_addr_peer, sizeof(struct sockaddr_in));
+}
+
+int RtpStream::set_remote_peer_rtp_network(const char* ip, unsigned short port)
+{
+    m_addr_peer.sin_family = AF_INET;
+    m_addr_peer.sin_port = htons(port);
+    m_addr_peer.sin_addr.s_addr = inet_addr(ip);
+    return 0;
 }
 
 int RtpStream::send(const unsigned char* buf, int len)

@@ -45,12 +45,14 @@ RtpSession::~RtpSession()
 int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
 {
     int ret = 0;
+    unsigned short peer_port = 0;
     if(!sdp || 0 == sdp->m_parsed)
     {
         ret = -1;
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"sdp is null or sdp is not parsed");
         goto errorProcess;
     }
+    sdp->getAudioMediaPort(&peer_port);
     switch (direction)
     {
         case EXTERNAL_PEER:
@@ -70,7 +72,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_external = new RtpStream(this);
                 m_internal = new RtpStream(this);;
                 m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
-                m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_external->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_external->chooseCrypto2Local(sdp, AEAD_AES_256_GCM);
 
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
@@ -89,7 +91,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             }
             else
             {
-                m_external->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_external->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 ret = m_external->checkAndSetRemoteCrypto(sdp);
                 if(ret != 0)
                 {
@@ -131,7 +133,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_internal = new RtpStream(this);
                 m_external = new RtpStream(this);;
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, direction);
-                m_internal->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_internal->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_internal->produceLocalInternalSdp(sdp);
                 m_external->set_local_rtp_network("10.100.126.230", IPV4, INTERNAL_PEER);
                 m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
@@ -144,7 +146,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             }
             else
             {
-                m_internal->set_remote_peer_rtp_network(&sdp->m_con.address);
+                m_internal->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 sdp->destroySdp();
                 sdp->m_sdp_str.len = m_external->m_local_sdp.len;
                 sdp->m_sdp_str.s = m_external->m_local_sdp.s;

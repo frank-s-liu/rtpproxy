@@ -16,7 +16,7 @@ public:
     RtpStream(RtpSession* rtpsession);
     virtual ~RtpStream();
     int set_local_rtp_network(const char* ip, int net_type, RTPDirection direction);
-    int set_remote_peer_rtp_network(Network_address* remote_perr_addr);
+    int set_remote_peer_rtp_network(const char* ip, unsigned short port);
     int send(const unsigned char* buf, int len);
     int recv(unsigned char* buf, int len);
     unsigned short getLocalPort();
@@ -26,13 +26,14 @@ public:
     int checkAndSetRemoteCrypto(Sdp_session* sdp);
     int produceLocalInternalSdp(Sdp_session* sdp);
     int readAndProcess();
+    int writeProcess(cstr rtp);
 private:
     int processExternalRtp();
     int processInternalRtp();
 public:
     cstr                        m_local_sdp;
 private:
-    Network_address             m_addr_peer; // peer address
+    struct sockaddr_in          m_addr_peer; // peer address
     UdpSrvSocket*               m_socket;  // local address
     RtpSession*                 m_rtpSession;
     Crypto_context*             m_remote_cry_cxt; // external using encryption
