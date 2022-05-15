@@ -17,6 +17,8 @@ typedef int (*session_key_init_func)(class Crypto_context*);
 typedef int (*session_key_cleanup_func)(class Crypto_context*);
 typedef int (*crypto_rtp_cb)(class Crypto_context*, struct Rtp_Fixed_header*, cstr*, uint64_t);
 typedef int (*crypto_rtcp_cb)(class Crypto_context*, struct rtcp_packet*, cstr*, uint64_t);
+typedef int (*hash_func_rtp)(class Crypto_context*, char* out, cstr* in, uint64_t);
+typedef int (*hash_func_rtcp)(class Crypto_context*, char* out, cstr* in);
 
 void crypto_suit_init();
 
@@ -39,8 +41,8 @@ struct crypto_suite
     crypto_rtp_cb                         decrypt_rtp;
     //crypto_rtcp_cb                        encrypt_rtcp;
     //crypto_rtcp_cb                        decrypt_rtcp;
-    //hash_func_rtp                         hash_rtp;
-    //hash_func_rtcp                        hash_rtcp;
+    hash_func_rtp                         hash_rtp;
+    hash_func_rtcp                        hash_rtcp;
     session_key_init_func                 session_key_init;
     session_key_cleanup_func              session_key_cleanup;
     const EVP_CIPHER*                     aes_evp;

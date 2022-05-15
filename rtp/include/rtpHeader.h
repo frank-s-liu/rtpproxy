@@ -67,4 +67,15 @@ struct Rtp_payload
     unsigned char accepted:1;
 };
 
+struct SSRC_CTX
+{
+    uint32_t srtp_index;
+    uint32_t srtcp_index;
+};
+
+int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s);
+uint32_t packet_index(struct SSRC_CTX* ssrc_ctx, struct Rtp_Fixed_header* rtpHdr);
+int srtp_payloads(cstr* to_auth_check, cstr* to_decrypt, cstr* auth_tag, int auth_len, cstr* mki,
+                  int mki_len, const cstr* raw_rtp_packet, const cstr* payload);
+
 #endif

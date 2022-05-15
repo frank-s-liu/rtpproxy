@@ -6,7 +6,7 @@
 #include "udpSocket.h"
 #include "crypto.h"
 #include "rtpepoll.h"
-
+#include "rtpHeader.h"
 
 class RtpSession;
 class RtpProcess;
@@ -42,6 +42,8 @@ private:
     unsigned short              m_local_crypto_tag; // to check crypto tag sdp answer from external remote
     Crypto_Suite                m_local_crypto_chiper;  // to check crypto-suit in sdp from external remote
     unsigned char               m_bridged;
+    struct SSRC_CTX             m_peer_ssrc_ctx;
+    struct SSRC_CTX             m_local_ssrc_ctx;
 };
 
 class RtpSession

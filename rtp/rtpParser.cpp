@@ -3,6 +3,8 @@
 #include "log.h"
 #include "cstr.h"
 
+#include <arpa/inet.h>
+#include <stdlib.h>
 
 union Test_little_endian
 {
@@ -276,7 +278,7 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
     struct Rtp_Fixed_header* rtp;
     //struct Rtp_extension* ext;
     int rtp_header_size = sizeof(struct Rtp_Fixed_header);
-    unsigned char cc, x, v, p;
+    unsigned char cc, x, v;
     unsigned char padding_num = 0;
     if(s->len < (int)sizeof(struct Rtp_Fixed_header))
     {
@@ -289,14 +291,14 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
         cc = rtp->v_p_x_cc.v_p_x_cc_little.cc;
         x = rtp->v_p_x_cc.v_p_x_cc_little.x;
         v = rtp->v_p_x_cc.v_p_x_cc_little.v;
-        p = rtp->v_p_x_cc.v_p_x_cc_little.p;
+        //p = rtp->v_p_x_cc.v_p_x_cc_little.p;
     }
     else
     {
         cc = rtp->v_p_x_cc.v_p_x_cc_big.cc;
         x = rtp->v_p_x_cc.v_p_x_cc_big.x;
         v = rtp->v_p_x_cc.v_p_x_cc_big.v;
-        p = rtp->v_p_x_cc.v_p_x_cc_big.p;
+        //p = rtp->v_p_x_cc.v_p_x_cc_big.p;
     }
     if(v != 2)
     {
@@ -317,19 +319,120 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
     }
        
     *out = rtp;
-    if (!payload_out)
+    if(!payload_out)
     {
         return 0;
     }
     payload_out->s = s->s + rtp_header_size;
-    if(p==1)
-    {
-        padding_num = s->s[s->len-1]; // the last byte is the padding number
-    }
+    // not parsed here, the last byte of srtp is not the padding number
+    //if(p==1)
+    //{
+    //    padding_num = s->s[s->len-1]; // the last byte is the padding number
+    //}
     payload_out->len = s->len - rtp_header_size - padding_num;
     return 0;
 
 error:
     return -1;
 }
+
+uint32_t packet_index(struct SSRC_CTX* ssrc_ctx, struct Rtp_Fixed_header* rtpHdr)
+{
+    uint16_t seq = ntohs(rtpHdr->seq_num);
+    if(ssrc_ctx->srtp_index == 0)
+    {
+        ssrc_ctx->srtp_index = seq;
+    }
+    // rfc 3711 appendix A, 
+    uint16_t s_l = (ssrc_ctx->srtp_index & 0x0000ffffULL);
+    uint32_t roc = (ssrc_ctx->srtp_index & 0xffff0000ULL) >> 16;
+    uint32_t v = 0;
+
+    // to find which value from (rec-1, roc, roc+1) can make  (v<<16+seq) more likely equal to ssrc_ctx->srtp_index
+    if (s_l < 0x8000) 
+    {
+        if(((seq - s_l) > 0x8000) && roc > 0)
+        {
+            v = (roc - 1) % 0x10000;
+        }
+        else
+        {
+            v = roc;
+        }
+    } 
+    else 
+    {
+        if((s_l - 0x8000) > seq)
+        {
+            v = (roc + 1) % 0x10000;
+        }
+        else    
+        {
+            v = roc;
+        }
+    }
+    ssrc_ctx->srtp_index = ((v << 16) | seq) & 0xffffffffULL;
+    return ssrc_ctx->srtp_index;
+}
+
+// to_auth_check->s/len  is all the byte used to math authentication tag 
+int srtp_payloads(cstr* to_auth_check, cstr* to_decrypt, cstr* auth_tag, int auth_len, cstr* mki,
+                  int mki_len, const cstr* raw_rtp_packet, const cstr* payload)
+{
+   to_auth_check->len = raw_rtp_packet->len;
+   to_auth_check->s = raw_rtp_packet->s;
+   to_decrypt->len = payload->len;
+   to_decrypt->s = payload->s;
+   
+   if(auth_tag->len)
+   {
+       delete[] auth_tag->s;
+   }
+   auth_tag->s = NULL;
+   auth_tag->len = 0;
+   if(auth_len) 
+   {
+       if(to_decrypt->len <= auth_len)
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "srtp package format error, %d %d", to_decrypt->len, auth_len);
+           goto error;
+       }
+       auth_tag->s = to_decrypt->s + (to_decrypt->len - auth_len);
+       auth_tag->len = auth_len;
+       to_decrypt->len -= auth_len;
+       to_auth_check->len -= auth_len;
+   }
+   
+   if(mki)
+   {
+       if(mki->len)
+       {
+           delete[] mki->s;
+       }
+       mki->s = NULL;
+       mki->len = 0;
+   }
+   if(mki_len) 
+   {
+       if(to_decrypt->len <= mki_len)
+       {
+           tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "srtp package format error, %d %d", to_decrypt->len, mki_len);
+           goto error;
+       }
+       if(mki)
+       {
+           mki->s = to_decrypt->s +(to_decrypt->len - mki_len);
+           mki->len =  mki_len;
+       }
+       to_decrypt->len -= mki_len;
+       to_auth_check->len -= mki_len;
+   }
+
+   return 0;
+
+error:
+    return -1;
+}
+
+
 
