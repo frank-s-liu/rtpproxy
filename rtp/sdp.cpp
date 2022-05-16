@@ -64,7 +64,7 @@ int Network_address::parse(const char* network)
     }
     if(network[0] != 'I' || network[1] != 'N')
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing net type failed %s ", network);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "network address parsing net type failed [%s] ", network);
         return -1;
     }
     network += 2;
@@ -282,7 +282,11 @@ int Sdp_connection::replaceAddress(const char* ip, int len)
 // c=IN IP4 xxx.xxx.xxx.xxx
 int Sdp_connection::parse(const char* network)
 {
-    if(0 != address.parse(network))
+    if(network[0]!='c' || network[1] != '=')
+    {
+        return -1;
+    }
+    if(0 != address.parse(network+2))
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp connection line parsing failed because of parsing network address failed, %s", network);
         return -1;
@@ -376,7 +380,7 @@ int Attr_rtpmap::parse(const char* line)
     char* ec_str = NULL;
     if(!end || !pos || pos > end)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, %s", line);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtpmap attribute parse failed, [%s]", line);
         return -1;
     }
     pos += strlen("a=rtpmap:");
@@ -1288,9 +1292,9 @@ int Sdp_session::parse(const char* sdp, int len)
     {
         sdp++;
     }
-    if(!sdp[0] != 'v' || sdp[1] != '=' || sdp[2]!='0')
+    if(sdp[0] != 'v' || sdp[1] != '=' || sdp[2]!='0')
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is not start with v=0, %s", sdp);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sdp parsing error becuse of sdp is not start with v=0, [%s]", sdp);
         goto err_ret;
     }
     nextline = strstr(sdp, "\r\n");
