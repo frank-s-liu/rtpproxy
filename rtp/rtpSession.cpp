@@ -191,4 +191,20 @@ errorProcess:
     return ret;
 }
 
-
+int RtpSession::get_other_rtp_streams(RtpStream* from, RtpStream** to)
+{
+    if(from == m_internal)
+    {
+        *to = m_external;
+    }
+    else if(from == m_external)
+    {
+        *to = m_internal;
+    }
+    else
+    {
+        *to = NULL;
+        return -1;
+    }
+    return 0;
+}

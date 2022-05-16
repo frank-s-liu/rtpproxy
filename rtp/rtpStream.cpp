@@ -326,13 +326,20 @@ int RtpStream::readAndProcess()
         // AEAD_AES_256_GCM or AEAD_AES_128_GCM don't have authentication tag in srtp
         if (0 == auth_tag.len)
         {
-            goto decrypt;
+            int prev_len = pl_to_decrypt.len;
+            if(0 != m_remote_cry_cxt->m_params.crypto_suite->decrypt_rtp(m_remote_cry_cxt, rtpHdr, &pl_to_decrypt, rtpIndex))
+            {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error");
+                return -1;
+            }
+            rtp_raw.len -= (prev_len - pl_to_decrypt.len);
         }
         else
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream direction error, only support AEAD_AES_256_GCM");
             return -1;
         }
+        goto sendrtp;
     }
     else if(INTERNAL_PEER == m_direction)
     {
@@ -345,16 +352,19 @@ int RtpStream::readAndProcess()
     }
     return 0;
 
-decrypt:
-    int prev_len = pl_to_decrypt.len;
-    if(0 != m_remote_cry_cxt->m_params.crypto_suite->decrypt_rtp(m_remote_cry_cxt, rtpHdr, &pl_to_decrypt, rtpIndex))
-    {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error");
-        return -1;
-    }
-    rtp_raw.len -= (prev_len - pl_to_decrypt.len);
     
-    // 
+sendrtp:
+    //
+    RtpStream* sendto = NULL;
+    m_rtpSession->get_other_rtp_streams(this, &sendto);
+    if(sendto)
+    {
+        int len = sendto->writeProcess(rtp_raw);
+        if(len <= 0)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s send out rtp failed ", m_rtpSession->m_session_key->m_cookie);
+        }
+    }
     return 0;
 }
 
