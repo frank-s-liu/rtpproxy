@@ -9,6 +9,7 @@
 #include <sys/epoll.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 SocketInfo::SocketInfo()
 {
@@ -246,12 +247,13 @@ Epoll_data::~Epoll_data()
         m_nocall_key.s = NULL;
         m_nocall_key.len = 0;
     }
-    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data");
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "Epoll_data destroy");
 }
 
 int Epoll_data::rm_fd_from_epoll()
 {
     int ret = 0;
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__, "rm_fd_from_epoll");
     if(m_socket && m_socket->m_fd>=0)
     {
         ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, m_socket->m_fd, NULL);
@@ -377,6 +379,7 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
             int ret = parsingString(p, &begin); // string type key
             if(SUCCESS != ret)
             {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"parsing string error");
                 return ret;
             }
             else
@@ -446,6 +449,7 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
     }
     else
     {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "parsing becode failed, not found bencode start, [%s]", cmdstr);
         return FORMAT_ERR;
     }
     return SUCCESS;
@@ -473,6 +477,7 @@ int Epoll_data::parsingString(char* bencode_str_start, char** bencode_str_end)
         {
             return BENCODE_NOT_COMPLETED;
         }
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"format error %s", p);
         return FORMAT_ERR;
     }
     else
@@ -481,6 +486,7 @@ int Epoll_data::parsingString(char* bencode_str_start, char** bencode_str_end)
         int len = atoi(begin);
         if(len <= 0)
         {
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"atoi error, %s", begin);
             return FORMAT_ERR;
         }
         *p = ':';
@@ -512,6 +518,7 @@ int Epoll_data::parsingList(char* bencode_str_start, char** bencode_str_end)
     {
         return FORMAT_ERR;
     }
+    *bencode_str_end = p+1;
     return SUCCESS;
 }
 
@@ -574,8 +581,9 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         {
             if(0 != cs->process_cmd(cookie+2))
             {
-                CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
-                delete cs;
+                //CmdSessionManager::getInstance()->popCmdSession(cs->m_session_key);
+                //delete cs;
+                cs->process_cmd(DELETE_CMD);
             }
         }
     }

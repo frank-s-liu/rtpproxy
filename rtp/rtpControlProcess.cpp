@@ -266,6 +266,7 @@ void* ControlProcess::run()
                             SocketInfo* socketinfo = new TcpSocketInfo();
                             socketinfo->m_fd = new_client_fd;
                             tcpclientdata->m_epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
+                            tcpclientdata->m_epoll_fd = ep_fd;
                             tcpclientdata->m_socket = socketinfo;
                             setnoblock(new_client_fd);
                             setkeepalive(new_client_fd, 3600);
@@ -291,14 +292,7 @@ void* ControlProcess::run()
                         int ret = data->recvBencodeCmd();
                         if(ret != 0)
                         {
-                            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "recv Bencode error, delete socket");
-                            data->rm_fd_from_epoll();
-                            delete data->m_socket;
-                            data->m_socket = NULL;
-                            if(0 == data->m_session_count)
-                            {
-                                delete data;
-                            }
+                            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "recv Bencode error, break here");
                             break;// must beak and start a new epoll
                         }
                     }
@@ -350,12 +344,12 @@ void* ControlProcess::run()
                     else// maybe client disconnect with server becauseof network issue, So when srv send keepalive msg to client, may got this error
                     {
                         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "socket error, event is %d", events[i].events);
-                        data->rm_fd_from_epoll();
-                        delete data->m_socket;
-                        data->m_socket = NULL;
+                        //data->rm_fd_from_epoll();
+                        //delete data->m_socket;
+                        //data->m_socket = NULL;
                         if(0 == data->m_session_count)
                         {
-                            delete data;
+                            //delete data;
                         }
                         break;// must beak and start a new epoll
                     }

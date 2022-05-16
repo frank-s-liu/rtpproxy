@@ -84,6 +84,7 @@ LastCookie::LastCookie(const char* cookie, int len)
     snprintf(m_cookie, len+1, "%s", cookie);
     m_cookie_id = BKDRHash(m_cookie, len);
     m_cookie_len = len;
+    m_resp = NULL;
 }
 
 LastCookie::~LastCookie()
@@ -122,12 +123,6 @@ CmdSession::~CmdSession()
         delete m_css;
         m_css = NULL;
     }
-    if(m_session_key)
-    {
-        tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete cmd session %s", m_session_key->m_cookie);
-        delete m_session_key;
-        m_session_key = NULL;
-    }
     rmSocketInfo();
     cdmParameters_map::iterator ite;
     for (ite = m_cmdparams.begin(); ite != m_cmdparams.end(); )
@@ -153,6 +148,12 @@ CmdSession::~CmdSession()
     {
         delete m_last_cookie;
         m_last_cookie = NULL;
+    }
+    if(m_session_key)
+    {
+        tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "destroy cmd session [%s] instance", m_session_key->m_cookie);
+        delete m_session_key;
+        m_session_key = NULL;
     }
 }
 
@@ -335,8 +336,8 @@ void CmdSession::rmSocketInfo()
         m_socket_data->m_session_count --;
         if(0 == m_socket_data->m_session_count)
         {
-            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session %s ", m_session_key->m_cookie?m_session_key->m_cookie:"still no session key");
             delete m_socket_data;
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session %s ", m_session_key?m_session_key->m_cookie:"still no session key");
         }
         m_socket_data = NULL;
     }

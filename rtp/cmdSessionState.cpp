@@ -190,8 +190,14 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
         case ANSWER_CMD:
         case DELETE_CMD:
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd %s in CmdSessionInitState", m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
-            goto err_ret;
+            Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
+            if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
+            {
+                delete delCmdArg;
+                delCmdArg = NULL;
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add task of delete cmd session task error for cmd session %s", m_cs->m_session_key->m_cookie);
+            }
+            break;
         }
         case PING_CMD:
         {
@@ -270,7 +276,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add delete cmd session error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -428,7 +434,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add delete cmd session error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -516,7 +522,7 @@ int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextS
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add delete cmd session error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -614,7 +620,7 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add task of delete cmd session error for cmd session %s", m_cs->m_session_key->m_cookie);
             }
             break;
         }
