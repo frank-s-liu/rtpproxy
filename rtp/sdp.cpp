@@ -736,7 +736,7 @@ int Attr_sendrecv::serialize(char* buf, int buflen)
 int Attr_sendrecv::parse(const char* line)
 {
     const char* end = strstr(line, "\r\n");
-    const char* pos = strstr(line, "a=sendrecv:");
+    const char* pos = strstr(line, "a=sendrecv");
     if(pos && end && pos < end)
     {
         attr_type = ATTR_SENDRECV;
@@ -755,7 +755,7 @@ int Attr_sendrecv::parse(const char* line)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute parse failed %s", line);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "sendrecv attribute parse failed [%s]", line);
         return -1;
     }
     parsed = 1;
@@ -1232,32 +1232,38 @@ void Sdp_session::destroySdp()
 
 static Sdp_attribute* parseAttr(const char* line)
 {
+    const char* line_end = strstr(line, "\r\n");
+    const char* start = NULL;
     Sdp_attribute* attr = NULL;
-    if(strstr(line, "a=rtpmap"))
+    if(!line_end)
+    {
+        return NULL;
+    }
+    if((start=strstr(line, "a=rtpmap")) && start<line_end)
     {
         attr = new Attr_rtpmap();
     }
-    else if(strstr(line, "a=rtcp"))
+    else if((start=strstr(line, "a=rtcp")) && start<line_end)
     {
         attr = new Attr_rtcp();
     }
-    else if(strstr(line, "a=fmtp"))
+    else if((start=strstr(line, "a=fmtp")) && start<line_end)
     {
         attr = new Attr_fmtp();
     }
-    else if(strstr(line, "a=crypto"))
+    else if((start=strstr(line, "a=crypto")) && start<line_end)
     {
         attr = new Attr_crypto();
     }
-    else if(strstr(line, "a=send"))
+    else if((start=strstr(line, "a=send")) && start<line_end)
     {
         attr = new Attr_sendrecv();
     }
-    else if(strstr(line, "a=recvonly"))
+    else if((start=strstr(line, "a=recvonly")) && start<line_end)
     {
         attr = new Attr_sendrecv();
     }
-    else if(strstr(line, "a=inactive"))
+    else if((start=strstr(line, "a=inactive")) && start<line_end)
     {
         attr = new Attr_sendrecv();
     }
