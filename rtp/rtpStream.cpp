@@ -127,7 +127,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
         //a = remote_sdp->getLittleTagcryptoAttrFromAudioMedia();
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session [%s] no chip suit %s",
                                                           m_rtpSession->m_session_key->m_cookie,
-                                                          s_crypto_suite_str[chiper]);
+                                                          g_crypto_suite_str[chiper]);
         return -1;
     }
     if(m_remote_cry_cxt)
@@ -184,6 +184,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
         m_local_sdp.len = 0;
         return -1;
     }
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "external local sdp [%s]", m_local_sdp.s);
     return 0;
 }
 
@@ -194,14 +195,14 @@ int RtpStream::checkAndSetRemoteCrypto(Sdp_session* remote_sdp)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no  chip suit %s",
                                                           m_rtpSession->m_session_key->m_cookie, 
-                                                          s_crypto_suite_str[m_local_crypto_chiper]);
+                                                          g_crypto_suite_str[m_local_crypto_chiper]);
         return -1;
     }
     if(a->tag != m_local_crypto_tag)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s chip suit %s has wrong tag",
                                                           m_rtpSession->m_session_key->m_cookie, 
-                                                          s_crypto_suite_str[m_local_crypto_chiper]);
+                                                          g_crypto_suite_str[m_local_crypto_chiper]);
         return -1;
     }
     if(m_remote_cry_cxt)
@@ -223,7 +224,7 @@ int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
         unsigned char srckey[MAX_CRYPTO_SUIT_KEYSTR_LEN];
         a = new Attr_crypto();
         a->suite_str.s = new char[MAX_CRYPTO_SUIT_STR_LEN];
-        int len = snprintf(a->suite_str.s, MAX_CRYPTO_SUIT_STR_LEN, "%s", s_crypto_suite_str[chiper]);
+        int len = snprintf(a->suite_str.s, MAX_CRYPTO_SUIT_STR_LEN, "%s", g_crypto_suite_str[chiper]);
         a->suite_str.len = len;
         
         m_local_cry_cxt = new Crypto_context(chiper);

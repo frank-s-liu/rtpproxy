@@ -4,7 +4,7 @@
 #include "rtpSendRecvProcs.h"
 #include "args.h"
 #include "rtpControlProcess.h"
-
+#include "rtpConstStr.h"
 
 RtpSession::RtpSession()
 {
@@ -175,6 +175,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
     return ret;
 
 errorProcess:
+    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"process sdp error from %s", g_RTPDirection_str[direction]);
     if(sdp)
     {
         delete sdp;

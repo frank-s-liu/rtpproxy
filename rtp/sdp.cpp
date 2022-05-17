@@ -1527,7 +1527,7 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
 {
     Attr_crypto* attr = NULL;
     Sdp_media* audiMedia = NULL;
-    int chip_str_len = strlen(s_crypto_suite_str[chip]);
+    int chip_str_len = strlen(g_crypto_suite_str[chip]);
     Medias_l::iterator it;
     for(it=m_media_l.begin(); it!=m_media_l.end(); it++)
     {
@@ -1551,7 +1551,7 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
            if(a->attr_type == ATTR_CRYPTO)
            {
                Attr_crypto* crppto_a = (Attr_crypto*)a;
-               if(0 == strncmp(crppto_a->suite_str.s, s_crypto_suite_str[chip], crppto_a->suite_str.len<chip_str_len?crppto_a->suite_str.len:chip_str_len))
+               if(0 == strncmp(crppto_a->suite_str.s, g_crypto_suite_str[chip], crppto_a->suite_str.len<chip_str_len?crppto_a->suite_str.len:chip_str_len))
                {
                    return crppto_a;
                }
