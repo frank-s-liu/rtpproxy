@@ -35,7 +35,6 @@ static int parsingBencodeString(char* cmdstr, int* keylen, char** keystart)
     }
 }
 
-
 SessionKey::SessionKey(const char* cookie)
 {
     int len = strlen(cookie);
@@ -503,7 +502,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
                 delete oldvalue;
             }
             m_cmdparams[key] = value;
-            tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameters key: [%s]: value:[%s]", m_session_key->m_cookie, key.c_str(), value->c_str());
+            //tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session %s, parameters key: [%s]: value:[%s]", m_session_key->m_cookie, key.c_str(), value->c_str());
         }
         else if(ret == 0 && keylen == 0)
         {

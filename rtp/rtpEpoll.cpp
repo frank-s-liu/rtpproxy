@@ -555,12 +555,12 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             if(cmd_session_type == NONE_CALL_SESSION)
             {
                 cs = new NoneCallCmdSession();
-                cs->resetCookie(start, cookie-start);
             }
             else
             {
                 cs = new CallCmdSession();
             }
+            cs->resetCookie(start, cookie-start);
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);
             tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, session key is [%s]", sk->m_cookie);
@@ -572,10 +572,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             {
                 ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
             }
-            else
-            {
-                cs->resetCookie(start, cookie-start);
-            }
+            cs->resetCookie(start, cookie-start);
             delete sk;
         }
         if(0 == ret)

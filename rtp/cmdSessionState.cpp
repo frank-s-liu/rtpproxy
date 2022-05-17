@@ -320,7 +320,7 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     int offset = 0;
     int ret = 0;
     resp[0] = '\0';
-    processSdpResp_s(sdp, m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len, resp, sizeof(resp), &offset);
+    processSdpResp_s(sdp, m_cs->m_cookie.s, m_cs->m_cookie.len, resp, sizeof(resp), &offset);
     tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %s", &resp[offset], g_RTPDirection_str[direction]);
     ret = m_cs->sendcmd(&resp[offset]);
     if(0 == ret)
