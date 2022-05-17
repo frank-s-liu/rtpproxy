@@ -49,11 +49,6 @@ int UdpSrvSocket::bindPort(const char* local_ip, RTPDirection direction)
     struct sockaddr_in addr;
     int ret = 1;
     int loop = 0;
-    if(m_socket != INVALID_SOCKET)
-    {
-        close(m_socket);
-        m_socket = INVALID_SOCKET;
-    }
     while(ret)
     {
         if(direction == EXTERNAL_PEER)
@@ -80,7 +75,7 @@ int UdpSrvSocket::bindPort(const char* local_ip, RTPDirection direction)
         loop++;
         if((loop&15) == 0)
         {
-            tracelog("TRANSPORT", WARNING_LOG, __FILE__, __LINE__, "bind rtp port %d to socket, error %d", port, errno);
+            tracelog("TRANSPORT", WARNING_LOG, __FILE__, __LINE__, "bind rtp ip port [%s:%d] to socket, error %d", local_ip, port, errno);
         }
         if(loop > 128)
         {
@@ -100,11 +95,6 @@ int UdpSrvSocket::bindPort(const char* local_ip, unsigned short port)
 {
     struct sockaddr_in addr;
     int ret = 1;
-    if(m_socket != INVALID_SOCKET)
-    {
-        close(m_socket);
-        m_socket = INVALID_SOCKET;
-    }
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(local_ip);
     addr.sin_port = htons(port);
@@ -251,6 +241,10 @@ int UdpSrvSocket::getLocalIp(char* buf, int buflen)
             ret = -1;
             tracelog("TRANSPORT", ERROR_LOG, __FILE__, __LINE__, "usp server get local ip error, reason %d ", errno);
         }
+    }
+    else
+    {
+        tracelog("TRANSPORT", WARNING_LOG, __FILE__, __LINE__,"udp socket has been closed");
     }
     return ret;
 }
