@@ -5,6 +5,7 @@
 #include "log.h"
 #include "args.h"
 #include "sdp.h"
+#include "rtpConstStr.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -359,7 +360,7 @@ int CmdSession::process_cmd(char* cmdstr)
     parsingCmd(cmdstr, cmdlen);
     cmd = getCmd();
     CmdSessionState* css = NULL;
-    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s is processing cmd [%d]", m_session_key->m_cookie, cmd);
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_session_key->m_cookie,m_cookie.s, CMD_STR[cmd]);
     ret =m_css->processCMD(cmd, &css);
     if(0 == ret && css)
     {

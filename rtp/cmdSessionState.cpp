@@ -12,10 +12,7 @@
 #include <stdlib.h>
 
 
-static const char* StateName[CMDSESSION_MAX_STATE] = {"CMDSESSION_STATE",                 "CMDSESSION_INIT_STATE",               "CMDSESSION_OFFER_PROCESSING_STATE", 
-                                                      "CMDSESSION_OFFER_PROCESSED_STATE", "CMDSESSION_ANSWER_PROCESSING_STATE",  "CMDSESSION_ANSWER_PROCESSED_STATE",
-                                                      "CMDSESSION_DELETE_STATE"};
-static const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
+//static const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
 
 // timer thread call back
 static void fireArgs2controlProcess_s(void* args)

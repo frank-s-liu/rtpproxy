@@ -12,3 +12,9 @@ const char* g_RTPDirection_str[MAX_DIRECTION] = {
                                                 "INTERNAL_PEER",
                                                 "INTERNAL_LOCAL"
                                                 };
+
+const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
+
+const char* StateName[CMDSESSION_MAX_STATE] = {"CMDSESSION_STATE",                 "CMDSESSION_INIT_STATE",               "CMDSESSION_OFFER_PROCESSING_STATE", 
+                                               "CMDSESSION_OFFER_PROCESSED_STATE", "CMDSESSION_ANSWER_PROCESSING_STATE",  "CMDSESSION_ANSWER_PROCESSED_STATE",
+                                               "CMDSESSION_DELETE_STATE"};
