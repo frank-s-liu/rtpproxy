@@ -66,6 +66,15 @@ static int processSdpResp_s(Sdp_session* sdp, const char* cookie, int cookie_len
     len = snprintf(&resp[delta], real_reserver, "%s d3:sdp%d", cookie, len);
     resp[delta+len]=':';
     *resp_offset = delta;
+    len = strlen(&resp[delta]);
+    if(resp_size > (delta+len))
+    {
+        snprintf(&resp[delta]+len, resp_size-delta-len, "6:result2:oke");
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"resp buf is not enough %d %d", resp_size, delta+len);
+    }
     return ret;
 }
 
@@ -330,6 +339,7 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     else
     {
         *nextState = NULL;
+        tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"response cmd off failed");
         return ret;
     }
     StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);

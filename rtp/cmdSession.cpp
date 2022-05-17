@@ -497,8 +497,8 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
             if(iter != m_cmdparams.end())
             {
                 std::string* oldvalue = iter->second;
-                tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s modify key %s old value[%s] to new balue [%s]", 
-                                                              m_session_key->m_cookie, key.c_str(), oldvalue->c_str(), value->c_str());
+                //tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s modify key %s old value[%s] to new balue [%s]", 
+                //                                              m_session_key->m_cookie, key.c_str(), oldvalue->c_str(), value->c_str());
                 delete oldvalue;
             }
             m_cmdparams[key] = value;
