@@ -160,6 +160,10 @@ int Sdp_origin::replaceAddress(const char* ip, int len)
         snprintf(address.address.s, len+1, "%s", ip);
         return 0;
     }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"replaceAddress failed , ip:[%s], len:%d, parsed:%d", ip, len, parsed);
+    }
     return -1;
 }
 
