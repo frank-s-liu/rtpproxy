@@ -470,7 +470,7 @@ int CmdSession::parsingCmd(char* cmdstr, int cmdlen)
             }
             else if(*p == 'l')
             {
-                char* start = (p++);
+                char* start = (++p);
                 char* l_end = start;
                 while((*p > '0') && (*p<='9'))
                 {

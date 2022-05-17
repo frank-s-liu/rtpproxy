@@ -10,12 +10,17 @@ int init_rtp_sendRecv_process(int thread_num)
 {
     rtpProcess_num_s = thread_num;
     rtpProcess_s = new RtpProcess[thread_num]();
+    for(int index=0; index<thread_num; index++)
+    {
+        rtpProcess_s[index].start();
+    }
     return 0;
 }
 
-int processSdpArgs(SDPArgs* args, unsigned long hash_key)
+int processRTPArgs(rtpSendRecvThreadArgs* args, unsigned long hash_key)
 {
     int index = hash_key % rtpProcess_num_s;
+    args->setArg(&rtpProcess_s[index]);
     return rtpProcess_s[index].add_pipe_event(args);
 }
 

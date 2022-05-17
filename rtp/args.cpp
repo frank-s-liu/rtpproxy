@@ -5,10 +5,21 @@
 #include "rtpsession.h"
 #include "rtpSendRecvProcs.h"
 
-int Args::setArg(void* arg)
+
+rtpSendRecvThreadArgs::rtpSendRecvThreadArgs()
 {
-    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "set arg failed");
-    return -1;
+    process = NULL;
+}
+
+rtpSendRecvThreadArgs::~rtpSendRecvThreadArgs()
+{
+    process = NULL;
+}
+
+int rtpSendRecvThreadArgs::setArg(void* arg)
+{
+    process = (RtpProcess*)arg;
+    return 0;
 }
 
 PingCheckArgs::PingCheckArgs(char* cs_key, int len)
@@ -146,11 +157,6 @@ SDPArgs::~SDPArgs()
     sdp = NULL;
 }
 
-int SDPArgs::setArg(void* arg)
-{
-    process = (RtpProcess*)arg;
-    return 0;
-}
 
 int SDPArgs::processCmd()
 {

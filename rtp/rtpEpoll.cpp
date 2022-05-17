@@ -116,7 +116,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
     else if(len == 0)
     {
         tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "recv bencode cmd error, peer side close socket");
-        ret = -1;
+        ret = -2;
         close(m_fd);
         m_fd = -1;
         goto retprocess;
@@ -124,7 +124,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
     else
     {
         tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
-        ret = -1;
+        ret = -3;
         close(m_fd);
         m_fd = -1;
         goto retprocess;

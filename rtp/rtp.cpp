@@ -4,6 +4,7 @@
 #include "rtpepoll.h"
 #include "rtp.h"
 #include "port_q.h"
+#include "rtpLB.h"
 
 
 #include <assert.h>
@@ -206,7 +207,7 @@ int initRTP(const char* config_file)
     }
     //ControlProcess
     ControlProcess::getInstance()->start();
-
+    init_rtp_sendRecv_process(s_rtp_config.rtpThreads);
     return result;
 }
 

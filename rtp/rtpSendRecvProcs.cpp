@@ -80,6 +80,7 @@ void* RtpProcess::run()
         tracelog("RTP", ERROR_LOG, __FILE__, __LINE__, "epoll_ctl failed in RTP_send");
         assert(0);
     }
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "rtp send recv thread start");
     while( !m_isStop )
     {
         fd_cnt = epoll_wait(m_ep_fd, events, EPOLL_LISTEN_CNT, EPOLL_LISTEN_TIMEOUT);

@@ -11,7 +11,18 @@ class Args
 public:
     virtual ~Args(){};
     virtual int processCmd() = 0;
+    //virtual int setArg(void* arg);
+};
+
+class RtpProcess;
+class rtpSendRecvThreadArgs : public Args
+{
+public:
+    rtpSendRecvThreadArgs();
+    virtual ~rtpSendRecvThreadArgs();
     virtual int setArg(void* arg);
+public:
+    RtpProcess*     process;
 };
 
 class PingCheckArgs : public Args
@@ -48,18 +59,15 @@ public:
     char*              cs_cookie;
 };
 
-class RtpProcess;
-class SDPArgs : public Args
+class SDPArgs : public rtpSendRecvThreadArgs
 {
 public:
     SDPArgs(const char* call_id, int len);
     virtual ~SDPArgs();
     virtual int processCmd();
-    virtual int setArg(void* arg);
 public:
     cstr            call_id;
     Sdp_session*    sdp;   
-    RtpProcess*     process;
     RTPDirection    direction;
 };
 
@@ -76,7 +84,7 @@ public:
     char            result;
 };
 
-class DeletRtp : public Args
+class DeletRtp : public rtpSendRecvThreadArgs
 {
 public:
     DeletRtp(const char* call_id, int len);
@@ -84,7 +92,6 @@ public:
     virtual int processCmd();
 public:
     cstr            call_id;
-    RtpProcess*     process;
 };
 
 class DeleteCmdArg : public Args

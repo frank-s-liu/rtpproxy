@@ -163,11 +163,12 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
                sdpArg->sdp = sdp;
                sdpArg->direction = dir;
-               if(0 != processSdpArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
+               if(0 != processRTPArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
                {
                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
                                                                    CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
                    delete sdpArg;
+                   sdpArg = NULL;
                    goto err_ret;
                }
            }
@@ -248,7 +249,7 @@ CmdSessionOfferProcessingState::~CmdSessionOfferProcessingState()
 int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
-    Args* rtparg = NULL;
+    rtpSendRecvThreadArgs* rtparg = NULL;
     switch(cmd)
     {
         case OFFER_CMD:
@@ -262,7 +263,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
         case DELETE_CMD:
         {
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            if(0 != processRTPArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because of can not send delete rtp cmd to rtp thread in cmd session %s ", 
                                                                 m_cs->m_session_key->m_cookie);
@@ -354,7 +355,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
     int ret = 0;
     Sdp_session* sdp = NULL;
     SDPArgs* sdpArg = NULL;
-    Args*  rtparg = NULL;
+    rtpSendRecvThreadArgs*  rtparg = NULL;
     switch (cmd)
     {
         case OFFER_CMD:
@@ -393,7 +394,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 sdpArg = new SDPArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
                 sdpArg->sdp = sdp;
                 sdpArg->direction = dir;
-                if(0 != processSdpArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
+                if(0 != processRTPArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
                 {
                     tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
                                                                     CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
@@ -420,7 +421,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
         case DELETE_CMD:
         {
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            if(0 != processRTPArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because of can not send delete rtp cmd to rtp sendrecv thread in cmd session %s ", 
                                                                 m_cs->m_session_key->m_cookie);
@@ -494,7 +495,7 @@ CmdSessionAnswerProcessingState::~CmdSessionAnswerProcessingState()
 int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
-    Args* rtparg = NULL;
+    rtpSendRecvThreadArgs* rtparg = NULL;
     switch(cmd)
     {
         case OFFER_CMD:
@@ -508,7 +509,7 @@ int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextS
         case DELETE_CMD:
         {
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            if(0 != processRTPArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because can not send delete-rtp cmd to rtp thread in cmd session %s ", 
                                                                 m_cs->m_session_key->m_cookie);
@@ -593,7 +594,7 @@ CmdSessionAnswerProcessedState::~CmdSessionAnswerProcessedState()
 int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextState)
 {
     int ret = 0;
-    Args*  rtparg = NULL;
+    rtpSendRecvThreadArgs*  rtparg = NULL;
     switch (cmd)
     {
         case OFFER_CMD:
@@ -606,7 +607,7 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
         case DELETE_CMD:
         {
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != processArgs(rtparg, m_cs->m_session_key->m_cookie_id))
+            if(0 != processRTPArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
                 tracelog("RTP", ERROR_LOG,__FILE__, __LINE__,"process cmd DELETE_CMD error because of can not send delete rtp cmd to rtp sendrecv thread in cmd session %s ", 
                                                               m_cs->m_session_key->m_cookie);
