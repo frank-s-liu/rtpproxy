@@ -1538,7 +1538,7 @@ Attr_crypto* Sdp_session::getcryptoAttrFromAudioMedia(Crypto_Suite chip)
         audiMedia = *it;
         break;
     }
-    if(attr == NULL)
+    if(audiMedia == NULL)
     {
         return NULL;
     } 
