@@ -112,7 +112,12 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             arg->direction = direction;
             if(0 != ControlProcess::getInstance()->add_pipe_event(arg))
             {
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"send SDPRespArgs to ControlProcess failed for cmd session %s", m_session_key->m_cookie);
                 delete arg;
+            }
+            else
+            {
+                tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"send SDPRespArgs to ControlProcess for session%s", m_session_key->m_cookie);
             }
             break;
         }

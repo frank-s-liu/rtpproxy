@@ -22,7 +22,7 @@ static void randomString(unsigned char* buf, int buf_size)
 {
     int index = 0;
     srand((unsigned int)time(NULL));
-    for(index=0; index<buf_size; buf_size++)
+    for(index=0; index<buf_size; index++)
     {
         int i = rand()%sizeof(randomChar);
         buf[index] = randomChar[i];
