@@ -125,7 +125,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     if(!a)
     {
         //a = remote_sdp->getLittleTagcryptoAttrFromAudioMedia();
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no chip suit %s",
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session [%s] no chip suit %s",
                                                           m_rtpSession->m_session_key->m_cookie,
                                                           s_crypto_suite_str[chiper]);
         return -1;

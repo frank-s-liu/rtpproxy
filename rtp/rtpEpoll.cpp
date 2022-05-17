@@ -420,6 +420,7 @@ int Epoll_data::bencodeCheck(char* cmdstr, char** end)
                     call_id_v = strchr(p,':');
                     call_id_v++;
                     call_id_v_len = begin-call_id_v;
+                    call_id_key = NULL;
                 }
                 p = begin;
             }
