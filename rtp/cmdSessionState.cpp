@@ -325,13 +325,16 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     char resp[2048];
     int offset = 0;
     int ret = 0;
+    int len = 0;
     resp[0] = '\0';
     processSdpResp_s(sdp, m_cs->m_cookie.s, m_cs->m_cookie.len, resp, sizeof(resp), &offset);
     tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %s", &resp[offset], g_RTPDirection_str[direction]);
-    ret = m_cs->sendcmd(&resp[offset]);
+    len = strlen(&resp[offset]);
+    ret = m_cs->sendcmd(&resp[offset], len);
     if(0 == ret)
     {
         *nextState = new CmdSessionOfferProcessedState(m_cs);
+        m_cs->cache_cookie_resp(m_cs->m_cookie.s, m_cs->m_cookie.len, &resp[offset], len);
     }
     else
     {
@@ -560,6 +563,7 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     char resp[2048];
     int offset = 0;
     int ret = 0;
+    int len = 0;
     resp[0] = '\0';
     if(sdp->m_parsed)
     {
@@ -570,10 +574,12 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
         snprintf(resp, sizeof(resp), "%s d3:sdp%d:%s6:result2:oke", m_cs->m_cookie.s, sdp->m_sdp_str.len, sdp->m_sdp_str.s);
     }
     tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[offset], direction);
-    ret = m_cs->sendcmd(&resp[offset]);
+    len = strlen(&resp[offset]);
+    ret = m_cs->sendcmd(&resp[offset], len);
     if(0 == ret)
     {
         *nextState = new CmdSessionAnswerProcessedState(m_cs);
+        m_cs->cache_cookie_resp(m_cs->m_cookie.s, m_cs->m_cookie.len, &resp[offset], len);
     }
     else
     {

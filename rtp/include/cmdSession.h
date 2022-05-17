@@ -4,6 +4,7 @@
 #include "rtpepoll.h"
 #include "sessionKey.h"
 #include "rtpEnum.h"
+#include "cstr.h"
 
 #include <map>
 #include <string>
@@ -22,10 +23,9 @@ public:
     virtual ~LastCookie();
 
 public:
-    char*         m_cookie;
-    char*         m_resp;
+    cstr          m_cookie;
+    cstr          m_resp;
     unsigned long m_cookie_id;
-    int           m_cookie_len;
 };
 
 typedef std::map<std::string, std::string*> cdmParameters_map;
@@ -50,11 +50,12 @@ public:
     void setSocketInfo(Epoll_data* data);
     void getCmdValueByStrKey(const char* key_c, std::string** v);
     int doAction2PrepareSend();
-    int sendcmd(const char* cmdmsg);
+    int sendcmd(const char* cmdmsg, int len);
     int sendcmd(std::string* cmdmsg);
     void rmSocketInfo();
     int flushmsgs();
     int process_cookie(const char* cookie, int cookie_len);
+    int cache_cookie_resp(const char* cookie, int cookie_len, const char* resp, int resp_len);
 
 public:
     SessionKey*               m_session_key;

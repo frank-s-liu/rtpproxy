@@ -79,24 +79,27 @@ bool SessionKey::operator <(const SessionKey &k) const
 
 LastCookie::LastCookie(const char* cookie, int len)
 {
-    m_cookie = new char[len+1];
-    snprintf(m_cookie, len+1, "%s", cookie);
-    m_cookie_id = BKDRHash(m_cookie, len);
-    m_cookie_len = len;
-    m_resp = NULL;
+    m_cookie.s = new char[len+1];
+    m_cookie.len = len;
+    snprintf(m_cookie.s, len+1, "%s", cookie);
+    m_cookie_id = BKDRHash(m_cookie.s, len);
+    m_resp.s = NULL;
+    m_resp.len = 0;
 }
 
 LastCookie::~LastCookie()
 {
-    if(m_cookie)
+    if(m_cookie.len)
     {
-        delete[] m_cookie;
-        m_cookie = NULL;
-        m_cookie_len = 0;
+        delete[] m_cookie.s;
+        m_cookie.s = NULL;
+        m_cookie.len = 0;
     }
-    if(m_resp)
+    if(m_resp.len)
     {
-        delete[] m_resp;
+        delete[] m_resp.s;
+        m_resp.s = NULL;
+        m_resp.len = 0;
     }
 }
 
@@ -172,10 +175,9 @@ int CmdSession::sendPongResp()
     return -1;
 }
 
-int CmdSession::sendcmd(const char* cmdmsg)
+int CmdSession::sendcmd(const char* cmdmsg, int len)
 {
     int ret = 0;
-    int len = strlen(cmdmsg);
     if(m_socket_data && cmdmsg)
     {
         if(m_sendmsgs_l.empty())
@@ -538,37 +540,47 @@ int CmdSession::process_cookie(const char* cookie, int cookie_len)
 {
     if(m_last_cookie)
     {
-        if(m_last_cookie->m_cookie_len == cookie_len)
+        if(m_last_cookie->m_cookie.len == cookie_len)
         {
-            if(0 == strncmp(m_last_cookie->m_cookie, cookie, cookie_len))// retransmit
+            if(0 == strncmp(m_last_cookie->m_cookie.s, cookie, cookie_len))// retransmit
             {
-                int ret = sendcmd(m_last_cookie->m_resp);
+                int ret = sendcmd(m_last_cookie->m_resp.s, m_last_cookie->m_resp.len);
                 if(ret < 0 )
                 {
                     tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "retransmit response failed  %s ", m_session_key->m_cookie);
                     rmSocketInfo();
+                    return -1;
                 }
-                return -1;
-            }
-            else
-            {
-                delete m_last_cookie;
-                goto newcookie;
             }
         }
-        else
+    }
+    return 0;
+}
+
+int CmdSession::cache_cookie_resp(const char* cookie, int cookie_len, const char* resp, int resp_len)
+{
+    if(m_last_cookie)
+    {
+        if(m_last_cookie->m_cookie.len == cookie_len)
         {
-            delete m_last_cookie;
-            goto newcookie;
+            if(0 == strncmp(m_last_cookie->m_cookie.s, cookie, cookie_len))// retransmit
+            {
+                return 0;
+            }
         }
+        delete m_last_cookie;
+        goto cachecookie;
     }
     else
     {
-        goto newcookie;
+        goto cachecookie;
     }
 
-newcookie:
+cachecookie:
     m_last_cookie = new LastCookie(cookie, cookie_len);
+    m_last_cookie->m_resp.len = resp_len;
+    m_last_cookie->m_resp.s = new char[resp_len+1];
+    snprintf(m_last_cookie->m_resp.s, resp_len+1, "%s", resp);
     return 0;
 }
 
@@ -739,8 +751,8 @@ int NoneCallCmdSession::sendPongResp()
 {
     int ret = 0;
     char pongresp[256];
-    snprintf(pongresp, sizeof(pongresp), "%s d6:result4:ponge", m_cookie.s);
-    ret = sendcmd(pongresp);
+    int len = snprintf(pongresp, sizeof(pongresp), "%s d6:result4:ponge", m_cookie.s);
+    ret = sendcmd(pongresp, len);
     if(ret < 0 )
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "cmd session %s, response pong cmd", m_session_key->m_cookie);
