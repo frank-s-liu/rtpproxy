@@ -106,7 +106,7 @@ int Network_address::serialize(char* buf, int buflen)
 {
     if(buf && address.len)
     {
-        int len = snprintf(buf, buflen, "IN %s %s\r\n", AddrTypeStr[addr_type], address.s);
+        int len = snprintf(buf, buflen, "IN %s %s", AddrTypeStr[addr_type], address.s);
         if (len >= buflen)
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "Network_address serialize failed buf %s, buffer len%d.", buf, buflen);
