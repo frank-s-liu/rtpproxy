@@ -77,7 +77,6 @@ bool SessionKey::operator <(const SessionKey &k) const
     return false;
 }
 
-
 LastCookie::LastCookie(const char* cookie, int len)
 {
     m_cookie = new char[len+1];
@@ -106,6 +105,8 @@ CmdSession::CmdSession()
     m_css = new CmdSessionInitState(this);
     m_socket_data = NULL;
     m_last_cookie = NULL;
+    m_cookie.len = 0;
+    m_cookie.s = NULL;
 }
 
 CmdSession::CmdSession(char* cookie)
@@ -114,6 +115,8 @@ CmdSession::CmdSession(char* cookie)
     m_session_key = new SessionKey(cookie);
     m_socket_data = NULL;
     m_last_cookie = NULL;
+    m_cookie.s = NULL;
+    m_cookie.len = 0;
 }
 
 CmdSession::~CmdSession()
@@ -154,6 +157,12 @@ CmdSession::~CmdSession()
         tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "destroy cmd session [%s] instance", m_session_key->m_cookie);
         delete m_session_key;
         m_session_key = NULL;
+    }
+    if(m_cookie.len)
+    {
+        delete[] m_cookie.s;
+        m_cookie.s = NULL;
+        m_cookie.len = 0;
     }
 }
 
@@ -376,11 +385,6 @@ int CmdSession::process_cmd(int cmd)
     return ret;
 }
 
-void CmdSession::resetCookie(const char* cookie, int len)
-{
-    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not reset cookie in CmdSession, call id %s", m_session_key->m_cookie);
-}
-
 int CmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
 {
     tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "must not process SdpResp in CmdSession, call id %s", m_session_key->m_cookie);
@@ -581,6 +585,17 @@ int CmdSession::getSdp(int type, Sdp_session**sdp)
     return -1;
 }
 
+void CmdSession::resetCookie(const char* cookie, int len)
+{
+    if(m_cookie.len > 0)
+    {
+        delete[] m_cookie.s;
+    }
+    m_cookie.len = len;
+    m_cookie.s = new char[len+1];
+    snprintf(m_cookie.s, len+1, "%s", cookie);
+}
+
 CallCmdSession::CallCmdSession():CmdSession()
 {
     external_peer_sdp = NULL;
@@ -702,18 +717,10 @@ int CallCmdSession::processSdpResp(Sdp_session* sdp, RTPDirection direction)
 
 NoneCallCmdSession::NoneCallCmdSession():CmdSession()
 {
-    m_cookie.s = NULL;
-    m_cookie.len = 0;
 }
 
 NoneCallCmdSession::~NoneCallCmdSession()
 {
-    if(m_cookie.len > 0)
-    {
-        delete[] m_cookie.s;
-        m_cookie.s  = NULL;
-        m_cookie.len = 0;
-    }
 }
 
 int NoneCallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
@@ -727,16 +734,6 @@ int NoneCallCmdSession::checkPingKeepAlive(PingCheckArgs* pingArg)
     return ret;
 }
 
-void NoneCallCmdSession::resetCookie(const char* cookie, int len)
-{
-    if(m_cookie.len > 0)
-    {
-        delete[] m_cookie.s;
-    }
-    m_cookie.len = len;
-    m_cookie.s = new char[len+1];
-    snprintf(m_cookie.s, len+1, "%s", cookie);
-}
 
 int NoneCallCmdSession::sendPongResp()
 {

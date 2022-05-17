@@ -58,9 +58,9 @@ public:
 
 public:
     SessionKey*               m_session_key;
+    cstr                      m_cookie;       // cookie in cmd str, but we don't using this as the session key in none call session or call session
 protected:
     CmdSessionState*          m_css;
-
 private:
     int parsingCmd(char* cmd, int len);
     int getCmd();
@@ -78,11 +78,9 @@ public:
     NoneCallCmdSession();
     virtual ~NoneCallCmdSession();
     virtual int checkPingKeepAlive(PingCheckArgs* pingArg);
-    virtual void resetCookie(const char* cookie, int len);
     virtual int sendPongResp();
 
 private:
-    cstr      m_cookie;   // cookie in ping cmd str, but we don't using this as the session key
 };
 
 class CallCmdSession : public CmdSession

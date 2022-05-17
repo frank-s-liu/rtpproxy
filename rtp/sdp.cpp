@@ -547,7 +547,8 @@ int Attr_crypto::replaceKeyParamter(char* newkey, int key_len)
         {
             delete[] key_params.s;
         }
-        key_params.s = newkey;
+        key_params.s = new char[key_len+1];
+        snprintf(key_params.s, key_len+1, "%s", newkey);
         key_params.len = key_len;
         return 0;
     }

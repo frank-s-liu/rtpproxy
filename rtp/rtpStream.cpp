@@ -184,7 +184,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
         m_local_sdp.len = 0;
         return -1;
     }
-    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "external local sdp [%s]", m_local_sdp.s);
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "external local sdp [%s]", m_local_sdp.s);
     return 0;
 }
 
