@@ -618,9 +618,10 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
         case OFFER_CMD:
         case ANSWER_CMD:
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd of %s in CmdSessionAnswerProcessedState",
-                                                            m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
-            goto err_ret;
+            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] process cmd of %s in CmdSessionAnswerProcessedState",
+                                                          m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
+            m_cs->resp_cookie_cache_with_newcookie(m_cs->m_cookie.s, m_cs->m_cookie.len);
+            return 0;
         }
         case DELETE_CMD:
         {

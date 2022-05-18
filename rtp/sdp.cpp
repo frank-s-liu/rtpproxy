@@ -526,13 +526,15 @@ int Attr_crypto::serialize(char* buf, int buflen)
             }
             if(mki_v && mki_len>0)
             {
-                int mki_l = snprintf(&buf[len], buflen-len, "|%d:%d\r\n", mki_v, mki_len);
+                int mki_l = snprintf(&buf[len], buflen-len, "|%d:%d", mki_v, mki_len);
                 if(mki_l >= buflen-len)
                 {
                     tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed for MKI parameters %d %d", mki_v, mki_len);
                     return -1;
                 }
+                len += mki_l;
             }
+            snprintf(&buf[len], buflen-len, "\r\n");
             return 0;
         }
     }
