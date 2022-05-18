@@ -170,7 +170,7 @@ int SDPArgs::processCmd()
     {
         delete sk;
     }
-    tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__,"processing SDPArgs for session %s, direction:%s", call_id.s, g_RTPDirection_str[direction]);
+    tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__,"processing SDPArgs for session [%s], direction:%s", call_id.s, g_RTPDirection_str[direction]);
     rtpsession->processSdp(sdp, direction);
     return 0;
 }

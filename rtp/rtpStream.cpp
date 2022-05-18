@@ -243,6 +243,7 @@ int RtpStream::addCrypto2External(Sdp_session* sdp, Crypto_Suite chiper)
         a->key_params.s = new char[MAX_CRYPTO_SUIT_KEYSTR_LEN];
         len = snprintf(a->key_params.s, MAX_CRYPTO_SUIT_KEYSTR_LEN, "%s", base64key);
         a->key_params.len = len;
+        a->parsed = 1;
         sdp->addCrypto2AudioMedia(a);
         m_local_crypto_tag = a->tag;
         m_local_crypto_chiper = chiper;
@@ -347,6 +348,10 @@ int RtpStream::readAndProcess()
     else if(INTERNAL_PEER == m_direction)
     {
         int prev_len = payload.len;
+        if(!sendto || !sendto->m_local_cry_cxt)
+        {
+            return -1;
+        }
         if(0 != sendto->m_local_cry_cxt->m_params.crypto_suite->encrypt_rtp(sendto->m_local_cry_cxt, rtpHdr, &payload, rtpIndex))
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream encrypt_rtp error");

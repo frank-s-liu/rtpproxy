@@ -540,7 +540,8 @@ int Attr_crypto::serialize(char* buf, int buflen)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed %d %d %d in buf, buf len %d.", tag, suite_str.len, key_params.len, buflen);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto attribute serialize failed parsed:%d tag:%d suite_str len:%d key len:%d buf len %d.", 
+                                                          parsed, tag, suite_str.len, key_params.len, buflen);
         return -1;
     }
 }
