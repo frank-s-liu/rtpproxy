@@ -349,7 +349,7 @@ int RtpStream::readAndProcess()
         int prev_len = payload.len;
         if(0 != sendto->m_local_cry_cxt->m_params.crypto_suite->encrypt_rtp(sendto->m_local_cry_cxt, rtpHdr, &payload, rtpIndex))
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error");
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream encrypt_rtp error");
             return -1;
         }
         rtp_raw.len += (payload.len - prev_len);

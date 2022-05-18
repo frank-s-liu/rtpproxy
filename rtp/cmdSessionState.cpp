@@ -152,7 +152,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                sdp = new Sdp_session();
                sdp->parse(v->c_str(), v->length());
                std::string dir1("8:external8:internal");
-               std::string dir2("8:internal:8:external");
+               std::string dir2("8:internal8:external");
                if(*direction == dir1)
                {
                    dir = EXTERNAL_PEER;
@@ -163,7 +163,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                }
                else
                {
-                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "err direction %s for cmd session: %s to process cmd %s", 
+                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "err direction %s for cmd session: [%s] to process cmd %s", 
                                                                    direction->c_str(), m_cs->m_session_key->m_cookie, CMD_STR[OFFER_CMD]);
                    goto err_ret;
                }
@@ -172,7 +172,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
                sdpArg->direction = dir;
                if(0 != processRTPArgs(sdpArg, m_cs->m_session_key->m_cookie_id))
                {
-                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd %s error because of sdp args error in cmd session %s ", 
+                   tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"process cmd [%s] error because of sdp args error in cmd session [%s] ", 
                                                                    CMD_STR[OFFER_CMD], m_cs->m_session_key->m_cookie);
                    delete sdpArg;
                    sdpArg = NULL;
@@ -181,7 +181,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            }
            else
            {
-               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no sdp or no direction in cmd session %s, to process cmd of OFFER_CMD", m_cs->m_session_key->m_cookie);
+               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "no sdp or no direction in cmd session [%s], to process cmd of [OFFER_CMD]", m_cs->m_session_key->m_cookie);
                goto err_ret;
            }
            *nextState = new CmdSessionOfferProcessingState(m_cs);
@@ -190,7 +190,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            if(0 != add_task(1600, fireArgs2controlProcess_s, args))
            {
                delete args;
-               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s", m_cs->m_session_key->m_cookie);
+               tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session [%s]", m_cs->m_session_key->m_cookie);
            }
            ret = 0;
            break;
@@ -203,7 +203,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
-                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add task of delete cmd session task error for cmd session %s", m_cs->m_session_key->m_cookie);
+                tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "add task of delete cmd session task error for cmd session [%s]", m_cs->m_session_key->m_cookie);
             }
             break;
         }
@@ -216,7 +216,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
             if(0 != add_task(8000, fireArgs2controlProcess_s, args))
             {
                 delete args;
-                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session %s when processing cmd of PING_CMD", 
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "add state check task error for cmd session [%s] when processing cmd of PING_CMD", 
                                                                  m_cs->m_session_key->m_cookie);
             }
             ret = m_cs->sendPongResp();
@@ -224,7 +224,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
         }
         default:
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s process unknown cmd %d in CmdSessionInitState", m_cs->m_session_key->m_cookie, cmd);
+            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session [%s] process unknown cmd [%s] in CmdSessionInitState", m_cs->m_session_key->m_cookie, CMD_STR[cmd]);
             goto err_ret;
         }
     }
