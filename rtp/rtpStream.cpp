@@ -42,6 +42,8 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_local_crypto_tag = 0;
     m_local_crypto_chiper = AEAD_AES_256_GCM;
     m_data = NULL;
+    m_addr_peer_ip = NULL;
+    m_addr_peer_port = 0;
     memset(&m_peer_ssrc_ctx, 0, sizeof(m_peer_ssrc_ctx));
     memset(&m_local_ssrc_ctx, 0, sizeof(m_local_ssrc_ctx));
 }
@@ -69,6 +71,11 @@ RtpStream::~RtpStream()
     if(m_data)
     {
         delete m_data;
+    }
+    if(m_addr_peer_ip)
+    {
+        delete[] m_addr_peer_ip;
+        m_addr_peer_ip = NULL;
     }
 }
 
@@ -333,7 +340,7 @@ int RtpStream::readAndProcess()
             int prev_len = pl_to_decrypt.len;
             if(0 != m_remote_cry_cxt->m_params.crypto_suite->decrypt_rtp(m_remote_cry_cxt, rtpHdr, &pl_to_decrypt, rtpIndex))
             {
-                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error");
+                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error from remote peer address %s:%d", m_addr_peer_ip, m_addr_peer_port);
                 return -1;
             }
             rtp_raw.len -= (prev_len - pl_to_decrypt.len);
@@ -384,14 +391,23 @@ sendrtp:
 
 int RtpStream::writeProcess(cstr rtp)
 {
-    return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&m_addr_peer, sizeof(struct sockaddr_in));
+    struct sockaddr_in addr_peer;
+    addr_peer.sin_family = AF_INET;
+    addr_peer.sin_port = htons(m_addr_peer_port);
+    addr_peer.sin_addr.s_addr = inet_addr(m_addr_peer_ip);
+    return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&addr_peer, sizeof(struct sockaddr_in));
 }
+
+static const int IP_MAX_LEN = 64;
 
 int RtpStream::set_remote_peer_rtp_network(const char* ip, unsigned short port)
 {
-    m_addr_peer.sin_family = AF_INET;
-    m_addr_peer.sin_port = htons(port);
-    m_addr_peer.sin_addr.s_addr = inet_addr(ip);
+    if(!m_addr_peer_ip)
+    {
+        m_addr_peer_ip = new char[IP_MAX_LEN];
+    }
+    snprintf(m_addr_peer_ip, IP_MAX_LEN, "%s", ip);
+    m_addr_peer_port = port;
     return 0;
 }
 

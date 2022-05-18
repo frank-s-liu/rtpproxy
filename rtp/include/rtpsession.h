@@ -33,7 +33,7 @@ private:
 public:
     cstr                        m_local_sdp;
 private:
-    struct sockaddr_in          m_addr_peer; // peer address
+    char*                       m_addr_peer_ip; // peer address
     UdpSrvSocket*               m_socket;  // local address
     RtpSession*                 m_rtpSession;
     Crypto_context*             m_remote_cry_cxt; // external using encryption
@@ -41,6 +41,7 @@ private:
     RTP_send_recv_epoll_data*   m_data;
     RTPDirection                m_direction;
     unsigned short              m_local_crypto_tag; // to check crypto tag sdp answer from external remote
+    unsigned short              m_addr_peer_port;
     Crypto_Suite                m_local_crypto_chiper;  // to check crypto-suit in sdp from external remote
     unsigned char               m_bridged;
     struct SSRC_CTX             m_peer_ssrc_ctx;
