@@ -153,7 +153,7 @@ void* RtpProcess::run()
                 }
                 else if(events[i].events & EPOLLOUT)
                 {
-
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"----------------");
                 }
                 else if((events[i].events & EPOLLERR) ||
                         (events[i].events & EPOLLHUP) ||

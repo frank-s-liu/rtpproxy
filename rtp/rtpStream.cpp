@@ -343,6 +343,7 @@ int RtpStream::readAndProcess()
                 tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error from remote peer address %s:%d", m_addr_peer_ip, m_addr_peer_port);
                 return -1;
             }
+            //tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"rtp stream decrypt_rtp success from remote peer address %s:%d", m_addr_peer_ip, m_addr_peer_port);
             rtp_raw.len -= (prev_len - pl_to_decrypt.len);
         }
         else
@@ -361,7 +362,7 @@ int RtpStream::readAndProcess()
         }
         if(0 != sendto->m_local_cry_cxt->m_params.crypto_suite->encrypt_rtp(sendto->m_local_cry_cxt, rtpHdr, &payload, rtpIndex))
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream encrypt_rtp error");
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream encrypt_rtp error from peer address %s:%d", m_addr_peer_ip, m_addr_peer_port);
             return -1;
         }
         rtp_raw.len += (payload.len - prev_len);

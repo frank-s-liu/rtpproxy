@@ -140,7 +140,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4, direction);
                 m_internal->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_internal->produceLocalInternalSdp(sdp);
-                m_external->set_local_rtp_network("10.100.126.230", IPV4, INTERNAL_PEER);
+                m_external->set_local_rtp_network("10.100.126.230", IPV4, EXTERNAL_PEER);
                 m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
 
                 local_rtp_port = m_external->getLocalPort();
