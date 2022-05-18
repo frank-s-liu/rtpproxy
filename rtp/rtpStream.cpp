@@ -214,7 +214,7 @@ int RtpStream::checkAndSetRemoteCrypto(Sdp_session* remote_sdp)
     }
     if(m_remote_cry_cxt)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s has rmt_cry_cxt", m_rtpSession->m_session_key->m_cookie);
+        tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "rtp session %s has rmt_cry_cxt", m_rtpSession->m_session_key->m_cookie);
         delete m_remote_cry_cxt;
     }
     m_remote_cry_cxt = new Crypto_context(m_local_crypto_chiper);
