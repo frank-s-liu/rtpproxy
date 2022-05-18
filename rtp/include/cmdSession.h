@@ -56,7 +56,7 @@ public:
     int flushmsgs();
     int process_cookie(const char* cookie, int cookie_len);
     int cache_cookie_resp(const char* cookie, int cookie_len, const char* resp, int resp_len);
-
+    int resp_cookie_cache_with_newcookie(const char* cookie, int cookie_len);
 public:
     SessionKey*               m_session_key;
     cstr                      m_cookie;       // cookie in cmd str, but we don't using this as the session key in none call session or call session

@@ -547,7 +547,7 @@ int CmdSession::process_cookie(const char* cookie, int cookie_len)
                 int ret = sendcmd(m_last_cookie->m_resp.s, m_last_cookie->m_resp.len);
                 if(ret < 0 )
                 {
-                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "retransmit response failed  %s ", m_session_key->m_cookie);
+                    tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "retransmit response failed  [%s] ", m_session_key->m_cookie);
                     rmSocketInfo();
                     return -1;
                 }
@@ -555,6 +555,35 @@ int CmdSession::process_cookie(const char* cookie, int cookie_len)
         }
     }
     return 0;
+}
+
+int CmdSession::resp_cookie_cache_with_newcookie(const char* cookie, int cookie_len)
+{
+    if(m_last_cookie)
+    {
+        int len = m_last_cookie->m_resp.len - m_last_cookie->m_cookie.len + cookie_len;
+        char* newresp = new char[len +1];
+        snprintf(newresp, len+1, "%s%s", cookie, m_last_cookie->m_resp.s+m_last_cookie->m_cookie.len);
+        delete m_last_cookie;
+        m_last_cookie = new LastCookie(cookie, cookie_len);
+        m_last_cookie->m_resp.len = len;   
+        m_last_cookie->m_resp.s = newresp;
+
+        tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"resp_cookie_cache_with_newcookie [%s]", m_last_cookie->m_resp.s);
+        int ret = sendcmd(m_last_cookie->m_resp.s, m_last_cookie->m_resp.len);
+        if(ret < 0 )
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "retransmit response failed  %s ", m_session_key->m_cookie);
+            rmSocketInfo();
+            return -1;
+        }
+        return 0;
+    }
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"no cookie cache in session [%s]", m_session_key->m_cookie);
+        return -1;
+    }
 }
 
 int CmdSession::cache_cookie_resp(const char* cookie, int cookie_len, const char* resp, int resp_len)

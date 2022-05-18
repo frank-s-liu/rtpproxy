@@ -371,9 +371,10 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
     {
         case OFFER_CMD:
         {
-            tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session %s must not process cmd of OFFER_CMD in CmdSessionOfferProcessedState",
+            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s process cmd of OFFER_CMD in CmdSessionOfferProcessedState, response last response",
                                                             m_cs->m_session_key->m_cookie);
-            goto err_ret;
+            m_cs->resp_cookie_cache_with_newcookie(m_cs->m_cookie.s, m_cs->m_cookie.len);
+            return 0;
         }
         case ANSWER_CMD:
         {
