@@ -328,7 +328,8 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     int len = 0;
     resp[0] = '\0';
     processSdpResp_s(sdp, m_cs->m_cookie.s, m_cs->m_cookie.len, resp, sizeof(resp), &offset);
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %s", &resp[offset], g_RTPDirection_str[direction]);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"cmd session [%s] send sdp resp msg [%s] from direction of %s", m_cs->m_session_key->m_cookie, 
+                                                  &resp[offset], g_RTPDirection_str[direction]);
     len = strlen(&resp[offset]);
     ret = m_cs->sendcmd(&resp[offset], len);
     if(0 == ret)
@@ -371,7 +372,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
     {
         case OFFER_CMD:
         {
-            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session %s process cmd of OFFER_CMD in CmdSessionOfferProcessedState, response last response",
+            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] process cmd of OFFER_CMD in CmdSessionOfferProcessedState, response last response",
                                                             m_cs->m_session_key->m_cookie);
             m_cs->resp_cookie_cache_with_newcookie(m_cs->m_cookie.s, m_cs->m_cookie.len);
             return 0;
@@ -388,7 +389,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 sdp = new Sdp_session();
                 sdp->parse(v->c_str(), v->length());
                 std::string dir1("8:external8:internal");
-                std::string dir2("8:internal:8:external");
+                std::string dir2("8:internal8:external");
                 if(*direction == dir1)
                 {
                     dir = EXTERNAL_PEER;
@@ -574,7 +575,8 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     {
         snprintf(resp, sizeof(resp), "%s d3:sdp%d:%s6:result2:oke", m_cs->m_cookie.s, sdp->m_sdp_str.len, sdp->m_sdp_str.s);
     }
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"sdp resp msg [%s] from direction of %d", &resp[offset], direction);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"cmd session [%s] send sdp resp msg [%s] from direction of [%s]", 
+                                                   m_cs->m_session_key->m_cookie, &resp[offset], g_RTPDirection_str[direction]);
     len = strlen(&resp[offset]);
     ret = m_cs->sendcmd(&resp[offset], len);
     if(0 == ret)
@@ -584,7 +586,8 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     }
     else
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"send sdp resp failed, msg [%s] from direction of %d", &resp[offset], direction);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"cmd session [%s] send sdp resp failed, msg [%s] from direction of [%s]", 
+                                                         m_cs->m_session_key->m_cookie, &resp[offset], g_RTPDirection_str[direction]);
         *nextState = NULL;
         return ret;
     }

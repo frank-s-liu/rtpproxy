@@ -298,6 +298,8 @@ int RtpStream::readAndProcess()
     int ret = 0;
     int recv_len = m_socket->recv_from(buf, sizeof(buf));
     uint32_t rtpIndex = 0;
+    RtpStream* sendto = NULL;
+    m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(-1 == recv_len)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session read err, errno:%d", errno);
@@ -345,7 +347,7 @@ int RtpStream::readAndProcess()
     else if(INTERNAL_PEER == m_direction)
     {
         int prev_len = pl_to_decrypt.len;
-        if(0 != m_local_cry_cxt->m_params.crypto_suite->encrypt_rtp(m_local_cry_cxt, rtpHdr, &pl_to_decrypt, rtpIndex))
+        if(0 != sendto->m_local_cry_cxt->m_params.crypto_suite->encrypt_rtp(m_local_cry_cxt, rtpHdr, &pl_to_decrypt, rtpIndex))
         {
             tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp stream decrypt_rtp error");
             return -1;
@@ -364,8 +366,6 @@ int RtpStream::readAndProcess()
     
 sendrtp:
     //
-    RtpStream* sendto = NULL;
-    m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(sendto)
     {
         int len = sendto->writeProcess(rtp_raw);
