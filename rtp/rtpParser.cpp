@@ -276,10 +276,10 @@ const struct RFC_payload rfc_rtp_payload_types[MAX_PAYLOAD_TYPE_INDEX] =
 int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s) 
 {
     struct Rtp_Fixed_header* rtp;
-    //struct Rtp_extension* ext;
+    struct Rtp_extension* ext;
     int rtp_header_size = sizeof(struct Rtp_Fixed_header);
     unsigned char cc, x, v;
-    unsigned char padding_num = 0;
+    //unsigned char padding_num = 0;
     if(s->len < (int)sizeof(struct Rtp_Fixed_header))
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package is too short");
@@ -311,7 +311,12 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package cc parsing error cc: %d", cc);
         goto error;
     }
-    rtp_header_size += x * sizeof(struct Rtp_extension);
+    if(x)
+    {
+        ext = (struct Rtp_extension*)(s->s + rtp_header_size);
+        int length = ntohs(ext->length) *4; // byte
+        rtp_header_size += (4+length);
+    }
     if(s->len <  rtp_header_size)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package cc parsing error extension: %d", x);
@@ -329,7 +334,7 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
     //{
     //    padding_num = s->s[s->len-1]; // the last byte is the padding number
     //}
-    payload_out->len = s->len - rtp_header_size - padding_num;
+    payload_out->len = s->len - rtp_header_size;// - padding_num;
     return 0;
 
 error:
