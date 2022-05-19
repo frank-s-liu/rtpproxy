@@ -5,6 +5,7 @@
 #include "rtp.h"
 #include "port_q.h"
 #include "rtpLB.h"
+#include "crypto.h"
 
 
 #include <assert.h>
@@ -205,6 +206,7 @@ int initRTP(const char* config_file)
         pushPort(internal_ports_q, start);
         start++;
     }
+    crypto_suit_init();
     //ControlProcess
     ControlProcess::getInstance()->start();
     init_rtp_sendRecv_process(s_rtp_config.rtpThreads);
