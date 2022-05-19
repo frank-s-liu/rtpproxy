@@ -280,6 +280,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
                 goto err_ret;
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            m_cs->m_state_check_count++;
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
@@ -343,6 +344,7 @@ int CmdSessionOfferProcessingState::processSdpResp(Sdp_session* sdp, RTPDirectio
     if(0 == ret)
     {
         *nextState = new CmdSessionOfferProcessedState(m_cs);
+        m_cs->m_state_check_count++;
         m_cs->cache_cookie_resp(m_cs->m_cookie.s, m_cs->m_cookie.len, &resp[offset], len);
     }
     else
@@ -479,8 +481,8 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 goto err_ret;
             }
             *nextState = new CmdSessionAnswerProcessingState(m_cs);
-            StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             m_cs->m_state_check_count++;
+            StateCheckArgs* args = new StateCheckArgs(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             args->state = m_cs->m_state_check_count;
             if(0 != add_task(1600, fireArgs2controlProcess_s, args))
             {
@@ -502,6 +504,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
                 goto err_ret;
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            m_cs->m_state_check_count++;
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
@@ -590,6 +593,7 @@ int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextS
                 goto err_ret;
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            m_cs->m_state_check_count++;
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
@@ -641,6 +645,7 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     if(0 == ret)
     {
         *nextState = new CmdSessionAnswerProcessedState(m_cs);
+        m_cs->m_state_check_count++;
         m_cs->cache_cookie_resp(m_cs->m_cookie.s, m_cs->m_cookie.len, &resp[offset], len);
     }
     else
@@ -743,6 +748,7 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
                 goto err_ret;
             }
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
+            m_cs->m_state_check_count++;
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
             {
