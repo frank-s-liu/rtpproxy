@@ -10,6 +10,7 @@
 #include "rtpHeader.h"
 #include "base64.h"
 #include "util.h"
+#include "log.h"
 
 static int aes_gcm_session_key_init(class Crypto_context *c);
 static int evp_session_key_cleanup(class Crypto_context *c);
@@ -262,18 +263,19 @@ static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cs
     return 0;
 }
 
-static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r, cstr* s, uint64_t idx) 
+static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r_hdr, cstr* srtp_load, uint64_t idx) 
 {
     union aes_gcm_rtp_iv iv;
     int len, plaintext_len;
 
-    if (s->len < 16)
+    if(srtp_load->len < 16)
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "srtp payload size is too short %d", srtp_load->len);
         return -1;
     }
     memcpy(iv.bytes, c->m_session_salt, 12);
 
-    iv.ssrc ^= r->ssrc;
+    iv.ssrc ^= r_hdr->ssrc;
     iv.roq ^= htonl((idx & 0x00ffffffff0000ULL) >> 16);
     iv.seq ^= htons(idx & 0x00ffffULL);
 
@@ -281,17 +283,27 @@ static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r, cs
                     (const unsigned char*) c->m_session_key, iv.bytes);
 
     // nominally 12 bytes of AAD
-    EVP_DecryptUpdate(c->m_session_key_ctx[0], NULL, &len, (const unsigned char*)r, s->s - (char *)r);
-
+    if(!EVP_DecryptUpdate(c->m_session_key_ctx[0], NULL, &len, (const unsigned char*)r_hdr, srtp_load->s - (char*)r_hdr))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "EVP_DecryptUpdate failed, index [%lu]", idx);
+    }
     // decrypt partial buffer - the last 16 bytes are the tag
-    EVP_DecryptUpdate(c->m_session_key_ctx[0], (unsigned char *) s->s, &len,
-                    (const unsigned char*) s->s, s->len-16);
+    if(!EVP_DecryptUpdate(c->m_session_key_ctx[0], (unsigned char *) srtp_load->s, &len,
+                    (const unsigned char*) srtp_load->s, srtp_load->len-16))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "EVP_DecryptUpdate failed, index [%lu]", idx);
+    }
+    //tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"srtp lad size %d, rtp load size %d ", srtp_load->len-16, len);
+
     plaintext_len = len;
-    EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_SET_TAG, 16, s->s + s->len-16);
-    if (!EVP_DecryptFinal_ex(c->m_session_key_ctx[0], (unsigned char*) s->s+len, &len))
-            return 1;
+    EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_SET_TAG, 16, srtp_load->s + (srtp_load->len-16));
+    if(!EVP_DecryptFinal_ex(c->m_session_key_ctx[0], (unsigned char*) srtp_load->s+len, &len))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "EVP_DecryptFinal_ex failed, index [%lu]", idx);
+        return -1;
+    }
     plaintext_len += len;
-    s->len = plaintext_len;
+    srtp_load->len = plaintext_len;
 
     return 0;
 }
@@ -345,6 +357,7 @@ int Crypto_context::set_crypto_param(Attr_crypto* a)
 {
     int ret = 0;
     unsigned char b64decode[256];
+    cstr key;
     if(a->mki_len)
     {
         m_params.mki = new unsigned char[a->mki_len+1]; // add mki_len byte into srtp package, the value is a->mki_v in network order
@@ -380,5 +393,27 @@ int Crypto_context::set_crypto_param(Attr_crypto* a)
     }
     memcpy(m_params.master_key, b64decode, m_params.crypto_suite->master_key_len);
     memcpy(m_params.master_salt, &b64decode[m_params.crypto_suite->master_key_len], m_params.crypto_suite->master_salt_len);
+
+    key.s = m_session_key;
+    key.len = m_params.crypto_suite->session_key_len;
+    if(crypto_gen_session_key(this, &key, 0x00, 6))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key session key failed");
+        return -1;
+    }
+    key.s = m_session_auth_key;
+    key.len = m_params.crypto_suite->srtp_auth_key_len;
+    if(crypto_gen_session_key(this, &key, 0x01, 6))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key auth key failed");
+        return -1;
+    }
+    key.s = m_session_salt;
+    key.len = m_params.crypto_suite->session_salt_len;
+    if(crypto_gen_session_key(this, &key, 0x02, 6))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key salt key failed");
+        return -1;
+    }
     return 0;
 }
