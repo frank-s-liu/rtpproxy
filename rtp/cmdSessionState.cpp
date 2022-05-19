@@ -96,7 +96,7 @@ int CmdSessionState::checkState(StateCheckArgs* stateArg)
 {
     if(stateArg->state >= m_cs->m_state_check_count)
     {
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"cmd session %s check state failed in cmd session state of %s", m_cs->m_session_key->m_cookie, StateName[m_state]);
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__,"cmd session [%s] check state failed in cmd session state of [%s]", m_cs->m_session_key->m_cookie, StateName[m_state]);
         return -1;
     }
     return 0;

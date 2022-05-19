@@ -27,6 +27,7 @@ public:
     int produceLocalInternalSdp(Sdp_session* sdp);
     int readAndProcess();
     int writeProcess(cstr rtp);
+    int saveLocalSdpStr(Sdp_session* sdp);
 private:
     int processExternalRtp();
     int processInternalRtp();

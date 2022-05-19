@@ -88,6 +88,7 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                     goto errorProcess;
                 }
                 ret = sdp->removeCryptoAttr();
+                m_internal->saveLocalSdpStr(sdp);
             }
             else
             {

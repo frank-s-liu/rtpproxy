@@ -194,6 +194,26 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     return 0;
 }
 
+int RtpStream::saveLocalSdpStr(Sdp_session* sdp)
+{
+    int ret = 0;
+    if(m_local_sdp.len >0)
+    {
+        delete[] m_local_sdp.s;
+    }
+    m_local_sdp.s = new char[MAX_SDP_LEN];
+    m_local_sdp.len = MAX_SDP_LEN;
+    ret = sdp->serialize(m_local_sdp.s, &m_local_sdp.len);
+    if(ret != 0)
+    {
+        delete[] m_local_sdp.s;
+        m_local_sdp.s = NULL;
+        m_local_sdp.len = 0;
+        return -1;
+    }
+    return 0;
+}
+
 int RtpStream::checkAndSetRemoteCrypto(Sdp_session* remote_sdp)
 {
     Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(m_local_crypto_chiper);
