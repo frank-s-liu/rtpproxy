@@ -638,8 +638,8 @@ int CmdSessionAnswerProcessingState::processSdpResp(Sdp_session* sdp, RTPDirecti
     {
         snprintf(resp, sizeof(resp), "%s d3:sdp%d:%s6:result2:oke", m_cs->m_cookie.s, sdp->m_sdp_str.len, sdp->m_sdp_str.s);
     }
-    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"cmd session [%s] send sdp resp msg [%s] from direction of [%s]", 
-                                                   m_cs->m_session_key->m_cookie, &resp[offset], g_RTPDirection_str[direction]);
+    tracelog("RTP", DEBUG_LOG, __FILE__, __LINE__,"cmd session [%s] send sdp resp msg [%s] from direction of [%s] in state [%s]", 
+                                                   m_cs->m_session_key->m_cookie, &resp[offset], g_RTPDirection_str[direction], StateName[m_state]);
     len = strlen(&resp[offset]);
     ret = m_cs->sendcmd(&resp[offset], len);
     if(0 == ret)

@@ -1203,7 +1203,7 @@ void Sdp_session::destroySdp()
     }
     if(m_sdp_str.len)
     {
-        delete[] m_sdp_str.s;
+        // don't delete here
         m_sdp_str.s = NULL;
         m_sdp_str.len = 0;
     }

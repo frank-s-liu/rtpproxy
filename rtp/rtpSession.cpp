@@ -103,8 +103,6 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 sdp->destroySdp();
                 sdp->m_sdp_str.len = m_internal->m_local_sdp.len;
                 sdp->m_sdp_str.s = m_internal->m_local_sdp.s;
-                m_internal->m_local_sdp.len = 0;
-                m_internal->m_local_sdp.s = NULL;
             }
             
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
@@ -156,8 +154,6 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
                 sdp->destroySdp();
                 sdp->m_sdp_str.len = m_external->m_local_sdp.len;
                 sdp->m_sdp_str.s = m_external->m_local_sdp.s;
-                m_external->m_local_sdp.len = 0;
-                m_external->m_local_sdp.s = NULL;
             }
 
             SDPRespArgs* arg = new SDPRespArgs(m_session_key->m_cookie, m_session_key->m_cookie_len);
