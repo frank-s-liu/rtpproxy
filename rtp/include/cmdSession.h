@@ -60,6 +60,7 @@ public:
 public:
     SessionKey*               m_session_key;
     cstr                      m_cookie;       // cookie in cmd str, but we don't using this as the session key in none call session or call session
+    unsigned int              m_state_check_count;
 protected:
     CmdSessionState*          m_css;
 private:

@@ -142,6 +142,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"already has one m_remote_cry_cxt for session %s", m_rtpSession->m_session_key->m_cookie);
         delete m_remote_cry_cxt;
     }
+    m_local_crypto_tag = a->tag;
     m_remote_cry_cxt = new Crypto_context(chiper);
     m_remote_cry_cxt->set_crypto_param((Attr_crypto*)a);
 
@@ -177,9 +178,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     a->replaceKeyParamter((char*)base64key, strlen((const char*)base64key));
     if(m_local_sdp.len >0)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s has local external sdp str",
-                                                           m_rtpSession->m_session_key->m_cookie);
-        return -1;
+        delete[] m_local_sdp.s;
     }
     m_local_sdp.s = new char[MAX_SDP_LEN];
     m_local_sdp.len = MAX_SDP_LEN;
@@ -200,16 +199,16 @@ int RtpStream::checkAndSetRemoteCrypto(Sdp_session* remote_sdp)
     Attr_crypto* a = remote_sdp->getcryptoAttrFromAudioMedia(m_local_crypto_chiper);
     if(!a)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s no  chip suit %s",
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session [%s] no  chip suit %s",
                                                           m_rtpSession->m_session_key->m_cookie, 
                                                           g_crypto_suite_str[m_local_crypto_chiper]);
         return -1;
     }
     if(a->tag != m_local_crypto_tag)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s chip suit %s has wrong tag",
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session [%s] chip suit %s has wrong tag %d %d",
                                                           m_rtpSession->m_session_key->m_cookie, 
-                                                          g_crypto_suite_str[m_local_crypto_chiper]);
+                                                          g_crypto_suite_str[m_local_crypto_chiper], a->tag, m_local_crypto_tag);
         return -1;
     }
     if(m_remote_cry_cxt)

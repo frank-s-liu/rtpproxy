@@ -45,7 +45,7 @@ public:
     virtual int processCmd();
 public:
     char*         cs_key; // call id
-    unsigned char state;
+    unsigned int  state;
 };
 
 class SendCMDArgs : public Args

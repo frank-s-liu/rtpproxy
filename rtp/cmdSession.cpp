@@ -110,6 +110,7 @@ CmdSession::CmdSession()
     m_last_cookie = NULL;
     m_cookie.len = 0;
     m_cookie.s = NULL;
+    m_state_check_count = 0;
 }
 
 CmdSession::CmdSession(char* cookie)
@@ -120,6 +121,7 @@ CmdSession::CmdSession(char* cookie)
     m_last_cookie = NULL;
     m_cookie.s = NULL;
     m_cookie.len = 0;
+    m_state_check_count = 0;
 }
 
 CmdSession::~CmdSession()
