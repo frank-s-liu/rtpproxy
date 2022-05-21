@@ -274,6 +274,7 @@ int DeletRtp::processCmd()
     else
     {
         tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete rtp session[%s]", call_id.s);
+        process->popRtpSession(sk);
         delete rtpsession;
     }
     delete sk;
