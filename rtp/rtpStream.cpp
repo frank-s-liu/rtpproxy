@@ -348,6 +348,11 @@ int RtpStream::readAndProcess()
 
     if(EXTERNAL_PEER == m_direction)
     {
+        if(!m_remote_cry_cxt)
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"still not receive remote sdp for session[%s] [EXTERNAL] stream", m_rtpSession->m_session_key->m_cookie);
+            return 0;
+        }
         if (0 != srtp_payloads(&to_auth, &pl_to_decrypt, &auth_tag,
                             m_remote_cry_cxt->m_params.session_params.unauthenticated_srtp ? 0 : m_remote_cry_cxt->m_params.crypto_suite->srtp_auth_tag_len,
                             NULL, m_remote_cry_cxt->m_params.mki_len,
