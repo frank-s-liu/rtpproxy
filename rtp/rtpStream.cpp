@@ -328,6 +328,16 @@ int RtpStream::readAndProcess()
     int recv_len = m_socket->recv_from(buf, sizeof(buf));
     uint32_t rtpIndex = 0;
     RtpStream* sendto = NULL;
+    auth_tag.len = 0;
+    auth_tag.s = NULL;
+    pl_to_decrypt.len = 0;
+    pl_to_decrypt.s = NULL;
+    to_auth.len = 0;
+    to_auth.s = NULL;
+    rtp_raw.len = 0;
+    rtp_raw.s = NULL;
+    payload.len = 0;
+    payload.s = NULL;
     m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(-1 == recv_len)
     {
