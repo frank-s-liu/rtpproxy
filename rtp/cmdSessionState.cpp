@@ -146,6 +146,7 @@ int CmdSessionInitState::processCMD(int cmd, CmdSessionState** nextState)
            std::string* direction = NULL;
            m_cs->getCmdValueByStrKey("sdp", &v);
            m_cs->getCmdValueByStrKey("direction", &direction);
+           tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_cs->m_session_key->m_cookie, m_cs->m_cookie.s, CMD_STR[cmd]);
            if(v && direction)
            {
                RTPDirection dir = MAX_DIRECTION;
@@ -258,6 +259,7 @@ int CmdSessionOfferProcessingState::processCMD(int cmd, CmdSessionState** nextSt
 {
     int ret = 0;
     rtpSendRecvThreadArgs* rtparg = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_cs->m_session_key->m_cookie, m_cs->m_cookie.s, CMD_STR[cmd]);
     switch(cmd)
     {
         case OFFER_CMD:
@@ -379,6 +381,7 @@ int CmdSessionOfferProcessedState::processCMD(int cmd, CmdSessionState** nextSta
     Sdp_session* sdp = NULL;
     SDPArgs* sdpArg = NULL;
     rtpSendRecvThreadArgs*  rtparg = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_cs->m_session_key->m_cookie, m_cs->m_cookie.s, CMD_STR[cmd]);
     switch (cmd)
     {
         case OFFER_CMD:
@@ -571,6 +574,7 @@ int CmdSessionAnswerProcessingState::processCMD(int cmd, CmdSessionState** nextS
 {
     int ret = 0;
     rtpSendRecvThreadArgs* rtparg = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_cs->m_session_key->m_cookie, m_cs->m_cookie.s, CMD_STR[cmd]);
     switch(cmd)
     {
         case OFFER_CMD:
@@ -678,6 +682,7 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
     int ret = 0;
     rtpSendRecvThreadArgs*  rtparg = NULL;
     Sdp_session* sdp = NULL;
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_cs->m_session_key->m_cookie, m_cs->m_cookie.s, CMD_STR[cmd]);
     switch (cmd)
     {
         case OFFER_CMD:

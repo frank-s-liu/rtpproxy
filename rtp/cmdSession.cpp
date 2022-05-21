@@ -364,7 +364,7 @@ int CmdSession::process_cmd(char* cmdstr)
     parsingCmd(cmdstr, cmdlen);
     cmd = getCmd();
     CmdSessionState* css = NULL;
-    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_session_key->m_cookie,m_cookie.s, CMD_STR[cmd]);
+    //tracelog("RTP", DEBUG_LOG,__FILE__, __LINE__, "cmd session [%s] cookie[%s] is processing cmd [%s]", m_session_key->m_cookie,m_cookie.s, CMD_STR[cmd]);
     ret =m_css->processCMD(cmd, &css);
     if(0 == ret && css)
     {
