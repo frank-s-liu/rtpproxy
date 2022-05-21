@@ -738,6 +738,7 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
         }
         case DELETE_CMD:
         {
+            char del_resp[1024];
             rtparg = new DeletRtp(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
             if(0 != processRTPArgs(rtparg, m_cs->m_session_key->m_cookie_id))
             {
@@ -747,10 +748,17 @@ int CmdSessionAnswerProcessedState::processCMD(int cmd, CmdSessionState** nextSt
                 rtparg = NULL;
                 goto err_ret;
             }
+            snprintf(del_resp, sizeof(del_resp), "%s d6:result2:oke", m_cs->m_cookie.s);
+            ret = m_cs->sendcmd(del_resp, strlen(del_resp));       
+            if(0 != ret)
+            {
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "DELETE response send out failed");
+            }      
+
             *nextState = new CmdSessionDeleteState(m_cs); // to make sure can process the re-transimitd cmd
             m_cs->m_state_check_count++;
             Args* delCmdArg = new DeleteCmdArg(m_cs->m_session_key->m_cookie, m_cs->m_session_key->m_cookie_len);
-            if(0 != add_task(4000, fireArgs2controlProcess_s, delCmdArg))
+            if(0 != add_task(32000, fireArgs2controlProcess_s, delCmdArg)) // after 32s, delete cmd session
             {
                 delete delCmdArg;
                 delCmdArg = NULL;
