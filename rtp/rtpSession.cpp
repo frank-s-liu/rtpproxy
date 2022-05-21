@@ -25,10 +25,6 @@ RtpSession::RtpSession(SessionKey* key, RtpProcess* process)
 
 RtpSession::~RtpSession()
 {
-    if(m_session_key)
-    {
-        delete m_session_key;
-    }
     m_rtp_sendrecv_process = NULL;
     if(m_external)
     {
@@ -39,6 +35,10 @@ RtpSession::~RtpSession()
     {
         delete m_internal;
         m_internal = NULL;
+    }
+    if(m_session_key)
+    {
+        delete m_session_key;
     }
 }
 

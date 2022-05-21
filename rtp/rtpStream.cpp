@@ -79,7 +79,6 @@ RtpStream::~RtpStream()
         delete[] m_addr_peer_ip;
         m_addr_peer_ip = NULL;
     }
-    tracelog("RTP", INFO_LOG, __FILE__, __LINE__,"destroy [%s] RtpStream instance for session [%s]", g_RTPDirection_str[m_direction], m_rtpSession->m_session_key->m_cookie);
 }
 
 int RtpStream::produceLocalInternalSdp(Sdp_session* remote_sdp)
