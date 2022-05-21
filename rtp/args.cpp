@@ -164,6 +164,7 @@ int SDPArgs::processCmd()
     RtpSession* rtpsession = process->getRtpSession(sk);
     if(!rtpsession)
     {
+        tracelog("RTP", INFO_LOG,__FILE__, __LINE__,"create new RTP session[%s]", call_id.s);
         rtpsession = new RtpSession(sk, process);
     }
     else
