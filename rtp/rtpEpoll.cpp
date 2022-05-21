@@ -48,7 +48,7 @@ int TcpSocketInfo::sendMsg(const char* buf, int len)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd failed becauseof socket fd is not initialed");
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "send bencode cmd failed because of socket fd is not initialed");
         ret = -1;
     }
     return ret;
