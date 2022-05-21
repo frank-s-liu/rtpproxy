@@ -29,7 +29,7 @@ static void randomString(unsigned char* buf, int buf_size)
     }
 }
 
-RtpStream::RtpStream(RtpSession* rtp_session)
+RtpStream::RtpStream(RtpSession* rtp_session, RTPDirection direction)
 {
     m_socket = NULL;
     m_rtpSession = rtp_session;
@@ -38,7 +38,7 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_local_cry_cxt = NULL;
     m_local_sdp.s = NULL;
     m_local_sdp.len = 0;
-    m_direction = MAX_DIRECTION;
+    m_direction = direction;
     m_local_crypto_tag = 0;
     m_local_crypto_chiper = AEAD_AES_256_GCM;
     m_data = NULL;
@@ -46,10 +46,12 @@ RtpStream::RtpStream(RtpSession* rtp_session)
     m_addr_peer_port = 0;
     memset(&m_peer_ssrc_ctx, 0, sizeof(m_peer_ssrc_ctx));
     memset(&m_local_ssrc_ctx, 0, sizeof(m_local_ssrc_ctx));
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__,"create [%s] RtpStream instance for session [%s]", g_RTPDirection_str[m_direction], m_rtpSession->m_session_key->m_cookie);
 }
 
 RtpStream::~RtpStream()
 {
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__,"destroy [%s] RtpStream instance for session [%s]", g_RTPDirection_str[m_direction], m_rtpSession->m_session_key->m_cookie);
     if(m_socket)
     {
         delete m_socket;
@@ -77,6 +79,7 @@ RtpStream::~RtpStream()
         delete[] m_addr_peer_ip;
         m_addr_peer_ip = NULL;
     }
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__,"destroy [%s] RtpStream instance for session [%s]", g_RTPDirection_str[m_direction], m_rtpSession->m_session_key->m_cookie);
 }
 
 int RtpStream::produceLocalInternalSdp(Sdp_session* remote_sdp)
@@ -142,6 +145,7 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"already has one m_remote_cry_cxt for session %s", m_rtpSession->m_session_key->m_cookie);
         delete m_remote_cry_cxt;
     }
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__,"create [%s] m_remote_cry_cxt for session [%s]", g_RTPDirection_str[m_direction], m_rtpSession->m_session_key->m_cookie);
     m_local_crypto_tag = a->tag;
     m_remote_cry_cxt = new Crypto_context(chiper);
     m_remote_cry_cxt->set_crypto_param((Attr_crypto*)a);
@@ -288,7 +292,7 @@ unsigned short RtpStream::getLocalPort()
     return m_socket->getlocalPort();
 }
 
-int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirection direction)
+int RtpStream::set_local_rtp_network(const char* local_ip, int type)
 {
     if(type == IPV4)
     {
@@ -300,13 +304,12 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type, RTPDirectio
         {
             delete m_socket;
         }
-        m_socket = new UdpSrvSocket(local_ip, direction);
+        m_socket = new UdpSrvSocket(local_ip, m_direction);
         if(0 == m_socket->getStatus())
         {
             return -1;
         }
         m_socket->setnoblock();
-        m_direction = direction;
         m_socket->add_read_event2EpollLoop(epoll_fd, m_data);
         return 0;
     }

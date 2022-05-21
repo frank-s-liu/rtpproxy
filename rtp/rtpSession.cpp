@@ -69,13 +69,13 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             }
             if(!m_external) // both NULL
             {
-                m_external = new RtpStream(this);
-                m_internal = new RtpStream(this);;
-                m_external->set_local_rtp_network("10.100.126.230", IPV4, direction);
+                m_external = new RtpStream(this, EXTERNAL_PEER);
+                m_internal = new RtpStream(this, INTERNAL_PEER);;
+                m_external->set_local_rtp_network("10.100.126.230", IPV4);
                 m_external->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_external->chooseCrypto2Local(sdp, AEAD_AES_256_GCM);
 
-                m_internal->set_local_rtp_network("10.100.125.147", IPV4, INTERNAL_PEER);
+                m_internal->set_local_rtp_network("10.100.125.147", IPV4);
                 m_internal->getLocalAddress(local_internal_address, sizeof(local_internal_address));
                 local_rtp_port = m_internal->getLocalPort();
                 sdp->replaceOrigin(local_internal_address, strlen(local_internal_address));
@@ -134,12 +134,12 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             }
             if(!m_internal) // both NULL
             {
-                m_internal = new RtpStream(this);
-                m_external = new RtpStream(this);;
-                m_internal->set_local_rtp_network("10.100.125.147", IPV4, direction);
+                m_internal = new RtpStream(this, INTERNAL_PEER);
+                m_external = new RtpStream(this, EXTERNAL_PEER);
+                m_internal->set_local_rtp_network("10.100.125.147", IPV4);
                 m_internal->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_internal->produceLocalInternalSdp(sdp);
-                m_external->set_local_rtp_network("10.100.126.230", IPV4, EXTERNAL_PEER);
+                m_external->set_local_rtp_network("10.100.126.230", IPV4);
                 m_external->getLocalAddress(local_external_address, sizeof(local_external_address));
 
                 local_rtp_port = m_external->getLocalPort();

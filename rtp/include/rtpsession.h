@@ -13,9 +13,9 @@ class RtpProcess;
 class RtpStream
 {
 public:
-    RtpStream(RtpSession* rtpsession);
+    RtpStream(RtpSession* rtpsession, RTPDirection direction);
     virtual ~RtpStream();
-    int set_local_rtp_network(const char* ip, int net_type, RTPDirection direction);
+    int set_local_rtp_network(const char* ip, int net_type);
     int set_remote_peer_rtp_network(const char* ip, unsigned short port);
     int send(const unsigned char* buf, int len);
     int recv(unsigned char* buf, int len);
