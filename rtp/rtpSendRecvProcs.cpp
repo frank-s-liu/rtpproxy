@@ -109,7 +109,8 @@ void* RtpProcess::run()
                                 {
                                     Args* arg = pipeArg->args_data;
                                     arg->processCmd();
-                                    delete pipeArg;   
+                                    delete pipeArg;
+                                    break; // must break here, because of may delete socket when processing args
                                 }
                                 else
                                 {

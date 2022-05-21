@@ -318,15 +318,15 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type)
 int RtpStream::readAndProcess()
 {
     char buf[2048];
+    int ret = 0;
+    uint32_t rtpIndex = 0;
+    int recv_len = 0;
     Rtp_Fixed_header* rtpHdr = NULL;
     cstr payload;
     cstr rtp_raw;
     cstr to_auth;
     cstr pl_to_decrypt;
     cstr auth_tag;
-    int ret = 0;
-    int recv_len = m_socket->recv_from(buf, sizeof(buf));
-    uint32_t rtpIndex = 0;
     RtpStream* sendto = NULL;
     auth_tag.len = 0;
     auth_tag.s = NULL;
@@ -338,6 +338,7 @@ int RtpStream::readAndProcess()
     rtp_raw.s = NULL;
     payload.len = 0;
     payload.s = NULL;
+    recv_len = m_socket->recv_from(buf, sizeof(buf));
     m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(-1 == recv_len)
     {
