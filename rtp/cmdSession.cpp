@@ -204,7 +204,7 @@ int CmdSession::sendcmd(const char* cmdmsg, int len)
                 }
                 else
                 {
-                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info", m_session_key->m_cookie);
+                    tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "cmd session[%s] send cmd failed, de-attach socket info, errno [%d]", m_session_key->m_cookie, errno);
                     rmSocketInfo();
                     ret = -1;
                 }
