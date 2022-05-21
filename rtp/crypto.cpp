@@ -1,5 +1,6 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/err.h>
 #include <string.h>  // memcpy
 #include <assert.h>
 #include <arpa/inet.h>
@@ -64,6 +65,7 @@ struct crypto_suite s_crypto_suites[MAX_CRYPTO_SUIT] =
 void crypto_suit_init() 
 {
     struct crypto_suite *cs;
+    ERR_load_crypto_strings();
     for (unsigned int i = 0; i < MAX_CRYPTO_SUIT; i++) 
     {
         cs = &s_crypto_suites[i];
@@ -126,6 +128,7 @@ static void aes_ctr(unsigned char *out, cstr* in, EVP_CIPHER_CTX* ecc, const uns
     uintptr_t pi_addr, qi_addr;
     if (!ecc)
     {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"in function of aes_ctr,  ecc is nuLL");
         return;
     }
     memcpy(ivx, iv, 16);
@@ -142,13 +145,12 @@ static void aes_ctr(unsigned char *out, cstr* in, EVP_CIPHER_CTX* ecc, const uns
     {
         EVP_EncryptUpdate(ecc, key_block, &outlen, ivx, 16);
         assert(outlen == 16);
-
         qi[0] = pi[0] ^ ki[0];
         qi[1] = pi[1] ^ ki[1];
         left -= 16;
         qi += 2;
         pi += 2;
-
+        
         for (i = 15; i >= 0; i--) 
         {
             ivx[i]++;
@@ -221,7 +223,24 @@ int crypto_gen_session_key(Crypto_context *c, cstr *out, unsigned char label, in
     ctx = EVP_CIPHER_CTX_new();
     EVP_EncryptInit_ex(ctx, c->m_params.crypto_suite->aes_evp, NULL, c->m_params.master_key, NULL);
     aes_ctr(union_out.o, &c_in, ctx, iv);
-    EVP_EncryptFinal_ex(ctx, block, &len);
+    if(!EVP_EncryptFinal_ex(ctx, block, &len))
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key failed");
+    }
+#if 0
+    else
+    {
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, 
+                 "crypto_gen_session_key success, master key [%02x%02x%02x%02x] "
+                 "master salt[%02x%02x%02x%02x]-[%02x%02x%02x%02x]-[%02x%02x%02x%02x] lable %d, length %d, key[%02x%02x%02x%02x], block [%02x%02x%02x%02x], iv[%02x%02x%02x%02x]",
+                 c->m_params.master_key[0], c->m_params.master_key[1], c->m_params.master_key[2], c->m_params.master_key[3],
+                 c->m_params.master_salt[0], c->m_params.master_salt[1], c->m_params.master_salt[2], c->m_params.master_salt[3],
+                 c->m_params.master_salt[4], c->m_params.master_salt[5], c->m_params.master_salt[6], c->m_params.master_salt[7],
+                 c->m_params.master_salt[8], c->m_params.master_salt[9], c->m_params.master_salt[10], c->m_params.master_salt[11],
+                 label, out->len, union_out.o[0], union_out.o[1], union_out.o[2], union_out.o[3], 
+                 block[0], block[1], block[2], block[3], iv[0], iv[1], iv[2], iv[3]);
+    }
+#endif
     EVP_CIPHER_CTX_free(ctx);
 
     memcpy(out->s, union_out.o, out->len);
@@ -253,8 +272,10 @@ static int aes_gcm_encrypt_rtp(Crypto_context *c, struct Rtp_Fixed_header* r, cs
     EVP_EncryptUpdate(c->m_session_key_ctx[0], (unsigned char*) s->s, &len,
                     (const unsigned char*) s->s, s->len);
     ciphertext_len = len;
-    if (!EVP_EncryptFinal_ex(c->m_session_key_ctx[0], (unsigned char *) s->s+len, &len))
-            return 1;
+    if(!EVP_EncryptFinal_ex(c->m_session_key_ctx[0], (unsigned char *) s->s+len, &len))
+    {
+        return 1;
+    }
     ciphertext_len += len;
     // append the tag to the str buffer
     EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_GET_TAG, 16, s->s+ciphertext_len);
@@ -293,12 +314,16 @@ static int aes_gcm_decrypt_rtp(Crypto_context* c, struct Rtp_Fixed_header* r_hdr
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "EVP_DecryptUpdate failed, index [%lu]", idx);
     }
-    //tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"srtp lad size %d, rtp load size %d ", srtp_load->len-16, len);
+    //tracelog("RTP", WARNING_LOG, __FILE__, __LINE__,"srtp lad size %d, rtp load size %d , index[%lu]", srtp_load->len-16, len, idx);
 
     plaintext_len = len;
     EVP_CIPHER_CTX_ctrl(c->m_session_key_ctx[0], EVP_CTRL_GCM_SET_TAG, 16, srtp_load->s + (srtp_load->len-16));
+    //ERR_clear_error();
     if(!EVP_DecryptFinal_ex(c->m_session_key_ctx[0], (unsigned char*) srtp_load->s+len, &len))
     {
+        //unsigned long ulErr = ERR_get_error();
+        //char szErrMsg[1024] = {0};
+        //ERR_error_string(ulErr,szErrMsg);
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "EVP_DecryptFinal_ex failed, index [%lu]", idx);
         return -1;
     }
@@ -401,12 +426,15 @@ int Crypto_context::set_crypto_param(Attr_crypto* a)
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key session key failed");
         return -1;
     }
-    key.s = m_session_auth_key;
-    key.len = m_params.crypto_suite->srtp_auth_key_len;
-    if(crypto_gen_session_key(this, &key, 0x01, 6))
+    if(m_params.crypto_suite->srtp_auth_key_len)
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key auth key failed");
-        return -1;
+        key.s = m_session_auth_key;
+        key.len = m_params.crypto_suite->srtp_auth_key_len;
+        if(crypto_gen_session_key(this, &key, 0x01, 6))
+        {
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "crypto_gen_session_key auth key failed");
+            return -1;
+        }
     }
     key.s = m_session_salt;
     key.len = m_params.crypto_suite->session_salt_len;
