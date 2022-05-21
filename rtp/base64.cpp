@@ -168,6 +168,7 @@ int base64Decode(const char* src, int in_size, unsigned char* out, int out_size)
         }
         else if(src[index] == 61)
         {
+            outindex += 1;
             break;
         }
         else
@@ -198,6 +199,7 @@ int base64Decode(const char* src, int in_size, unsigned char* out, int out_size)
         }
         else if(src[index] == 61)
         {
+            outindex +=2;
             break;
         }
         else
