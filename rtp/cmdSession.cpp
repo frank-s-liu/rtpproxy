@@ -362,7 +362,8 @@ void CmdSession::rmSocketInfo()
                                                       remote_ip, remote_port, m_session_key?m_session_key->m_cookie:"still no session key", m_socket_data->m_session_count);
         if(0 == m_socket_data->m_session_count)
         {
-            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session [%s] ", m_session_key?m_session_key->m_cookie:"still no session key");
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info[%s:%d]  in cmd session [%s] ", 
+                                                           remote_ip, remote_port, m_session_key?m_session_key->m_cookie:"still no session key");
             delete m_socket_data;
         }
         m_socket_data = NULL;
