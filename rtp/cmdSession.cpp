@@ -339,7 +339,17 @@ void CmdSession::setSocketInfo(Epoll_data* data)
 {
     char remote_ip[64];
     unsigned short remote_port;
-    rmSocketInfo();
+    if(m_socket_data)
+    {
+        if(data == m_socket_data)
+        {
+            return;
+        }
+        else
+        {
+            rmSocketInfo();
+        }
+    }
     m_socket_data = data;
     m_socket_data->m_session_count++;
     data->m_socket->getRemoteAddress(remote_ip, sizeof(remote_ip));

@@ -592,12 +592,22 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
         }
         else
         {
+            char remote_ip[64];
+            //char legacy_ip[64];
+            unsigned short remote_port;
+            //unsigned short legacy_port;
+            m_socket->getRemoteAddress(remote_ip, sizeof(remote_ip));
+            m_socket->getRemotePort(&remote_port);
+            //cs->m_socket_data->m_socket->getRemoteAddress(legacy_ip, sizeof(legacy_ip));
+            //cs->m_socket_data->m_socket->getRemotePort(&legacy_port);
             if(cmd_session_type == CALL_SESSION)
             {
                 ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
             }
             cs->resetCookie(start, cookie-start);
-            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "cmd session [%s] cookie[%s] will process cmd", sk->m_cookie, cs->m_cookie.s);
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "cmd session [%s] cookie[%s] receive  cmd from connection[%s:%d]", 
+                                                          sk->m_cookie, cs->m_cookie.s, remote_ip, remote_port);
+            cs->setSocketInfo(this);
             delete sk;
         }
         if(0 == ret)
