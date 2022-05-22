@@ -27,6 +27,7 @@ static void randomString(unsigned char* buf, int buf_size)
         int i = rand()%sizeof(randomChar);
         buf[index] = randomChar[i];
     }
+    buf[buf_size] = '\0';
 }
 
 RtpStream::RtpStream(RtpSession* rtp_session, RTPDirection direction)
