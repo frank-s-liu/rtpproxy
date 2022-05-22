@@ -371,7 +371,8 @@ int CmdSession::process_cmd(char* cmdstr)
         delete m_css;
         m_css = css;
     }
-    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] has processed cmd [%s], result is %s ", m_session_key->m_cookie, CMD_STR[cmd], ret==0?"SUCCESS":"FAILED");
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "cmd session [%s] with cookie [%s] has processed cmd [%s], result is %s ", 
+                                                  m_session_key->m_cookie, m_cookie.s, CMD_STR[cmd], ret==0?"SUCCESS":"FAILED");
     return ret;
 }
 

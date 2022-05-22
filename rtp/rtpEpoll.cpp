@@ -39,6 +39,7 @@ TcpSocketInfo::~TcpSocketInfo()
         delete[] cmd_not_completed;
         cmd_not_completed = NULL;
     }
+    tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "connection with %s:%d closed", m_remote_ip, m_remote_port);
 }
 
 int TcpSocketInfo::sendMsg(const char* buf, int len)
@@ -125,7 +126,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
     }
     else
     {
-        tracelog("RTP", ERROR_LOG,__FILE__, __LINE__, "recv bencode cmd error,  errno is %d", errno);
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd error for connection %s:%d,  errno is %d", m_remote_ip, m_remote_port, errno);
         ret = -3;
         close(m_fd);
         m_fd = -1;
@@ -565,7 +566,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
             cs->resetCookie(start, cookie-start);
             cs->m_session_key = sk;
             CmdSessionManager::getInstance()->putinCmdSession(cs);
-            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, session key is [%s]", sk->m_cookie);
+            tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "new cmd session, session key is [%s] cookie[%s]", sk->m_cookie, cs->m_cookie.s);
             cs->setSocketInfo(this);
         }
         else
@@ -575,6 +576,7 @@ int Epoll_data::parseBencodeCmd(char* cmdstr, const char* key, int keylen)
                 ret = cs->process_cookie(start, cookie-start);  // check if it is retransmited
             }
             cs->resetCookie(start, cookie-start);
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "cmd session [%s] cookie[%s] will process cmd", sk->m_cookie, cs->m_cookie.s);
             delete sk;
         }
         if(0 == ret)
