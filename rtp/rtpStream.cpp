@@ -155,8 +155,10 @@ int RtpStream::chooseCrypto2Local(Sdp_session* remote_sdp, Crypto_Suite chiper)
     len = snprintf((char*)srckey, sizeof(srckey), "%s%s",m_local_cry_cxt->m_params.master_key, m_local_cry_cxt->m_params.master_salt);
     if(len >= sizeof(srckey))
     {
-        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s produce random key error",
-                                                          m_rtpSession->m_session_key->m_cookie);
+        tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session [%s] produce random key error, master_key len %d, master_salt len %d, len %d",
+                                                          m_rtpSession->m_session_key->m_cookie, 
+                                                          m_local_cry_cxt->m_params.crypto_suite->master_key_len, 
+                                                          m_local_cry_cxt->m_params.crypto_suite->master_salt_len, len);
         return -1;
     }
     base64Encode(srckey, len, base64key, sizeof(base64key));
