@@ -25,9 +25,11 @@ SocketInfo::~SocketInfo()
     }
 }
 
-TcpSocketInfo::TcpSocketInfo()
+TcpSocketInfo::TcpSocketInfo(unsigned short port):SocketInfo()
 {
     cmd_not_completed = NULL;
+    m_remote_port = port;
+    m_remote_ip[0] = '\0';
 }
 
 TcpSocketInfo::~TcpSocketInfo()
@@ -48,7 +50,7 @@ int TcpSocketInfo::sendMsg(const char* buf, int len)
     }
     else
     {
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "send bencode cmd failed because of socket fd is not initialed");
+        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "send bencode cmd failed because of connection with %s:%d is not initialed", m_remote_ip, m_remote_port);
         ret = -2;
     }
     return ret;

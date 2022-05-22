@@ -26,7 +26,7 @@ public:
 class TcpSocketInfo: public SocketInfo
 {
 public:
-    TcpSocketInfo();
+    TcpSocketInfo(unsigned short port);
     virtual ~TcpSocketInfo();
     virtual int sendMsg(const char* buf, int len);
     virtual int recvBencode(Epoll_data* data);
@@ -36,6 +36,8 @@ public:
 
 public:
     char*                cmd_not_completed;
+    unsigned short       m_remote_port;
+    char                 m_remote_ip[32];
 };
 
 class UdpSocketInfo : public SocketInfo

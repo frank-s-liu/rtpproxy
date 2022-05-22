@@ -184,7 +184,7 @@ void* ControlProcess::run()
             {
                 int reuse_addr = 1;
                 int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                m_fd_socketInfo[i] = new TcpSocketInfo();
+                m_fd_socketInfo[i] = new TcpSocketInfo(0);
                 m_fd_socketInfo[i]->m_fd = fd;
                 // when restart service, if socket is in timewait state, maybe something wrong, So need to set SO_REUSEADDR.
                 if(-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)))
@@ -262,9 +262,12 @@ void* ControlProcess::run()
                         if(-1 != new_client_fd)
                         {
                             struct epoll_event event;
+                            unsigned short port = ntohs(client_addr.sin_port);
+                            const char* remote_ip = inet_ntoa(client_addr.sin_addr);
                             Epoll_data* tcpclientdata = new Epoll_data();
-                            SocketInfo* socketinfo = new TcpSocketInfo();
+                            TcpSocketInfo* socketinfo = new TcpSocketInfo(port);
                             socketinfo->m_fd = new_client_fd;
+                            snprintf(socketinfo->m_remote_ip, sizeof(socketinfo->m_remote_ip), "%s", remote_ip);
                             tcpclientdata->m_epoll_fd_type = RTP_RES_CMD_SOCKET_TCP_FD;
                             tcpclientdata->m_epoll_fd = ep_fd;
                             tcpclientdata->m_socket = socketinfo;
@@ -312,6 +315,7 @@ void* ControlProcess::run()
                                 Args* arg = pipeArg->args_data;
                                 arg->processCmd();
                                 delete pipeArg;
+                                break;
                             }
                             else
                             {
