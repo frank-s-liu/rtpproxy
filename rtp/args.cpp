@@ -93,7 +93,7 @@ int StateCheckArgs::processCmd()
     }
     else 
     {
-        tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "check state, but not find cmd session %s", cs_key);
+        tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "check state, but not find cmd session %s", cs_key);
         return -1;
     }
 }

@@ -337,20 +337,33 @@ int CmdSession::doAction2PrepareSend()
 
 void CmdSession::setSocketInfo(Epoll_data* data)
 {
+    char remote_ip[64];
+    unsigned short remote_port;
     rmSocketInfo();
     m_socket_data = data;
     m_socket_data->m_session_count++;
+    data->m_socket->getRemoteAddress(remote_ip, sizeof(remote_ip));
+    data->m_socket->getRemotePort(&remote_port);
+    tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "setSocketInfo in cmd session [%s], connection with remote add[%s:%d], session counter[%d] ", 
+                                                   m_session_key?m_session_key->m_cookie:"still no session key",
+                                                   remote_ip, remote_port, m_socket_data->m_session_count);
 }
 
 void CmdSession::rmSocketInfo()
 {
     if(m_socket_data)
     {
+        char remote_ip[64];
+        unsigned short remote_port;
+        m_socket_data->m_socket->getRemoteAddress(remote_ip, sizeof(remote_ip));
+        m_socket_data->m_socket->getRemotePort(&remote_port);
         m_socket_data->m_session_count --;
+        tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "rmSocketInfo[%s:%d] in cmd session [%s], session counter %d ", 
+                                                      remote_ip, remote_port, m_session_key?m_session_key->m_cookie:"still no session key", m_socket_data->m_session_count);
         if(0 == m_socket_data->m_session_count)
         {
+            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session [%s] ", m_session_key?m_session_key->m_cookie:"still no session key");
             delete m_socket_data;
-            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "delete Epoll_data info in cmd session %s ", m_session_key?m_session_key->m_cookie:"still no session key");
         }
         m_socket_data = NULL;
     }

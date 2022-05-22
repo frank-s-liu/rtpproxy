@@ -295,12 +295,11 @@ void* ControlProcess::run()
                         int ret = data->recvBencodeCmd();
                         if(ret < -1)
                         {
-                            tracelog("RTP", INFO_LOG, __FILE__, __LINE__, "recv Bencode socket error, break here");
                             if(0 == data->m_session_count)  // ret <-1, for this recv action, no cmd session was parsing.
                             {
+                                tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "recv Bencode socket error, break here");
                                 delete data;
                             }
-                            break;// must beak and start a new epoll
                         }
                     }
                     else if(type == RTP_EPOLL_PIPE_FD)

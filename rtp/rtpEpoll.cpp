@@ -25,6 +25,15 @@ SocketInfo::~SocketInfo()
     }
 }
 
+int SocketInfo::getRemotePort(unsigned short* port)
+{
+    return 0;
+}
+int SocketInfo::getRemoteAddress(char* buf, int buflen)
+{
+    return 0;
+}
+
 TcpSocketInfo::TcpSocketInfo(unsigned short port):SocketInfo()
 {
     cmd_not_completed = NULL;
@@ -105,7 +114,7 @@ int TcpSocketInfo::recvBencode(Epoll_data* data)
                 int len = strlen(cmd);
                 cmd_not_completed = new char[len+1];
                 snprintf(cmd_not_completed, len+1, "%s", cmd);
-                tracelog("RTP", INFO_LOG,__FILE__, __LINE__, "recv bencode cmd not completed");
+                tracelog("RTP", WARNING_LOG,__FILE__, __LINE__, "recv bencode cmd not completed");
                 break;
             }
             else
@@ -140,6 +149,18 @@ retprocess:
         cmdnew = NULL;
     }
     return ret;
+}
+
+int TcpSocketInfo::getRemotePort(unsigned short* port)
+{
+    *port = m_remote_port;
+    return 0;
+}
+
+int TcpSocketInfo::getRemoteAddress(char* buf, int buflen)
+{
+    snprintf(buf, buflen, "%s", m_remote_ip);
+    return 0;
 }
 
 int TcpSocketInfo::modify_write_event2Epoll(int ep_fd, void* event_data)
