@@ -432,11 +432,18 @@ sendrtp:
 
 int RtpStream::writeProcess(cstr rtp)
 {
-    struct sockaddr_in addr_peer;
-    addr_peer.sin_family = AF_INET;
-    addr_peer.sin_port = htons(m_addr_peer_port);
-    addr_peer.sin_addr.s_addr = inet_addr(m_addr_peer_ip);
-    return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&addr_peer, sizeof(struct sockaddr_in));
+    if(!m_addr_peer_ip)
+    {
+        return 0;
+    }
+    else
+    {
+        struct sockaddr_in addr_peer;
+        addr_peer.sin_family = AF_INET;
+        addr_peer.sin_port = htons(m_addr_peer_port);
+        addr_peer.sin_addr.s_addr = inet_addr(m_addr_peer_ip);
+        return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&addr_peer, sizeof(struct sockaddr_in));
+    }
 }
 
 static const int IP_MAX_LEN = 64;
