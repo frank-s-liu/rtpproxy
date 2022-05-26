@@ -320,7 +320,7 @@ int RtpStream::set_local_rtp_network(const char* local_ip, int type)
 
 int RtpStream::readAndProcess()
 {
-    char buf[2048];
+    char buf[4096];
     int ret = 0;
     uint32_t rtpIndex = 0;
     int recv_len = 0;
@@ -341,7 +341,7 @@ int RtpStream::readAndProcess()
     rtp_raw.s = NULL;
     payload.len = 0;
     payload.s = NULL;
-    recv_len = m_socket->recv_from(buf, sizeof(buf));
+    recv_len = m_socket->recv_from(buf, sizeof(buf)-512); // 512 byte used for authtication and mki info
     m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(-1 == recv_len)
     {
