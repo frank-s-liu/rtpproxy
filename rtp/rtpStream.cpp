@@ -422,9 +422,9 @@ sendrtp:
     if(sendto)
     {
         int len = sendto->writeProcess(rtp_raw);
-        if(len <= 0)
+        if(len < 0)
         {
-            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s send out rtp failed ", m_rtpSession->m_session_key->m_cookie);
+            tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session %s send out rtp failed %d", m_rtpSession->m_session_key->m_cookie, errno);
         }
     }
     return 0;
