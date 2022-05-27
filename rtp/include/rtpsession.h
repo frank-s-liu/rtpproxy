@@ -41,12 +41,13 @@ private:
     Crypto_context*             m_local_cry_cxt; // external using encryption
     RTP_send_recv_epoll_data*   m_data;
     RTPDirection                m_direction;
-    unsigned short              m_local_crypto_tag; // to check crypto tag sdp answer from external remote
-    unsigned short              m_addr_peer_port;
     Crypto_Suite                m_local_crypto_chiper;  // to check crypto-suit in sdp from external remote
-    unsigned char               m_bridged;
     struct SSRC_CTX             m_peer_ssrc_ctx;
     struct SSRC_CTX             m_local_ssrc_ctx;
+    struct sockaddr_in          m_addr_peer;
+    unsigned short              m_local_crypto_tag; // to check crypto tag sdp answer from external remote
+    unsigned short              m_addr_peer_port;
+    unsigned char               m_bridged;
 };
 
 class RtpSession

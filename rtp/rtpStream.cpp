@@ -442,11 +442,14 @@ int RtpStream::writeProcess(cstr rtp)
     }
     else
     {
-        struct sockaddr_in addr_peer;
-        addr_peer.sin_family = AF_INET;
-        addr_peer.sin_port = htons(m_addr_peer_port);
-        addr_peer.sin_addr.s_addr = inet_addr(m_addr_peer_ip);
-        return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&addr_peer, sizeof(struct sockaddr_in));
+        if(m_bridged == 0)
+        {
+            m_addr_peer.sin_family = AF_INET;
+            m_addr_peer.sin_port = htons(m_addr_peer_port);
+            m_addr_peer.sin_addr.s_addr = inet_addr(m_addr_peer_ip);
+            m_bridged = 1;
+        }
+        return m_socket->send_to(rtp.s, rtp.len, 0, (struct sockaddr* )&m_addr_peer, sizeof(struct sockaddr_in));
     }
 }
 
