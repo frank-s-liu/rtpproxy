@@ -286,20 +286,18 @@ int rtp_payload(struct Rtp_Fixed_header** out, cstr* payload_out, const cstr* s)
         goto error;
     }
     rtp = (struct Rtp_Fixed_header*)s->s;
-    if(s_little_endian == 1)
-    {
+    //if(s_little_endian == 1) // single byte don't need to check
+    //{
         cc = rtp->v_p_x_cc.v_p_x_cc_little.cc;
         x = rtp->v_p_x_cc.v_p_x_cc_little.x;
         v = rtp->v_p_x_cc.v_p_x_cc_little.v;
-        //p = rtp->v_p_x_cc.v_p_x_cc_little.p;
-    }
-    else
-    {
-        cc = rtp->v_p_x_cc.v_p_x_cc_big.cc;
-        x = rtp->v_p_x_cc.v_p_x_cc_big.x;
-        v = rtp->v_p_x_cc.v_p_x_cc_big.v;
-        //p = rtp->v_p_x_cc.v_p_x_cc_big.p;
-    }
+    //}
+    //else
+    //{
+    //    cc = rtp->v_p_x_cc.v_p_x_cc_big.cc;
+    //    x = rtp->v_p_x_cc.v_p_x_cc_big.x;
+    //    v = rtp->v_p_x_cc.v_p_x_cc_big.v;
+    //}
     if(v != 2)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp package version error %d", v);
@@ -356,7 +354,7 @@ uint32_t packet_index(struct SSRC_CTX* ssrc_ctx, struct Rtp_Fixed_header* rtpHdr
     // to find which value from (rec-1, roc, roc+1) can make  (v<<16+seq) more likely equal to ssrc_ctx->srtp_index
     if (s_l < 0x8000) 
     {
-        if(((seq - s_l) > 0x8000) && roc > 0)
+        if(roc > 0 && ((seq - s_l) > 0x8000))
         {
             v = (roc - 1) % 0x10000;
         }
@@ -367,16 +365,16 @@ uint32_t packet_index(struct SSRC_CTX* ssrc_ctx, struct Rtp_Fixed_header* rtpHdr
     } 
     else 
     {
-        if((s_l - 0x8000) > seq)
-        {
-            v = (roc + 1) % 0x10000;
-        }
-        else    
+        if((s_l - 0x8000) <= seq)
         {
             v = roc;
         }
+        else    
+        {
+            v = (roc + 1) % 0x10000;
+        }
     }
-    ssrc_ctx->srtp_index = ((v << 16) | seq) & 0xffffffffULL;
+    ssrc_ctx->srtp_index = ((v << 16) | seq);
     return ssrc_ctx->srtp_index;
 }
 
