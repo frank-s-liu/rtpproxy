@@ -346,7 +346,7 @@ int RtpStream::readAndProcess()
     payload.len = 0;
     payload.s = NULL;
     recv_len = m_socket->recv_from(readbuf.buf, sizeof(readbuf.buf)-512); // 512 byte used for authtication and mki info
-    m_rtpSession->get_other_rtp_streams(this, &sendto);
+    //m_rtpSession->get_other_rtp_streams(this, &sendto);
     if(-1 == recv_len)
     {
         tracelog("RTP", WARNING_LOG, __FILE__, __LINE__, "rtp session read err, errno:%d", errno);
@@ -362,7 +362,7 @@ int RtpStream::readAndProcess()
     }
     rtpIndex = packet_index(&m_peer_ssrc_ctx, rtpHdr);
 
-
+    sendto = m_rtpSession->m_rtpstreams[this->m_direction];
     if(EXTERNAL_PEER == m_direction)
     {
         if(!m_remote_cry_cxt)

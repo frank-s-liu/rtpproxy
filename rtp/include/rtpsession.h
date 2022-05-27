@@ -56,10 +56,11 @@ public:
     RtpSession(SessionKey* key, RtpProcess* process);
     virtual ~RtpSession();
     int processSdp(Sdp_session* sdp, RTPDirection direction);
-    int get_other_rtp_streams(RtpStream* from, RtpStream** to);
+    //int get_other_rtp_streams(RtpStream* from, RtpStream** to);
 public:
     SessionKey*               m_session_key;
     RtpProcess*               m_rtp_sendrecv_process;
+    RtpStream*                m_rtpstreams[2];
 private:
     RtpStream*                m_external;
     RtpStream*                m_internal;

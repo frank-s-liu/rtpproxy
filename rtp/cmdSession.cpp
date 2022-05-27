@@ -709,19 +709,9 @@ int CallCmdSession::setSdp(int type, Sdp_session* sdp)
             external_peer_sdp = sdp;
             break;
         }
-        case EXTERNAL_LOCAL:
-        {
-            external_local_sdp = sdp;
-            break;
-        }
         case INTERNAL_PEER:
         {
             internal_peer_sdp = sdp;
-            break;
-        }
-        case INTERNAL_LOCAL:
-        {
-            internal_local_sdp = sdp;
             break;
         }
         default:
@@ -742,19 +732,9 @@ int CallCmdSession::getSdp(int type, Sdp_session**sdp)
             *sdp = external_peer_sdp;
             break;
         }
-        case EXTERNAL_LOCAL:
-        {
-            *sdp = external_local_sdp;
-            break;
-        }
         case INTERNAL_PEER:
         {
             *sdp = internal_peer_sdp;
-            break;
-        }
-        case INTERNAL_LOCAL:
-        {
-            *sdp = internal_local_sdp;
             break;
         }
         default:

@@ -12,6 +12,8 @@ RtpSession::RtpSession()
     m_internal = NULL;
     m_session_key = NULL;
     m_rtp_sendrecv_process = NULL;
+    m_rtpstreams[0] = NULL;
+    m_rtpstreams[1] = NULL;
 }
 
 RtpSession::RtpSession(SessionKey* key, RtpProcess* process)
@@ -19,6 +21,8 @@ RtpSession::RtpSession(SessionKey* key, RtpProcess* process)
     m_external = NULL;
     m_internal = NULL;
     m_session_key = key;
+    m_rtpstreams[0] = NULL;
+    m_rtpstreams[1] = NULL;
     m_rtp_sendrecv_process = process;
     process->putRtpSession(this);
 }
@@ -36,6 +40,8 @@ RtpSession::~RtpSession()
         delete m_internal;
         m_internal = NULL;
     }
+    m_rtpstreams[0] = NULL;
+    m_rtpstreams[1] = NULL;
     if(m_session_key)
     {
         delete m_session_key;
@@ -71,6 +77,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             {
                 m_external = new RtpStream(this, EXTERNAL_PEER);
                 m_internal = new RtpStream(this, INTERNAL_PEER);;
+                m_rtpstreams[EXTERNAL_PEER] = m_internal;
+                m_rtpstreams[INTERNAL_PEER] = m_external;
                 m_external->set_local_rtp_network("10.100.126.230", IPV4);
                 m_external->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_external->chooseCrypto2Local(sdp, AEAD_AES_256_GCM);
@@ -136,6 +144,8 @@ int RtpSession::processSdp(Sdp_session* sdp, RTPDirection direction)
             {
                 m_internal = new RtpStream(this, INTERNAL_PEER);
                 m_external = new RtpStream(this, EXTERNAL_PEER);
+                m_rtpstreams[EXTERNAL_PEER] = m_internal;
+                m_rtpstreams[INTERNAL_PEER] = m_external;
                 m_internal->set_local_rtp_network("10.100.125.147", IPV4);
                 m_internal->set_remote_peer_rtp_network(sdp->m_con.address.address.s, peer_port);
                 m_internal->produceLocalInternalSdp(sdp);
@@ -194,20 +204,3 @@ errorProcess:
     return ret;
 }
 
-int RtpSession::get_other_rtp_streams(RtpStream* from, RtpStream** to)
-{
-    if(from == m_internal)
-    {
-        *to = m_external;
-    }
-    else if(from == m_external)
-    {
-        *to = m_internal;
-    }
-    else
-    {
-        *to = NULL;
-        return -1;
-    }
-    return 0;
-}

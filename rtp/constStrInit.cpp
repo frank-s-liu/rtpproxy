@@ -8,9 +8,7 @@ const char* g_crypto_suite_str[MAX_CRYPTO_SUIT] = {
 
 const char* g_RTPDirection_str[MAX_DIRECTION] = {
                                                 "EXTERNAL_PEER",
-                                                "EXTERNAL_LOCAL",
                                                 "INTERNAL_PEER",
-                                                "INTERNAL_LOCAL"
                                                 };
 
 const char* CMD_STR[MAX_CONTROL_CMD] = {"OFFER_CMD", "ANSWER_CMD", "DELETE_CMD", "PING_CMD", "PING_CHECK_CMD"};
